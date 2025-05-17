@@ -84,14 +84,14 @@ Khadok streamlines every step of the ordering journey:
 
 | Layer         | Technology                                       |
 |---------------|--------------------------------------------------|
-| **Frontend**  | HTML5, CSS3, Vanilla JavaScript, EJS templating  |
+| **Frontend**  | HTML5, CSS3, Vanilla JavaScript                  |
 | **Mapping**   | MapTiler (tiles), Leaflet.js, OSRM routing       |
 | **3D Tours**  | Panolens.js                                      |
 | **Backend**   | Node.js, Express.js                              |
 | **Real-Time** | Socket.io                                        |
 | **Payments**  | bKash API                                        |
 | **Database**  | MySQL (primary), Redis (cache)                   |
-| **Authentication** | express-session, JWT (optional)             |
+| **Authentication** | express-session                             |
 | **File Uploads**  | Multer                                       |
 | **Environment**   | dotenv                                       |
 | **PDF Generation**| PDFKit                                       |
