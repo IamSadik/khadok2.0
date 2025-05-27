@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 24, 2025 at 09:56 PM
+-- Generation Time: May 27, 2025 at 06:43 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -102,16 +102,22 @@ INSERT INTO `cuisine` (`id`, `name`) VALUES
 (1, 'Asian'),
 (2, 'Bakery'),
 (3, 'Bangladeshi'),
+(60, 'Beef'),
 (4, 'Beverage'),
+(59, 'Bhorta & Bhaji'),
 (5, 'Biryani'),
 (6, 'Burgers'),
 (7, 'Cafe'),
 (8, 'Cakes'),
+(58, 'Chef\'s Special'),
 (9, 'Chicken'),
 (10, 'Chinese'),
 (40, 'Chotpoti & Fuchka'),
+(53, 'Chowmein'),
+(51, 'Combo'),
 (11, 'Curry'),
 (12, 'Dessert'),
+(48, 'Drinks'),
 (13, 'Dumpling'),
 (14, 'Fast Food'),
 (15, 'Fish'),
@@ -124,19 +130,29 @@ INSERT INTO `cuisine` (`id`, `name`) VALUES
 (21, 'Kebab'),
 (22, 'Korean'),
 (23, 'Meat'),
+(57, 'Meat Box'),
 (24, 'Mediterranean'),
 (25, 'Middle Eastern'),
 (45, 'Momos'),
 (46, 'Nachos'),
 (26, 'Noodles'),
+(50, 'Others'),
 (27, 'Pasta'),
+(56, 'Pastry'),
 (28, 'Pizza'),
+(52, 'Platters'),
+(55, 'Puri'),
+(54, 'Rice Bowl'),
 (29, 'Rice Dishes'),
+(62, 'Rolls'),
+(63, 'Salads'),
 (30, 'Sandwiches'),
 (31, 'Seafood'),
 (47, 'Set Menu'),
+(49, 'Shakes'),
 (32, 'Shawarma'),
 (43, 'Sides'),
+(64, 'Signature Item'),
 (33, 'Snacks'),
 (34, 'Soups'),
 (35, 'Sweets'),
@@ -144,7 +160,8 @@ INSERT INTO `cuisine` (`id`, `name`) VALUES
 (36, 'Thai'),
 (37, 'Turkish'),
 (38, 'Vegetarian'),
-(39, 'Western');
+(39, 'Western'),
+(61, 'Wraps');
 
 -- --------------------------------------------------------
 
@@ -214,10 +231,10 @@ CREATE TABLE `interior_pic` (
 CREATE TABLE `menu` (
   `menu_id` int(10) NOT NULL,
   `stakeholder_id` int(10) NOT NULL,
-  `item_name` varchar(20) NOT NULL,
+  `item_name` varchar(50) NOT NULL,
   `category` varchar(20) DEFAULT NULL,
   `item_price` int(10) NOT NULL,
-  `description` varchar(100) DEFAULT NULL,
+  `description` varchar(150) DEFAULT NULL,
   `item_picture` varchar(255) DEFAULT NULL,
   `rating` float DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -227,7 +244,37 @@ CREATE TABLE `menu` (
 --
 
 INSERT INTO `menu` (`menu_id`, `stakeholder_id`, `item_name`, `category`, `item_price`, `description`, `item_picture`, `rating`) VALUES
-(9, 36, 'Chicken Chaap', NULL, 160, '1:1- Prepared with special masala & spices', 'upload_1748116438622.jpg', NULL);
+(9, 36, 'Chicken Chaap', NULL, 160, '1:1- Prepared with special masala & spices', 'upload_1748116438622.jpg', NULL),
+(10, 36, 'Chicken Kebab', NULL, 160, 'Prepared with special masala', 'upload_1748156656317.jpg', NULL),
+(11, 36, 'BBQ Chicken Kebab', NULL, 170, 'Prepared with house special sauce', 'upload_1748156735329.jpg', NULL),
+(12, 36, 'Beef Kebab', NULL, 180, 'Prepared with special masala', 'upload_1748156787989.jpg', NULL),
+(14, 36, 'Naga Chicken Kebab', NULL, 170, '1:1 - Prepared with chicken, naga sauce & spices', 'upload_1748157411900.jpg', NULL),
+(15, 36, 'Beef Chaap', NULL, 220, '1:1 - Prepared with plain Beef, special sauce & spices', 'upload_1748158441879.jpg', NULL),
+(16, 36, 'Supreme Cheese Burger', NULL, 325, '1 pc - Crispy chicken fillet with cheese, thousand island sauce, iceberg lettuce, tomato, onion & pickle', 'upload_1748161949374.jpg', NULL),
+(17, 36, 'Supreme Burger', NULL, 295, '1 pc - Crispy chicken fillet, thousand island sauce, iceberg lettuce, tomato, onion & pickles', 'upload_1748162035732.jpg', NULL),
+(18, 36, 'Mustard Burger', NULL, 240, '1 pc - Crispy chicken fillet with spicy mustard sauce, iceberg lettuce, tomato & pickles', 'upload_1748162086112.jpg', NULL),
+(19, 36, 'Mustard Cheese Burger', NULL, 270, '1 pc - Crispy chicken fillet with cheese, spicy mustard sauce, iceberg lettuce, tomato & pickle', 'upload_1748162136272.jpg', NULL),
+(20, 36, 'Best Burger', NULL, 275, '1 pc - Crispy chicken fillet with mayonnaise & iceberg lettuce', 'upload_1748162176405.jpg', NULL),
+(21, 36, 'Best Cheese Burger', NULL, 305, '1 pc - Crispy chicken fillet with mayonnaise & iceberg lettuce', 'upload_1748162220730.jpg', NULL),
+(22, 36, 'Juicy Cheese Burger', NULL, 225, '1 pc - Crispy chicken fillet with the delicious sauce & cheese', 'upload_1748162268644.jpg', NULL),
+(23, 36, 'Juicy Burger', NULL, 195, '1 pc - Crispy chicken fillet with delicious sauce', 'upload_1748162306494.jpg', NULL),
+(24, 36, 'Spicy Burger', NULL, 275, '1 pc - Crispy spicy chicken fillet with spicy sauce, iceberg lettuce & pickle', 'upload_1748162352156.jpg', NULL),
+(25, 36, 'Spicy Burger with Cheese', NULL, 305, '1 pc - Crispy spicy chicken fillet with spicy sauce, iceberg lettuce & pickle', 'upload_1748162384484.jpg', NULL),
+(26, 36, 'Spicy Crispy Fried Chicken', NULL, 260, '2 pcs - 1 rib or thigh & 1 leg', 'upload_1748162601184.jpg', NULL),
+(27, 36, 'Korean Fried Chicken', NULL, 760, '6 pc - 1 rib, 2 leg, 1 thigh & 2 breast fried with special korean naga sauce', 'upload_1748163528318.jpg', NULL),
+(29, 36, 'Special Porota', NULL, 15, '1 pc - Prepared with flour fried in oil', 'upload_1748181082209.jpg', NULL),
+(30, 36, 'Choco Cold Coffee', NULL, 110, '1:1 - Iced coffee blended with chocolate, milk & ice for a refreshing, indulgent & caffeinated beverage', 'upload_1748181215135.jpg', NULL),
+(31, 36, 'Banvan Shake', NULL, 110, '1:1 - Creamy banana shake topped with crispy wafer, a delightful blend of smooth & crunchy textures', 'upload_1748181296701.jpg', NULL),
+(32, 36, 'Espresso Mousse', NULL, 100, '1:1 - Smooth, rich espresso-infused dessert with airy texture, a delectable blend of coffee & velvety chocolate mousse', 'upload_1748181351956.jpg', NULL),
+(33, 36, 'Smoked Chicken Sandwich', NULL, 250, '1 pc - Smoky flavored tasty bacon, melted cheese, then smothered with ranch dressing', 'upload_1748181432457.jpg', NULL),
+(34, 36, 'Chicken Pastrami Sandwich', NULL, 375, '1 pc - Prepared with chicken pastrami & special delicious ingredients', 'upload_1748181476132.jpg', NULL),
+(35, 36, 'Patty Melt', NULL, 420, '1:1 - Chunky beef patty, 2 types of cheese & spices on oat infused brown bread', 'upload_1748181526285.jpg', NULL),
+(36, 36, 'BBQ Meat Machine Pizza', NULL, 335, 'Topped with beef & chicken both with freshly cut vegetables, cheese & in a soft pizza dough. 10 inch', 'upload_1748181717147.jpg', NULL),
+(37, 36, 'Meat Masala Pizza', NULL, 335, 'Lots of meat, Spice. 10 inch', 'upload_1748181765625.jpg', NULL),
+(38, 36, 'Basmati Kacchi - 1:1', NULL, 300, '1:1 - Popular dish prepared of slow-cooked aromatic basmati rice layered with potatoes, marinated mutton pcs, in a delicate blend of whole spices', 'upload_1748181854912.jpg', NULL),
+(39, 36, 'Kacchi Khadok - 1:1', NULL, 490, '1:1 - With 4 pcs meat', 'upload_1748181894226.jpg', NULL),
+(40, 36, 'Mutton Leg Roast', NULL, 390, '1 pc - Succulent, tender mutton leg, roasted to perfection, bursting with flavor', 'upload_1748182436069.jpg', NULL),
+(44, 36, 'Vegetable Salad', NULL, 120, '1:2 - Prepared with fresh vegetables, eggs and special dressings', 'upload_1748256817231.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -316,7 +363,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`session_id`, `expires`, `data`) VALUES
-('xHn0o784VtNb3A-oXbJ_FyEtsjTosUcs', 1748115249, '{\"cookie\":{\"originalMaxAge\":1800000,\"expires\":\"2025-05-24T19:09:01.165Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"lax\"},\"userId\":36,\"role\":\"stakeholder\"}');
+('b-jynjzcHwhzwNhOeYqkzjWHLc2wZErU', 1748365409, '{\"cookie\":{\"originalMaxAge\":1800000,\"expires\":\"2025-05-27T16:51:53.372Z\",\"secure\":false,\"httpOnly\":true,\"path\":\"/\",\"sameSite\":\"lax\"},\"userId\":36,\"role\":\"stakeholder\"}');
 
 -- --------------------------------------------------------
 
@@ -340,15 +387,16 @@ CREATE TABLE `stakeholder` (
   `lat` varchar(20) NOT NULL,
   `lng` varchar(20) NOT NULL,
   `number` varchar(11) DEFAULT NULL,
-  `picture` varchar(255) DEFAULT NULL
+  `picture` varchar(255) DEFAULT NULL,
+  `category_order` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `stakeholder`
 --
 
-INSERT INTO `stakeholder` (`stakeholder_id`, `name`, `email`, `password`, `restaurant_name`, `ratings`, `address`, `created_at`, `updated_at`, `type`, `opens_at`, `closes_at`, `lat`, `lng`, `number`, `picture`) VALUES
-(36, 'sorol', 'sorol@gmail.com', '', 'Chillzzz', NULL, 'Shonir Akhra - Mridhabari Road, Mridhabari, Shonir Akhra, Dhaka, Dhaka Metropolitan, Dhaka District,', '2025-05-07 21:37:53', '2025-05-22 23:12:38', '[\"delivery\",\"pickup\",\"dine-in\"]', '16:00:00', '23:00:00', '23.703102', '90.450842', '01937890430', 'consumer_1747933958335.jpg');
+INSERT INTO `stakeholder` (`stakeholder_id`, `name`, `email`, `password`, `restaurant_name`, `ratings`, `address`, `created_at`, `updated_at`, `type`, `opens_at`, `closes_at`, `lat`, `lng`, `number`, `picture`, `category_order`) VALUES
+(36, 'sorol', 'sorol@gmail.com', '', 'Chillzzz', NULL, 'Shonir Akhra - Mridhabari Road, Mridhabari, Shonir Akhra, Dhaka, Dhaka Metropolitan, Dhaka District,', '2025-05-07 21:37:53', '2025-05-22 23:12:38', '[\"delivery\",\"pickup\",\"dine-in\"]', '16:00:00', '23:00:00', '23.703102', '90.450842', '01937890430', 'consumer_1747933958335.jpg', '[\"Burgers\",\"Kebab\",\"Sides\",\"Fried Chicken\",\"Beverage\",\"Biryani\",\"Curry\",\"Dessert\",\"Pizza\",\"Sandwiches\",\"Salads\"]');
 
 -- --------------------------------------------------------
 
@@ -367,7 +415,37 @@ CREATE TABLE `stakeholder_cuisine` (
 --
 
 INSERT INTO `stakeholder_cuisine` (`stakeholder_id`, `cuisine_id`, `menu_id`) VALUES
-(36, 21, 9);
+(36, 21, 9),
+(36, 21, 10),
+(36, 21, 11),
+(36, 21, 12),
+(36, 21, 14),
+(36, 21, 15),
+(36, 6, 16),
+(36, 6, 17),
+(36, 6, 18),
+(36, 6, 19),
+(36, 6, 20),
+(36, 6, 21),
+(36, 6, 22),
+(36, 6, 23),
+(36, 6, 24),
+(36, 6, 25),
+(36, 16, 26),
+(36, 16, 27),
+(36, 43, 29),
+(36, 4, 30),
+(36, 4, 31),
+(36, 12, 32),
+(36, 30, 33),
+(36, 30, 34),
+(36, 30, 35),
+(36, 28, 36),
+(36, 28, 37),
+(36, 5, 38),
+(36, 5, 39),
+(36, 11, 40),
+(36, 63, 44);
 
 -- --------------------------------------------------------
 
@@ -517,7 +595,7 @@ ALTER TABLE `consumer`
 -- AUTO_INCREMENT for table `cuisine`
 --
 ALTER TABLE `cuisine`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `delivery`
@@ -547,7 +625,7 @@ ALTER TABLE `interior_pic`
 -- AUTO_INCREMENT for table `menu`
 --
 ALTER TABLE `menu`
-  MODIFY `menu_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `menu_id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `pickup`
