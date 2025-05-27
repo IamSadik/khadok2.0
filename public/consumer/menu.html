@@ -127,24 +127,43 @@
         }
     </script>
 
-    <script>
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                const response = await fetch('/auth/logout?type=consumer', {
-                    method: 'GET',
-                });
+<script>
+    async function logout() {
+        const sessionId = localStorage.getItem("sessionId");
 
-                if (response.ok) {
-                    alert('Logout successful');
-                    window.location.href = '../login.html';
-                } else {
-                    alert('Error during logout');
-                }
-            } catch (error) {
-                console.error('Error logging out:', error);
+        if (!sessionId) {
+            alert("No session found.");
+            return;
+        }
+
+        try {
+            const res = await fetch("/api/auth/logout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId }),
+                credentials: "include", // Include the session cookie in the request
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                localStorage.removeItem("sessionId"); // Clear sessionId from localStorage after logout
+                alert(data.message); // Show success message
+                window.location.href = '../login.html';
+            } else {
+                alert(data.message || "Logout failed.");
+                window.location.href = '../login.html'; // Redirect to login page on error
             }
-        });
-    </script>
+        } catch (err) {
+            console.error("Logout error:", err);
+            alert("Something went wrong.");
+            window.location.href = '../login.html'; // Redirect to login page on error
+        }
+    }
+
+    const logoutButton = document.getElementById("logoutButton");
+    logoutButton.addEventListener("click", logout);
+</script>
       
     
 </body>

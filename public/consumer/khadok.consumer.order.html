@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,15 +9,16 @@
     <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
     <link rel="stylesheet" href="css/khadok.consumer.order.css">
     <link rel="stylesheet" href="css/reservation.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">   
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    
+
 </head>
+
 <body>
     <div class="sidebar">
         <div class="logo_content">
             <div class="logo">
-                
+
                 <div class="logo_name">Khadok
 
                 </div>
@@ -25,10 +27,10 @@
         </div>
         <ul class="nav_list">
             <li>
-                
-                    <i class='bx bx-search-alt'></i>
-                    <input type="text" placeholder="Search...">
-                
+
+                <i class='bx bx-search-alt'></i>
+                <input type="text" placeholder="Search...">
+
                 <span class="tooltip">Search </span>
             </li>
             <li>
@@ -52,7 +54,7 @@
                 </a>
                 <span class="tooltip">Map</span>
             </li>
-            
+
             <li>
                 <a href="khadok.consumer.order.html">
                     <i class='bx bxs-package'></i>
@@ -60,7 +62,7 @@
                 </a>
                 <span class="tooltip">Orders</span>
             </li>
-            
+
             <li>
                 <a href="khadok.consumer.setting.html">
                     <i class='bx bxs-cog'></i>
@@ -150,34 +152,55 @@
     </div>
     <script src="js/khadok.consumer.order.js"></script>
     <script>
-        let btn = document.querySelector("#btn"); 
+        let btn = document.querySelector("#btn");
         let sidebar = document.querySelector(".sidebar");
-        let searchBtn = document.querySelector(".bx-search-alt");  
+        let searchBtn = document.querySelector(".bx-search-alt");
 
-        btn.onclick = function(){
+        btn.onclick = function () {
             sidebar.classList.toggle("active");
         }
-        searchBtn.onclick = function(){
+        searchBtn.onclick = function () {
             sidebar.classList.toggle("active");
         }
     </script>
     <script>
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-           try {
-               const response = await fetch('/auth/logout?type=consumer', {
-                   method: 'GET',
-               });
-   
-               if (response.ok) {
-                   alert('Logout successful');
-                   window.location.href = '../login.html';
-               } else {
-                   alert('Error during logout');
-               }
-           } catch (error) {
-               console.error('Error logging out:', error);
-           }
-       });
-   </script>
+        async function logout() {
+            const sessionId = localStorage.getItem("sessionId");
+
+            if (!sessionId) {
+                alert("No session found.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId }),
+                    credentials: "include", // Include the session cookie in the request
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.removeItem("sessionId"); // Clear sessionId from localStorage after logout
+                    alert(data.message); // Show success message
+                    window.location.href = '../login.html';
+                } else {
+                    alert(data.message || "Logout failed.");
+                    window.location.href = '../login.html'; // Redirect to login page on error
+                }
+            } catch (err) {
+                console.error("Logout error:", err);
+                alert("Something went wrong.");
+                window.location.href = '../login.html'; // Redirect to login page on error
+            }
+        }
+
+        const logoutButton = document.getElementById("logoutButton");
+        logoutButton.addEventListener("click", logout);
+    </script>
+
 </body>
+
 </html>

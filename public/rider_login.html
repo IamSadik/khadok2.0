@@ -2,55 +2,145 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="stylesheet" href="css/rider_login.css">
-    <title>Welcome to Khadok</title>
-    <style>
-        .home-icon {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 24px;
-            color: #444;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
+    <meta charset="UTF-8" />
+    <title>Khadok | Rider Login</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
-        .home-icon:hover {
-            color: #007bff;
-        }
-    </style>
+    <!-- Font & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <!-- Main styles -->
+    <link rel="stylesheet" href="css/rider_login.css" />
+
 </head>
 
 <body>
-    <!-- Home Icon -->
-    <a href="index.html" class="home-icon" title="Go to Landing Page">
-        <i class="fa-solid fa-house"></i>
-    </a>
 
-   
+    <!-- Header -->
+    <header class="nav-bar">
+        <div class="logo">
+            <a href="index.html" class="logo-link">
+                <img src="images/khadok2.png" alt="Brand Logo" class="brand-logo">
+                <span class="logo-text">Khadok</span>
+            </a>
+        </div>
 
-    <!-- Rider Form Section -->
-    <div class="form-container rider-container">
-        <form class="rider-form" method="post" action="/auth/login-rider">
-            <h1 style="align-self: center;">Rider</h1>
-            <div class="social-icons">
-                <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-                <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-                <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-                <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
-            </div>
-            <span>or use your email password</span>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <a href="#">Forget Your Password?</a>
-            <button type="submit">Rider Sign In</button>
-        </form>
+        <!-- Hamburger Button -->
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-menu" id="nav-menu">
+            <ul>
+                <li><a href="index.html" class="about-btn">Home</a></li>
+                <li><a href="about.html" class="contact-btn">About</a></li>
+                <li><a href="admin_login.html" class="login-btn">Admin</a></li>
+                <li><a href="signup.html" class="signup-btn">Sign up</a></li>
+            </ul>
+        </nav>
+
+        <ul>
+            <li class="user-icon">
+                <a href="login.html"><i class="fas fa-user-circle"></i></a>
+            </li>
+        </ul>
+    </header>
+
+    <!-- Animated Waves + Rider Cycling -->
+    <div class="wave-wrapper">
+        <!-- Floating Bouncing Circles -->
+        <div class="circle-wrapper">
+            <div class="circle c1"></div>
+            <div class="circle c2"></div>
+            <div class="circle c3"></div>
+            <div class="circle c4"></div>
+            <div class="circle c5"></div>
+        </div>
+
+        <!-- Rider Cycling Animation -->
+        <div class="rider-bike">
+            <i class="fas fa-biking"></i>
+        </div>
+        <!-- Second Rider: simple left-to-right along bottom -->
+        <div class="rider-bike-bottom">
+            <i class="fas fa-biking"></i>
+        </div>
+         <!-- the new road -->
+        <div class="road"></div>
     </div>
 
-    <script src="js/login_script.js"></script>
+
+    <!-- Glassmorphic Login Card -->
+    <main class="login-glass">
+        <div class="glass-card">
+            <div class="card-header">
+                <i class="fas fa-motorcycle"></i>
+                <h2>Rider Sign In</h2>
+            </div>
+            <form id="loginForm" class="login-form" autocomplete="off">
+                <div class="input-box">
+                    <input type="email" class="input-field" id="log-email" required />
+                    <label for="log-email" class="label">Email</label>
+                    <i class="bx bx-envelope icon"></i>
+                </div>
+                <div class="input-box">
+                    <input type="password" class="input-field" id="log-pass" required />
+                    <label for="log-pass" class="label">Password</label>
+                    <i class="bx bx-lock-alt icon"></i>
+                </div>
+                <div class="form-cols">
+                    <div class="col-1"></div>
+                    <div class="col-2"><a href="#">Forgot password?</a></div>
+                </div>
+                <button class="btn-submit" id="SignInBtn" type="submit">
+                    Sign In <i class="bx bx-log-in"></i>
+                </button>
+                <p class="switch-form">
+                    New here? <a href="signup.html">Register now</a>
+                </p>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Basic login handler
+        document.getElementById('loginForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const email = document.getElementById('log-email').value.trim();
+            const password = document.getElementById('log-pass').value;
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (res.ok && data.sessionId && data.user.role === 'rider') {
+                    localStorage.setItem('sessionId', data.sessionId);
+                    localStorage.setItem('rider_id', data.user.id);
+                    window.location.href = data.redirect || '/rider/index.html';
+                } else {
+                    alert(data.message || 'Login failed.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Something went wrong.');
+            }
+        });
+    </script>
+     <script>
+        const toggleBtn = document.getElementById('menu-toggle');
+        const navMenu = document.getElementById('nav-menu');
+
+        toggleBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('show');
+        });
+    </script>
 </body>
 
 </html>

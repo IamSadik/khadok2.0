@@ -111,4 +111,12 @@ function updateCartCount(cartItems) {
     document.getElementById('cart-count').textContent = totalCount;
 }
 
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();
 

@@ -1,3 +1,12 @@
+body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    background-color: #ffffff;
+   
+}
+
+
 /* Modal Structure */
 .modal {
     display: none;
@@ -14,7 +23,8 @@
 }
 
 .modal-content {
-    background: linear-gradient(to right, #97a0879a, #767f65);
+    background: linear-gradient(135deg, #101812, #5a8765);
+
     padding: 30px;
     border-radius: 10px;
     width: 90%;
@@ -28,7 +38,7 @@
     font-size: 24px;
     margin-bottom: 20px;
     font-weight: bold;
-    color: #333;
+    color: #000;
 }
 
 .modal-content form input {
@@ -42,13 +52,13 @@
     box-shadow:3px #333;
     color: #000;
     background-color: #ddd;
-    font-family: 'Montserrat', sans-serif;;
+    
 }
 
 .modal-content form button {
     width: 378px;
     padding: 10px;
-    background: #254a5d;
+    background: #101812;
     color: white;
     border: none;
     border-radius: 30px;
@@ -57,9 +67,20 @@
     margin-top: 10px;
     justify-content: center;
     margin-right: 2px;
-    font-family: 'Montserrat', sans-serif;;
+    
 }
 
+.modal-content form button:hover {
+    background: #5A8765;
+    color: #333;
+    border: none;
+    cursor: pointer;
+    border-radius: 30px;
+    scale: 1.01;
+    transition: 0.2s ease-in;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    
+}
 
 
 .close-modal {

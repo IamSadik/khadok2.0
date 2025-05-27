@@ -232,3 +232,12 @@ document.getElementById('place-pickup-btn').addEventListener('click', async () =
         alert('Error processing your request. Please try again.');
     }
 });
+
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Khadok | Privacy Policy</title>
+    <link rel="stylesheet" href="css/privacy.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+    <!-- Header (you already have the CSS) -->
+    <header class="nav-bar">
+        <div class="logo">
+            <a href="index.html" class="logo-link">
+                <img src="images/khadok2.png" alt="Brand Logo" class="brand-logo">
+                <span class="logo-text">Khadok</span>
+            </a>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <nav class="nav-menu" id="nav-menu">
+            <ul>
+                <li><a href="about.html" class="about-btn">About</a></li>
+                <li><a href="admin_login.html" class="contact-btn">Admin</a></li>
+                <li><a href="rider_login.html" class="login-btn">Rider</a></li>
+                <li><a href="signup.html" class="signup-btn">Sign up</a></li>
+            </ul>
+        </nav>
+
+        <ul>
+            <li class="user-icon">
+                <a href="login.html"><i class="fas fa-user-circle"></i></a>
+            </li>
+        </ul>
+    </header>
+
+    <!-- Privacy Policy Content -->
+    <main class="privacy-container">
+        <section class="privacy-header">
+            <h1><i class="fas fa-user-secret"style="color: #5a8765;"></i> Privacy Policy</h1>
+            <p>Effective Date: May 20, 2025</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-database"style="color: #5a8765;"></i> Information We Collect</h2>
+            <p>We collect personal data such as your name, email, phone number, and delivery preferences to enhance your experience on Khadok.</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-eye"style="color: #5a8765;"></i> How We Use Your Data</h2>
+            <p>Your data helps us improve services, personalize content, provide customer support, and manage orders efficiently.</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-share-alt"style="color: #5a8765;"></i> Data Sharing</h2>
+            <p>We do not sell your personal data. We may share limited data with delivery personnel and restaurant partners to fulfill orders.</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-shield-alt"style="color: #5a8765;"></i> Data Security</h2>
+            <p>We use encryption, secure servers, and limited access protocols to protect your personal data from unauthorized access or leaks.</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-user-cog"style="color: #5a8765;"></i> Your Rights</h2>
+            <p>You can access, update, or delete your personal information anytime. Contact our support team for any privacy-related requests.</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-cookie-bite"style="color: #5a8765;"></i> Cookies</h2>
+            <p>Khadok uses cookies to enhance usability and tailor content. You can modify your cookie preferences in your browser settings.</p>
+        </section>
+
+        <section class="privacy-card">
+            <h2><i class="fas fa-sync"style="color: #5a8765;"></i> Policy Updates</h2>
+            <p>We may update our privacy policy as needed. Updates will be posted here, and significant changes will be communicated.</p>
+        </section>
+
+        <section class="privacy-footer">
+            <p><i class="fas fa-envelope-open-text"style="color: #ff5722;"></i> Questions? Contact us at <a href="mailto:support@khadok.com">support@khadok.com</a></p>
+        </section>
+    </main>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+
+    <script>
+        const scrollBtn = document.getElementById("scrollToTopBtn");
+        window.onscroll = () => {
+            scrollBtn.style.display = (window.scrollY > 300) ? "block" : "none";
+        };
+        scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    </script>
+      <script>
+        const toggleBtn = document.getElementById('menu-toggle');
+        const navMenu = document.getElementById('nav-menu');
+
+        toggleBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('show');
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+    <script>
+        // detached scrolling
+        // JavaScript for detached scrolling effect
+        document.addEventListener("DOMContentLoaded", () => {
+            let lastScrollY = window.scrollY;
+            const header = document.querySelector("header");
+
+            window.addEventListener("scroll", () => {
+                if (window.scrollY > lastScrollY) {
+                    header.classList.add("hidden"); // Hide header on scroll down
+                } else {
+                    header.classList.remove("hidden"); // Show header on scroll up
+                }
+                lastScrollY = window.scrollY;
+            });
+        });
+
+    </script>
+        <footer>
+            <hr class="footer-divider" />
+            <div class="footer-content">
+                <p>&copy; 2024 Khadok. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="terms&conditions.html">Terms & Conditions</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                    <a href="contact.html">Contact Us</a>
+                </div>
+                <div class="social-media-icons">
+                    <a href="https://facebook.com/iamsadikmahmud" target="_blank" aria-label="Facebook">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://twitter.com/iamsadikmahmud" target="_blank" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://instagram.com/iamsadikmahmud" target="_blank" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </footer>
+
+</body>
+</html>

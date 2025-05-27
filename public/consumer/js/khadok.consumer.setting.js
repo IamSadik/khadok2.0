@@ -27,3 +27,13 @@ document.getElementById('otherSettingsForm').addEventListener('submit', function
     e.preventDefault();
     alert('Other settings saved!');
 });
+
+
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();

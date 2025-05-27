@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Khadok - Unleash your cravings</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/node-vibrant/3.1.6/vibrant.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -12,6 +15,17 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 
 
@@ -22,6 +36,7 @@
 
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <header class="nav-bar">
         <div class="logo">
@@ -30,28 +45,32 @@
                 <span class="logo-text">Khadok</span>
             </a>
         </div>
-        <nav>
+
+        <!-- Hamburger Button -->
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-menu" id="nav-menu">
             <ul>
                 <li><a href="about.html" class="about-btn">About</a></li>
                 <li><a href="admin_login.html" class="contact-btn">Admin</a></li>
                 <li><a href="rider_login.html" class="login-btn">Rider</a></li>
-                <li><a href="signup.html" class="signup-btn">Sign up</a></li> 
-                       
+                <li><a href="signup.html" class="signup-btn">Sign up</a></li>
             </ul>
-            
         </nav>
+
         <ul>
             <li class="user-icon">
-                <a href="login.html">
-                    <i class="fas fa-user-circle"></i>
-                </a>
-            </li> 
+                <a href="login.html"><i class="fas fa-user-circle"></i></a>
+            </li>
         </ul>
-             
-    </header> 
-    
-    
-    
+    </header>
+
+
+
+
 
     <section class="hero">
         <div class="carousel">
@@ -66,19 +85,17 @@
             <p>Discover your favorite meals and the best dining experiences.</p>
             <div class="search-container" style="position: relative; width: 100%;">
                 <form class="search-bar" id="search-form" onsubmit="return searchRestaurants();">
-                    <input type="text" id="search-input" 
-                        placeholder="Search for your favorite restaurants..." 
-                        onkeyup="fetchSuggestions()" 
-                        autocomplete="off">
+                    <input type="text" id="search-input" placeholder="Search for your favorite restaurants..."
+                        onkeyup="fetchSuggestions()" autocomplete="off">
                     <button type="submit">Search</button>
                 </form>
                 <div id="suggestions" class="suggestions-box"></div>
             </div>
 
-                                  
+
         </div>
     </section>
-    
+
 
     <section class="services">
         <h2>Our Services</h2>
@@ -100,71 +117,71 @@
     <section id="featured-restaurants">
         <h2>Top Rated Restaurants</h2>
         <div class="horizontal-scroll-container">
-          <button class="scroll-btn left" id="scroll-left" aria-label="Scroll Left">&lt;</button>
-          <div id="restaurant-grid" class="restaurant-grid">
-            <!-- Dynamic restaurant cards will be injected here -->
-          </div>
-          <button class="scroll-btn right" id="scroll-right" aria-label="Scroll Right">&gt;</button>
+            <button class="scroll-btn left" id="scroll-left" aria-label="Scroll Left">&lt;</button>
+            <div id="restaurant-grid" class="restaurant-grid">
+                <!-- Dynamic restaurant cards will be injected here -->
+            </div>
+            <button class="scroll-btn right" id="scroll-right" aria-label="Scroll Right">&gt;</button>
         </div>
     </section>
-      
+
     <div class="cities-section">
         <h2>Cities We Are Available In</h2>
         <div class="horizontal-scroll-container">
-          <!-- Reuse the same scroll buttons -->
-          <button class="scroll-btn left" id="city-scroll-left" aria-label="Scroll Left">&lt;</button>
-          <div id="cities-grid" class="restaurant-grid">
-            <div class="city-card">
-              <img src="images/istambul.jpg" alt="Istambul">
-              <p>Istambul</p>
+            <!-- Reuse the same scroll buttons -->
+            <button class="scroll-btn left" id="city-scroll-left" aria-label="Scroll Left">&lt;</button>
+            <div id="cities-grid" class="restaurant-grid">
+                <div class="city-card">
+                    <img src="images/istambul.jpg" alt="Istambul">
+                    <p>Istambul</p>
+                </div>
+                <div class="city-card">
+                    <img src="images/dhaka.jpg" alt="Dhaka">
+                    <p>Dhaka</p>
+                </div>
+                <div class="city-card">
+                    <img src="images/barisal.jpg" alt="Barisal">
+                    <p>Barisal</p>
+                </div>
+                <div class="city-card">
+                    <img src="images/cox.jpg" alt="Cox's Bazar">
+                    <p>Cox's Bazar</p>
+                </div>
+                <div class="city-card">
+                    <img src="images/chittagong.jpg" alt="Chittagong">
+                    <p>Chittagong</p>
+                </div>
+                <div class="city-card">
+                    <img src="images/sylhet.jpg" alt="Sylhet">
+                    <p>Sylhet</p>
+                </div>
+                <div class="city-card">
+                    <img src="images/noakhali.jpg" alt="Noakhali">
+                    <p>Noakhali</p>
+                </div>
             </div>
-            <div class="city-card">
-              <img src="images/dhaka.jpg" alt="Dhaka">
-              <p>Dhaka</p>
-            </div>
-            <div class="city-card">
-              <img src="images/barisal.jpg" alt="Barisal">
-              <p>Barisal</p>
-            </div>
-            <div class="city-card">
-              <img src="images/cox.jpg" alt="Cox's Bazar">
-              <p>Cox's Bazar</p>
-            </div>
-            <div class="city-card">
-              <img src="images/chittagong.jpg" alt="Chittagong">
-              <p>Chittagong</p>
-            </div>
-            <div class="city-card">
-              <img src="images/sylhet.jpg" alt="Sylhet">
-              <p>Sylhet</p>
-            </div>
-            <div class="city-card">
-              <img src="images/noakhali.jpg" alt="Noakhali">
-              <p>Noakhali</p>
-            </div>
-          </div>
-          <button class="scroll-btn right" id="city-scroll-right" aria-label="Scroll Right">&gt;</button>
+            <button class="scroll-btn right" id="city-scroll-right" aria-label="Scroll Right">&gt;</button>
         </div>
     </div>
-      
-      
-      
+
+
+
 
     <section class="join-us" id="join-us">
         <div class="join-us-container">
-          <div class="join-us-content" data-aos="fade-up">
-            <img src="images/khadok2.png" alt="Logo" class="join-us-logo" />
-            <div class="join-us-text">
-              <h2 class="join-us-title">Connecting hearts through food, one order at a time</h2>
-              <p class="join-us-description">
-                Support us as we bring taste and convenience to your doorstep!
-              </p>
-              <a href="signup.html" class="join-us-button">Join Now</a>
+            <div class="join-us-content" data-aos="fade-up">
+                <img src="images/khadok2.png" alt="Logo" class="join-us-logo" />
+                <div class="join-us-text">
+                    <h2 class="join-us-title">Connecting hearts through food, one order at a time</h2>
+                    <p class="join-us-description">
+                        Support us as we bring taste and convenience to your doorstep!
+                    </p>
+                    <a href="signup.html" class="join-us-button">Join Now</a>
+                </div>
             </div>
-          </div>
         </div>
     </section>
-    
+
     <section class="subscribe-section">
         <div class="subscribe-container" data-aos="fade-up">
             <h2>Subscribe to Our Newsletter</h2>
@@ -178,23 +195,66 @@
             </div>
         </div>
     </section>
-    
-    
+
+    <!-- Fixed Find Restaurants Button -->
+    <div class="find-restaurant-fixed">
+        <button id="open-location-popup">Find Restaurants</button>
+    </div>
+
+    <!-- Popup Modal -->
+    <div id="location-popup" class="location-popup hidden">
+        <div class="popup-content">
+            <span class="close-popup" id="close-popup">&times;</span>
+            <h3>What's your exact location?</h3>
+            <p>Providing your location enables more accurate search and delivery ETA, seamless order tracking and
+                personalised recommendations.</p>
+
+            <!-- Input with Locate Me Button -->
+            <div class="location-input-wrapper" style="position: relative;">
+                <input type="text" placeholder="Enter your address" class="location-input" id="location-input" />
+                <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+
+                <!-- Locate Button -->
+                <button class="locate-me-btn" id="locate-me-btn" title="Use my location">
+                    <img src="/images/location-icon.jpg" alt="Locate" />
+                </button>
+
+                <!-- Clear Button -->
+                <button id="clear-location-btn" title="Clear"
+                    style="position:absolute; right: 50px; top: 5px; background:none; border:none; font-size: 16px; cursor: pointer;">×</button>
+            </div>
+
+
+
+            <!-- Map Container -->
+            <div class="map-placeholder" id="map-container">
+                <!-- Screen-centered pin, hidden initially -->
+                <div id="map-center-marker" class="hidden">
+                    <i class="fa-solid fa-map-pin"></i>
+                </div>
+            </div>
+
+
+            <button class="find-btn" id="find-btn">FIND RESTAURANTS</button>
+        </div>
+    </div>
+
+
 
 
     <!-- scroll js -->
     <script>
-                // Featured Restaurants Scroll
+        // Featured Restaurants Scroll
         const restaurantLeftBtn = document.getElementById('scroll-left');
         const restaurantRightBtn = document.getElementById('scroll-right');
         const restaurantGrid = document.getElementById('restaurant-grid');
 
         restaurantLeftBtn.addEventListener('click', () => {
-        restaurantGrid.scrollBy({ left: -300, behavior: 'smooth' });
+            restaurantGrid.scrollBy({ left: -300, behavior: 'smooth' });
         });
 
         restaurantRightBtn.addEventListener('click', () => {
-        restaurantGrid.scrollBy({ left: 300, behavior: 'smooth' });
+            restaurantGrid.scrollBy({ left: 300, behavior: 'smooth' });
         });
 
         // Cities Scroll
@@ -203,58 +263,58 @@
         const citiesGrid = document.getElementById('cities-grid');
 
         cityLeftBtn.addEventListener('click', () => {
-        citiesGrid.scrollBy({ left: -300, behavior: 'smooth' });
+            citiesGrid.scrollBy({ left: -300, behavior: 'smooth' });
         });
 
         cityRightBtn.addEventListener('click', () => {
-        citiesGrid.scrollBy({ left: 300, behavior: 'smooth' });
+            citiesGrid.scrollBy({ left: 300, behavior: 'smooth' });
         });
 
 
     </script>
-    
+
     <!-- navbar js -->
     <script>
         window.addEventListener("scroll", () => {
-    const header = document.querySelector("header");
-    if (window.scrollY > 50) {
-        header.style.background = "rgba(255, 255, 255, 0.9)";
-    } else {
-        header.style.background = "rgba(255, 255, 255, 0.2)";
-    }
-});
+            const header = document.querySelector("header");
+            if (window.scrollY > 50) {
+                header.style.background = "rgba(255, 255, 255, 0.9)";
+            } else {
+                header.style.background = "rgba(255, 255, 255, 0.2)";
+            }
+        });
 
     </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-        const images = document.querySelectorAll(".carousel-image");
-        let currentIndex = 0;
+            const images = document.querySelectorAll(".carousel-image");
+            let currentIndex = 0;
 
-        function showNextImage() {
-            // Hide the current image
-            images[currentIndex].classList.remove("active");
+            function showNextImage() {
+                // Hide the current image
+                images[currentIndex].classList.remove("active");
 
-            // Move to the next image
-            currentIndex = (currentIndex + 1) % images.length;
+                // Move to the next image
+                currentIndex = (currentIndex + 1) % images.length;
 
-            // Show the next image
+                // Show the next image
+                images[currentIndex].classList.add("active");
+            }
+
+            // Initial display
             images[currentIndex].classList.add("active");
-        }
 
-        // Initial display
-        images[currentIndex].classList.add("active");
-
-        // Change image every 3 seconds
-        setInterval(showNextImage, 3000);
-    });
+            // Change image every 3 seconds
+            setInterval(showNextImage, 3000);
+        });
 
     </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const restaurantGrid = document.getElementById('restaurant-grid');
-    
+
             fetch('/api/restaurant/top-rated-restaurants')
                 .then(response => response.json())
                 .then(data => {
@@ -262,7 +322,7 @@
                         console.error('Error:', data.error);
                         return;
                     }
-    
+
                     data.forEach(restaurant => {
                         const rating = typeof restaurant.ratings === 'number' ? restaurant.ratings.toFixed(1) : 'N/A';
                         const restaurantCard = `
@@ -277,178 +337,363 @@
                 .catch(error => console.error('Fetch Error:', error));
         });
     </script>
-    
+
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-     // Select the search bar element
-     const searchBar = document.querySelector('.search-bar');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select the search bar element
+            const searchBar = document.querySelector('.search-bar');
 
-        // Set up Intersection Observer to watch for when the search bar is in the viewport
-      const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-               // If the search bar is in view, add the 'visible' class to trigger animation
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                 observer.unobserve(entry.target);  // Stop observing after it becomes visible
-              }
-           });
-      }, {
-         threshold: 0.5  // Trigger when 50% of the search bar is visible
-      });
-
-        // Start observing the search bar
-        observer.observe(searchBar);
-        });
-
-    </script>
-    <script>
-         document.addEventListener('DOMContentLoaded', () => {
-     // Select the hero text element
-     const heroText = document.querySelector('.hero-text');
-
-        // Set up Intersection Observer to watch for when the hero text is in the viewport
-     const observer = new IntersectionObserver((entries, observer) => {
-          entries.forEach(entry => {
-             // If the hero text is in view, add the 'visible' class to trigger animation
-              if (entry.isIntersecting) {
-                  entry.target.classList.add('visible');
-                   observer.unobserve(entry.target);  // Stop observing after it becomes visible
-               }
-           });
-      }, {
-         threshold: 0.5  // Trigger when 50% of the hero text is visible
-     });
-
-        // Start observing the hero text
-     observer.observe(heroText);
-    });
-
-    </script>
-    
-    <script>
-       // Function to fetch suggestions as the user types
-async function fetchSuggestions() {
-    const searchQuery = document.getElementById('search-input').value.trim();
-    const suggestionsBox = document.getElementById('suggestions');
-    
-    // Clear the suggestions box if search query is empty
-    if (!searchQuery) {
-        suggestionsBox.innerHTML = '';
-        return;
-    }
-
-    try {
-        // Send request to the backend to fetch search results
-        const response = await fetch(`/api/search-restaurants?query=${searchQuery}`);
-        const suggestions = await response.json();
-
-        // Display suggestions in the suggestion box
-        suggestionsBox.innerHTML = suggestions.map(restaurant => {
-            return `<div class="suggestion-item">${restaurant.restaurant_name}</div>`;
-        }).join('');
-
-        // Add event listeners to the suggestion items (optional, for selecting suggestions)
-        const suggestionItems = document.querySelectorAll('.suggestion-item');
-        suggestionItems.forEach(item => {
-            item.addEventListener('click', () => {
-                document.getElementById('search-input').value = item.textContent;  // Fill the input with selected suggestion
-                suggestionsBox.innerHTML = '';  // Clear suggestions
+            // Set up Intersection Observer to watch for when the search bar is in the viewport
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // If the search bar is in view, add the 'visible' class to trigger animation
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);  // Stop observing after it becomes visible
+                    }
+                });
+            }, {
+                threshold: 0.5  // Trigger when 50% of the search bar is visible
             });
-        });
-    } catch (error) {
-        console.error('Error fetching suggestions:', error);
-    }
-}
 
-// Prevent form submission on Enter key
-function searchRestaurants() {
-    const searchQuery = document.getElementById('search-input').value.trim();
-    if (searchQuery) {
-        window.location.href = `/search-results?query=${searchQuery}`;  // Redirect to a results page or perform another action
-    }
-    return false;  // Prevent form submission
-}
+            // Start observing the search bar
+            observer.observe(searchBar);
+        });
 
     </script>
-    
-    
-    
-    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select the hero text element
+            const heroText = document.querySelector('.hero-text');
+
+            // Set up Intersection Observer to watch for when the hero text is in the viewport
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    // If the hero text is in view, add the 'visible' class to trigger animation
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);  // Stop observing after it becomes visible
+                    }
+                });
+            }, {
+                threshold: 0.5  // Trigger when 50% of the hero text is visible
+            });
+
+            // Start observing the hero text
+            observer.observe(heroText);
+        });
+
+    </script>
 
     <script>
-            // detached scrolling
-            // JavaScript for detached scrolling effect
-            document.addEventListener("DOMContentLoaded", () => {
-        let lastScrollY = window.scrollY;
-        const header = document.querySelector("header");
+        // Function to fetch suggestions as the user types
+        async function fetchSuggestions() {
+            const searchQuery = document.getElementById('search-input').value.trim();
+            const suggestionsBox = document.getElementById('suggestions');
 
-        window.addEventListener("scroll", () => {
-            if (window.scrollY > lastScrollY) {
-                header.classList.add("hidden"); // Hide header on scroll down
-            } else {
-                header.classList.remove("hidden"); // Show header on scroll up
+            // Clear the suggestions box if search query is empty
+            if (!searchQuery) {
+                suggestionsBox.innerHTML = '';
+                return;
             }
-            lastScrollY = window.scrollY;
-        });
-    });
 
-    </script>
+            try {
+                // Send request to the backend to fetch search results
+                const response = await fetch(`/api/search-restaurants?query=${searchQuery}`);
+                const suggestions = await response.json();
 
-    <script>
-        let lastScrollY = window.scrollY; // Track the last known scroll position
+                // Display suggestions in the suggestion box
+                suggestionsBox.innerHTML = suggestions.map(restaurant => {
+                    return `<div class="suggestion-item">${restaurant.restaurant_name}</div>`;
+                }).join('');
 
-        window.addEventListener('scroll', () => {
-        const header = document.querySelector('header'); // Select the header
-        const currentScrollY = window.scrollY;
-
-        if (currentScrollY > lastScrollY) {
-            // Scrolling down, show the header
-            header.classList.remove('hidden');
-        } else if (currentScrollY < lastScrollY) {
-            // Scrolling up, hide the header
-            header.classList.add('hidden');
+                // Add event listeners to the suggestion items (optional, for selecting suggestions)
+                const suggestionItems = document.querySelectorAll('.suggestion-item');
+                suggestionItems.forEach(item => {
+                    item.addEventListener('click', () => {
+                        document.getElementById('search-input').value = item.textContent;  // Fill the input with selected suggestion
+                        suggestionsBox.innerHTML = '';  // Clear suggestions
+                    });
+                });
+            } catch (error) {
+                console.error('Error fetching suggestions:', error);
+            }
         }
 
-        lastScrollY = currentScrollY; // Update the last scroll position
+        // Prevent form submission on Enter key
+        function searchRestaurants() {
+            const searchQuery = document.getElementById('search-input').value.trim();
+            if (searchQuery) {
+                window.location.href = `/search-results?query=${searchQuery}`;  // Redirect to a results page or perform another action
+            }
+            return false;  // Prevent form submission
+        }
+
+    </script>
+
+
+
+
+
+    <script>
+        // detached scrolling
+        // JavaScript for detached scrolling effect
+        document.addEventListener("DOMContentLoaded", () => {
+            let lastScrollY = window.scrollY;
+            const header = document.querySelector("header");
+
+            window.addEventListener("scroll", () => {
+                if (window.scrollY > lastScrollY) {
+                    header.classList.add("hidden"); // Hide header on scroll down
+                } else {
+                    header.classList.remove("hidden"); // Show header on scroll up
+                }
+                lastScrollY = window.scrollY;
+            });
         });
 
     </script>
+
+   
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-        AOS.init({
-            duration: 1000,
-            easing: 'ease-in-out',
-        });
+            AOS.init({
+                duration: 1000,
+                easing: 'ease-in-out',
+            });
         });
 
     </script>
- 
+    <script>
+        const toggleBtn = document.getElementById('menu-toggle');
+        const navMenu = document.getElementById('nav-menu');
+
+        toggleBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('show');
+        });
+    </script>
+
+
+
+    <script>
+        const openBtn = document.getElementById('open-location-popup');
+        const closeBtn = document.getElementById('close-popup');
+        const popup = document.getElementById('location-popup');
+
+        openBtn.addEventListener('click', () => {
+            popup.classList.remove('hidden');
+            popup.style.display = 'flex';
+        });
+
+        closeBtn.addEventListener('click', () => {
+            popup.classList.add('hidden');
+            popup.style.display = 'none';
+        });
+    </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const locateBtn = document.getElementById('locate-me-btn');
+            const findBtn = document.getElementById('find-btn');
+            const locationInput = document.getElementById('location-input');
+            const centerMarker = document.getElementById('map-center-marker');
+            const suggestionsList = document.getElementById('location-suggestions');
+            const clearBtn = document.getElementById('clear-location-btn');
+
+            let map;
+            let tileURL;        // will hold the proxied tile URL
+            let debounceTimeout = null;
+
+            // 1) Pre-fetch the tile URL from your backend proxy
+            (async () => {
+                try {
+                    const res = await fetch('/api/map/tile-url');
+                    const json = await res.json();
+                    tileURL = json.tileURL;
+                } catch (err) {
+                    console.error('Failed to fetch tile URL:', err);
+                }
+            })();
+
+            clearBtn.addEventListener('click', () => {
+                locationInput.value = '';
+                suggestionsList.innerHTML = '';
+                suggestionsList.classList.add('hidden');
+            });
+
+            // Reverse geocode: coords → address
+            async function reverseGeocode(lat, lon) {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1&accept-language=en`;
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    return data.display_name || '';
+                } catch (err) {
+                    console.error('Reverse geocode failed:', err);
+                    return '';
+                }
+            }
+
+            // Update input field to map center address
+            async function updateInputWithCenter() {
+                if (!map) return;
+                const c = map.getCenter();
+                const address = await reverseGeocode(c.lat, c.lng);
+                locationInput.value = address;
+            }
+
+            locateBtn.addEventListener('click', async () => {
+                if (!navigator.geolocation) {
+                    return alert('Your browser does not support geolocation.');
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    async ({ coords }) => {
+                        const { latitude, longitude } = coords;
+
+                        if (!map) {
+                            map = L.map('map-container', {
+                                zoomControl: true,
+                                scrollWheelZoom: false,
+                                doubleClickZoom: true,
+                                touchZoom: true,
+                                keyboard: false
+                            }).setView([latitude, longitude], 16);
+
+                            // Use the proxied tile URL
+                            L.tileLayer(tileURL, {
+                                tileSize: 512,
+                                zoomOffset: -1,
+                                attribution: "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
+                            }).addTo(map);
+
+                            map.on('moveend zoomend', updateInputWithCenter);
+                        }
+
+                        map.setView([latitude, longitude], 16);
+                        centerMarker.classList.remove('hidden');
+
+                        const address = await reverseGeocode(latitude, longitude);
+                        locationInput.value = address;
+                    },
+                    () => alert('Please allow location access.')
+                );
+            });
+
+            findBtn?.addEventListener('click', () => {
+                if (!map) return alert('Map not initialized. Click "Locate Me" first.');
+                const center = map.getCenter();
+                localStorage.setItem('tempLat', center.lat.toFixed(5));
+                localStorage.setItem('tempLng', center.lng.toFixed(5));
+            });
+
+            // Nominatim suggestions
+            locationInput.addEventListener('input', () => {
+                const query = locationInput.value.trim();
+                if (debounceTimeout) clearTimeout(debounceTimeout);
+
+                if (!query) {
+                    suggestionsList.innerHTML = '';
+                    suggestionsList.classList.add('hidden');
+                    return;
+                }
+
+                debounceTimeout = setTimeout(async () => {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=bd&q=${encodeURIComponent(query)}`;
+                    try {
+                        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+                        const data = await res.json();
+
+                        suggestionsList.innerHTML = data.length
+                            ? data.map(place => `<li data-lat="${place.lat}" data-lon="${place.lon}">${place.display_name}</li>`).join('')
+                            : '<li>No results found</li>';
+
+                        suggestionsList.classList.remove('hidden');
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }, 300);
+            });
+
+            // Click suggestion
+            suggestionsList.addEventListener('click', e => {
+                if (e.target.tagName !== 'LI') return;
+                const lat = parseFloat(e.target.dataset.lat);
+                const lon = parseFloat(e.target.dataset.lon);
+                const name = e.target.textContent;
+
+                if (!map) {
+                    map = L.map('map-container', {
+                        zoomControl: true,
+                        scrollWheelZoom: false,
+                        doubleClickZoom: true,
+                        touchZoom: true,
+                        keyboard: false
+                    }).setView([lat, lon], 16);
+
+                    L.tileLayer(tileURL, {
+                        tileSize: 512,
+                        zoomOffset: -1,
+                        attribution: "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
+                    }).addTo(map);
+
+                    map.on('moveend zoomend', updateInputWithCenter);
+                }
+
+                map.setView([lat, lon], 16);
+                locationInput.value = name;
+                suggestionsList.innerHTML = '';
+                suggestionsList.classList.add('hidden');
+                centerMarker.classList.remove('hidden');
+            });
+
+            // Click outside to hide
+            document.addEventListener('click', e => {
+                if (!locationInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+                    suggestionsList.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+
     <footer>
         <hr class="footer-divider" />
         <div class="footer-content">
-         <p>&copy; 2024 Khadok. All rights reserved.</p>
-         <div class="footer-links">
-             <a href="terms.html">Terms & Conditions</a>
+            <p>&copy; 2024 Khadok. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="terms&conditions.html">Terms & Conditions</a>
                 <a href="privacy.html">Privacy Policy</a>
-             <a href="contact.html">Contact Us</a>
-        </div>
-        <div class="social-media-icons">
-            <a href="https://facebook.com/iamsadikmahmud" target="_blank" aria-label="Facebook">
-                <i class="fab fa-facebook"></i>
-            </a>
-            <a href="https://twitter.com/iamsadikmahmud" target="_blank" aria-label="Twitter">
-                <i class="fab fa-twitter"></i>
-            </a>
-            <a href="https://instagram.com/iamsadikmahmud" target="_blank" aria-label="Instagram">
-                <i class="fab fa-instagram"></i>
-            </a>
-            <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
-                <i class="fab fa-linkedin"></i>
-            </a>
-        </div>
+                <a href="contact.html">Contact Us</a>
+            </div>
+            <div class="social-media-icons">
+                <a href="https://facebook.com/iamsadikmahmud" target="_blank" aria-label="Facebook">
+                    <i class="fab fa-facebook"></i>
+                </a>
+                <a href="https://twitter.com/iamsadikmahmud" target="_blank" aria-label="Twitter">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://instagram.com/iamsadikmahmud" target="_blank" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
         </div>
     </footer>
 
 </body>
+
 </html>

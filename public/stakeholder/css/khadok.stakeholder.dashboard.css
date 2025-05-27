@@ -1,17 +1,15 @@
 /* Adjusting Page Content */
 .main-content {
-    margin-left: 80px; /* Adjusted for collapsed sidebar */
+    margin-left: 80px; /* collapsed sidebar */
     padding: 20px;
     transition: margin-left 0.3s ease-in-out;
-    overflow-x: hidden; /* To prevent horizontal scrolling */
+    overflow-x: hidden;
 }
 
 .main-content.expanded {
-    margin-left: 260px; /* Adjusted for expanded sidebar */
+    margin-left: 260px; /* expanded sidebar */
 }
-span{
-    text-decoration: none;
-}
+
 /* Header Section */
 .main-content .header {
     text-align: center;
@@ -100,6 +98,7 @@ span{
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
 }
 
 .main-content .recent-activities h2 {
@@ -111,7 +110,7 @@ span{
 .main-content .recent-activities table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    min-width: 600px; /* ensure horizontal scroll on small */
 }
 
 .main-content .recent-activities table th,
@@ -126,5 +125,351 @@ span{
     color: #333;
 }
 
+/* ================================
+   RESPONSIVE LAYOUT
+   ================================ */
+@media (max-width: 992px) {
+  /* remove sidebar offset on tablet */
+  .main-content,
+  .main-content.expanded {
+      margin-left: 0;
+  }
+
+  /* Quick actions stack */
+  .main-content .quick-actions {
+      flex-direction: column;
+      gap: 15px;
+  }
+
+  /* Statistics stack */
+  .main-content .statistics {
+      flex-direction: column;
+      gap: 15px;
+  }
+}
+
+@media (max-width: 600px) {
+  /* Header text smaller */
+  .main-content .header h1 {
+      font-size: 2rem;
+  }
+  .main-content .header p {
+      font-size: 0.9rem;
+  }
+
+  /* Action cards fill width */
+  .main-content .quick-actions .action-card {
+      padding: 15px;
+  }
+
+  /* Stat cards fill width */
+  .main-content .statistics .stat-card {
+      padding: 15px;
+  }
+
+  /* Table wrapper scroll */
+  .main-content .recent-activities {
+      padding: 15px;
+  }
+}
 
 
+
+
+
+
+
+
+/* Overlay */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20, 20, 20, 0.6);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  /* Popup container */
+  .popup-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    position: relative;
+    text-align: center;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  /* Screens inside popup */
+  .popup-screen {
+    display: none;
+  }
+  .popup-screen.active {
+    display: block;
+  }
+  .popup-screen.hidden {
+    display: none;
+  }
+  
+  /* Inputs & labels */
+  .popup-content label {
+    display: block;
+    text-align: left;
+    margin: 12px 0 6px;
+    font-weight: 600;
+  }
+  .popup-content input[type="text"],
+  .popup-content input[type="tel"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+  }
+  
+  /* Buttons */
+  .primary-btn, .secondary-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .primary-btn {
+    background-color: #00b894;
+    color: white;
+  }
+  .secondary-btn {
+    background-color: #dfe6e9;
+    color: #2d3436;
+    margin-right: 10px;
+  }
+  .button-group {
+    margin-top: 20px;
+  }
+  
+  /* Map Placeholder */
+  .map-placeholder {
+    height: 200px;
+    background: #ecf0f1;
+    border: 1px solid #bdc3c7;
+    margin-top: 10px;
+    border-radius: 8px;
+  }
+  
+  /* Utility */
+  .hidden {
+    display: none !important;
+  }
+  .highlight {
+    color: #00b894;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+/* All popup screens hidden by default */
+.popup-screen {
+    display: none;
+  }
+  
+
+  .popup-screen.active {
+    display: block;
+  }
+  
+  .popup-content label {
+    display: block;
+    margin-bottom: 1rem;
+  }
+  
+  .popup-content input,
+  .popup-content select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+/* ───────── Step 2: Location ───────── */
+#step-2 h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Ensure the suggestions dropdown sits above the map */
+  .location-input-wrapper {
+    position: relative;
+  }
+  
+  /* Input styling (ellipses if too long) */
+  #step-2 .location-input-wrapper input#location-input {
+    width: 100%;
+    padding: 8px 68px 8px 12px; /* increased right padding for earlier overflow */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 50px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  
+  /* 2) Suggestions dropdown exactly matches the input width & border-radius */
+#step-2 .location-suggestions {
+  position: absolute;
+  top: calc(100% - 1px); /* sit directly under the input border */
+  left: 0;
+  width: 100%;            /* full width of the wrapper/input */
+  max-height: 200px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd; /* match input border color */
+  border-top: none;       /* remove double border where it meets the input */
+  border-radius: 0 0 8px 8px; /* only bottom corners rounded */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  list-style: none;
+  z-index: 1000;
+  padding: 0;
+  margin: 0;
+}
+
+/* 3) List items padding and full width */
+#step-2 .location-suggestions li {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: normal;   /* allow wrapping if needed */
+}
+
+/* 4) Hover state */
+#step-2 .location-suggestions li:hover {
+  background-color: #f5f5f5;
+}
+
+
+
+
+  /* Locate-me button (overrides any inline) */
+  #step-2 .locate-me-btn {
+    width: 34px;
+    height: 34px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: absolute; /* keep right:8px; top:50% transform */
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+    padding: 6px;
+    margin-top:-3px;
+    overflow: hidden;
+  }
+  #step-2 .locate-me-btn:hover {
+    background-color: #101812;
+    scale: 1.15;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease-in-out;
+  }
+  #step-2 .locate-me-btn img {
+    display: block;          /* remove inline whitespace */
+    width: 100%;             /* fill the button */
+    height: 100%;
+    object-fit: contain;     /* preserve aspect ratio */
+  }
+  /* Map container override */
+  #step-2 #map-container {
+    height: 300px;
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px #eee;
+  }
+  
+  /* Button-group spacing */
+  #step-2 .button-group {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+  /* ensure the map container is the positioning context */
+#map-container {
+  position: relative;
+}
+
+/* the fixed center marker */
+#map-center-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* translate −50% in both axes so it sits exactly in the middle */
+  transform: translate(-50%, -50%);
+  z-index: 1000;            /* above leaflet’s tiles */
+  pointer-events: none;     /* clicks pass through to the map */
+  width: 12px;            /* size of the marker */
+  height: 12px;           /* size of the marker */
+}
+
+/* style the icon inside the marker */
+#map-center-marker i {
+  font-size: 2.5rem;        /* or whatever size you prefer */
+  color: #5A8765;            /* your brand color */
+  text-shadow: 
+    0 0 4px rgba(0,0,0,0.3),
+    0 0 8px rgba(0,0,0,0.2);
+}
+
+#clear-location-btn {
+  position: absolute;
+  right: 50px;
+  top: 5px;
+  background: transparent;
+  border: none;
+  border-radius: 15px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #5A8765;
+  transition: all 0.3s ease;
+  margin-top: 14px;
+  z-index: 10;
+  width: 24px;
+  height: 24px;
+}
+
+#clear-location-btn:hover {
+  color: #fff;
+  background-color: #5A8765;
+  box-shadow: 0 0 12px rgba(63, 103, 79, 0.998), 0 0 20px rgba(104, 181, 135, 0.998);
+  border-radius: 50%;
+  transform: scale(1.2) rotate(180deg);
+}

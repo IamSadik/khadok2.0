@@ -422,3 +422,14 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initial button check
     updateCheckoutButtons();
 });
+
+
+
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();

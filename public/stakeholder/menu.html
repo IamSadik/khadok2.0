@@ -1,117 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Management</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/menu.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <title>Menu Management | Khadok</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
+    <!-- Font Awesome & Boxicons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
 
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/menu.css" />
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <button class="toggle-btn" id="toggle-btn">
-            <i class="fas fa-bars"></i>
-        </button>
+        <button class="toggle-btn" id="toggle-btn"><i class="fas fa-bars"></i></button>
         <ul>
-            <a href="khadok.stakeholder.index.html"><li data-title="Dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></li></a>
-            <a href="menu.html"><li data-title="Menu Management"><i class="fas fa-utensils"></i> <span>Menu Management</span></li></a>
-            <a href="./interior-setup.html"><li data-title="3D Interior View"><i class="fas fa-cube"></i> <span>3D Interior View</span></li></a>
-            <li data-title="Live Kitchen Feed"><i class="fas fa-video"></i> <span>Live Kitchen Feed</span></li>
-            <a href="order.html"><li data-title="Orders"><i class="fas fa-box"></i> <span>Orders</span></li></a>
-            <a href="reservation.html"><li data-title="Reservations"><i class="fas fa-calendar-check"></i> <span>Reservations</span></li></a>
-            <li data-title="Reviews & Feedback"><i class="fas fa-comment-alt"></i> <span>Reviews & Feedback</span></li>
-            <li data-title="Analytics"><i class="fas fa-chart-line"></i> <span>Analytics</span></li>
-            <li data-title="Promotions"><i class="fas fa-tags"></i> <span>Promotions</span></li>
-            <li data-title="Profile"><i class="fas fa-user"></i> <span>Profile</span></li>
-            <li data-title="Settings"><i class="fas fa-cog"></i> <span>Settings</span></li>
+            <a href="khadok.stakeholder.index.html">
+                <li><i class="fas fa-home"></i><span>Dashboard</span></li>
+            </a>
+            <a href="menu.html">
+                <li class="active"><i class="fas fa-utensils"></i><span>Menu Management</span></li>
+            </a>
+            <a href="interior-setup.html">
+                <li><i class="fas fa-cube"></i><span>3D Interior View</span></li>
+            </a>
+            <a href="#">
+                <li><i class="fas fa-video"></i><span>Live Kitchen Feed</span></li>
+            </a>
+            <a href="order.html">
+                <li><i class="fas fa-box"></i><span>Orders</span></li>
+            </a>
+            <a href="reservation.html">
+                <li><i class="fas fa-calendar-check"></i><span>Reservations</span></li>
+            </a>
+            <a href="#">
+                <li><i class="fas fa-comment-alt"></i><span>Reviews & Feedback</span></li>
+            </a>
+            <a href="#">
+                <li><i class="fas fa-chart-line"></i><span>Analytics</span></li>
+            </a>
+            <a href="#">
+                <li><i class="fas fa-tags"></i><span>Promotions</span></li>
+            </a>
+            <a href="#">
+                <li><i class="fas fa-user"></i><span>Profile</span></li>
+            </a>
+            <a href="#">
+                <li><i class="fas fa-cog"></i><span>Settings</span></li>
+            </a>
         </ul>
-        <div class="logout-btn" id="logoutButton">
+        <div class="logout-btn" id="logoutButton" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="main-content">
-        <header>
-            <h1>Menu Management</h1>
-        </header>
-        <main>
-            <section id="menu-list">
-                <h2>Existing Menu Items</h2>
-                 <!-- Container for Category Filter Buttons -->
-                 <div id="category-filters" class="category-filters">
-                    <!-- Dynamic category buttons will be injected here -->
+        <!-- Header / Breadcrumbs -->
+        <div class="page-header">
+            <div class="breadcrumbs">
+                <span><a href="khadok.stakeholder.index.html">Dashboard</a></span> &gt;
+                <span><a href="menu.html">Menu Management</a></span>
+            </div>
+            <h1>Your Menu</h1>
+        </div>
+
+        <!-- Sorting & Search -->
+        <div class="controls">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search in menu..." />
+
+                <!-- Live search results (now inside search-wrapper) -->
+                <div id="searchResults" class="search-results" style="display: none;"></div>
+            </div>
+
+            <div class="sort-wrapper">
+                <i class="fas fa-sort-amount-down-alt sort-icon"></i>
+                <select id="sortSelect">
+                    <option value="default">Sort By</option>
+                    <option value="priceLow">Price: Low to High</option>
+                    <option value="priceHigh">Price: High to Low</option>
+                    <option value="ratingHigh">Rating: High to Low</option>
+                    <option value="alphaAZ">Alphabetical (A–Z)</option>
+                    <option value="alphaZA">Alphabetical (Z–A)</option>
+                </select>
+            </div>
+        </div>
+
+
+
+
+        <!-- Tabs Container with Edit + Scroll Buttons -->
+        <div class="tabs-container" style="display: flex; align-items: center; gap: 8px;">
+            <!-- Edit button -->
+            <button id="reorderCategoriesBtn" class="reorder-btn" title="Reorder categories">
+
+                <i class="fas fa-edit"></i>
+            </button>
+
+            <!-- Scrollable wrapper with arrows -->
+            <div class="tabs-scroll-wrapper">
+                <button id="scrollLeft" class="scroll-btn" aria-label="Scroll left">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="scrollable-tabs">
+                    <div class="tabs" id="categoryTabs">
+                        <!-- your JS will inject <button class="tab-btn">…</button> here -->
+                    </div>
                 </div>
-                
-                <div class="horizontal-scroll-container">
-                    <button class="scroll-btn left" id="menu-scroll-left" aria-label="Scroll Left">&lt;</button>
-                    <div id="menu-items-container" class="menu-item-container">
-                        <!-- Dynamic Menu Items Will Be Injected Here -->
-                    </div>
-                    <button class="scroll-btn right" id="menu-scroll-right" aria-label="Scroll Right">&gt;</button>
-                </div>
-            </section>
-            
-            <section id="menu-form-section" class="menu-form-section-modern">
-                <h2 id="form-title" class="form-title-modern">Add New Menu Item</h2>
-                <form id="menu-form" class="menu-form-modern">
-                    <input type="hidden" id="menu-id" name="menu_id">
-                    
-                    <div class="form-group-modern">
-                        <label for="item-name" class="form-label-modern">Item Name:</label>
-                        <input type="text" id="item-name" name="item_name" placeholder="Enter the item name" class="input-modern" required>
-                    </div>
-            
-                    <div class="form-group-modern">
-                        <label for="category" class="form-label-modern">Category:</label>
-                        <input type="text" id="category" name="category" placeholder="E.g., Starter, Main Course" class="input-modern" required>
-                    </div>
-            
-                    <div class="form-group-modern">
-                        <label for="price" class="form-label-modern">Price:</label>
-                        <input type="number" id="price" name="item_price" placeholder="Enter the price" class="input-modern" required>
-                    </div>
-            
-                    <div class="form-group-modern">
-                        <label for="description" class="form-label-modern">Description:</label>
-                        <textarea id="description" name="description" placeholder="Write a short description..." class="textarea-modern" required></textarea>
-                    </div>
-            
-                    <div class="form-group-modern">
-                        <label for="item-picture" class="form-label-modern">Picture:</label>
-                        <input type="file" id="item-picture" name="item_picture" class="file-input-modern" accept="image/*">
-                    </div>
-            
-                    <button type="submit" class="btn-modern">Save Item</button>
-                </form>
-            </section>
-            
-        </main>
+
+                <button id="scrollRight" class="scroll-btn" aria-label="Scroll right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Reorder Instruction Message -->
+        <div id="reorderMessage" class="reorder-message">
+            Drag the categories to adjust their order on your page.
+        </div>
+
+
+
+
+
+        <!-- Full Menu Sections -->
+        <div id="menuSections">
+            <!-- dynamically injected -->
+        </div>
     </div>
 
 
-    <script src="js/menu.js"></script>
 
-    <script>
-        // Menu Items Horizontal Scroll
-        const menuLeftBtn = document.getElementById('menu-scroll-left');
-        const menuRightBtn = document.getElementById('menu-scroll-right');
-        const menuItemsContainer = document.getElementById('menu-items-container');
-    
-        menuLeftBtn.addEventListener('click', () => {
-            menuItemsContainer.scrollBy({ left: -300, behavior: 'smooth' });
-        });
-    
-        menuRightBtn.addEventListener('click', () => {
-            menuItemsContainer.scrollBy({ left: 300, behavior: 'smooth' });
-        });
-    </script>
-    
+    <!-- Popup: Add Menu Item -->
+    <div id="add-item-popup" class="popup-overlay" style="display:none;">
+        <div class="popup-content">
+            <!-- Step 1 -->
+            <div class="popup-screen active" id="item-step-1">
+                <h2><i class="fas fa-utensils"></i> Add Menu Item</h2>
+                <label>Name:
+                    <input type="text" id="item-name" placeholder="Dish name" />
+                </label>
+                <label>
+                    <span><i class="fas fa-dollar-sign"></i> Price:</span>
+                    <input type="number" id="item-price" placeholder="0.00" />
+                </label>
+
+                <label>
+                    <span><i class="fas fa-align-left"></i> Description:</span>
+                    <textarea id="item-desc" rows="3" placeholder="Short description"></textarea>
+                </label>
+
+                <label>
+                    <span><i class="fas fa-image"></i> Picture:</span>
+                    <input type="file" id="item-pic" accept="image/*" />
+                </label>
+                <!-- Hidden field to track edit mode -->
+                <input type="hidden" id="edit-menu-id" />
+                <img id="image-preview" style="display:none; max-width:100%; margin:1rem 0;" />
+
+
+                <div class="button-group">
+
+
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="popup-screen" id="item-step-2">
+                <h2><i class="fas fa-tags"></i> Select Cuisine Types</h2>
+                <div class="checkbox-group">
+                    <!-- List all cuisine options -->
+                    <label><input type="checkbox" name="cuisine" value="41" /> Appetizer</label>
+                    <label><input type="checkbox" name="cuisine" value="1" /> Asian</label>
+                    <label><input type="checkbox" name="cuisine" value="2" /> Bakery</label>
+                    <label><input type="checkbox" name="cuisine" value="3" /> Bangladeshi</label>
+                    <label><input type="checkbox" name="cuisine" value="60" /> Beef</label>
+                    <label><input type="checkbox" name="cuisine" value="4" /> Beverage</label>
+                    <label><input type="checkbox" name="cuisine" value="59" /> Bhorta &amp;
+                        Bhaji</label>
+                    <label><input type="checkbox" name="cuisine" value="5" /> Biryani</label>
+                    <label><input type="checkbox" name="cuisine" value="6" /> Burgers</label>
+                    <label><input type="checkbox" name="cuisine" value="7" /> Cafe</label>
+                    <label><input type="checkbox" name="cuisine" value="8" /> Cakes</label>
+                    <label><input type="checkbox" name="cuisine" value="58" /> Chef's Special</label>
+                    <label><input type="checkbox" name="cuisine" value="9" /> Chicken</label>
+                    <label><input type="checkbox" name="cuisine" value="10" /> Chinese</label>
+                    <label><input type="checkbox" name="cuisine" value="40" /> Chotpoti &amp;
+                        Fuchka</label>
+                    <label><input type="checkbox" name="cuisine" value="53" /> Chowmein</label>
+                    <label><input type="checkbox" name="cuisine" value="51" /> Combo</label>
+                    <label><input type="checkbox" name="cuisine" value="11" /> Curry</label>
+                    <label><input type="checkbox" name="cuisine" value="12" /> Dessert</label>
+                    <label><input type="checkbox" name="cuisine" value="48" /> Drinks</label>
+                    <label><input type="checkbox" name="cuisine" value="13" /> Dumpling</label>
+                    <label><input type="checkbox" name="cuisine" value="14" /> Fast Food</label>
+                    <label><input type="checkbox" name="cuisine" value="15" /> Fish</label>
+                    <label><input type="checkbox" name="cuisine" value="16" /> Fried Chicken</label>
+                    <label><input type="checkbox" name="cuisine" value="42" /> Grill</label>
+                    <label><input type="checkbox" name="cuisine" value="17" /> Indian</label>
+                    <label><input type="checkbox" name="cuisine" value="18" /> Italian</label>
+                    <label><input type="checkbox" name="cuisine" value="19" /> Japanese</label>
+                    <label><input type="checkbox" name="cuisine" value="20" /> Juice Corner</label>
+                    <label><input type="checkbox" name="cuisine" value="21" /> Kebab</label>
+                    <label><input type="checkbox" name="cuisine" value="22" /> Korean</label>
+                    <label><input type="checkbox" name="cuisine" value="23" /> Meat</label>
+                    <label><input type="checkbox" name="cuisine" value="57" /> Meat Box</label>
+                    <label><input type="checkbox" name="cuisine" value="24" /> Mediterranean</label>
+                    <label><input type="checkbox" name="cuisine" value="25" /> Middle Eastern</label>
+                    <label><input type="checkbox" name="cuisine" value="45" /> Momos</label>
+                    <label><input type="checkbox" name="cuisine" value="46" /> Nachos</label>
+                    <label><input type="checkbox" name="cuisine" value="26" /> Noodles</label>
+                    <label><input type="checkbox" name="cuisine" value="50" /> Others</label>
+                    <label><input type="checkbox" name="cuisine" value="27" /> Pasta</label>
+                    <label><input type="checkbox" name="cuisine" value="56" /> Pastry</label>
+                    <label><input type="checkbox" name="cuisine" value="28" /> Pizza</label>
+                    <label><input type="checkbox" name="cuisine" value="52" /> Platters</label>
+                    <label><input type="checkbox" name="cuisine" value="55" /> Puri</label>
+                    <label><input type="checkbox" name="cuisine" value="54" /> Rice Bowl</label>
+                    <label><input type="checkbox" name="cuisine" value="29" /> Rice Dishes</label>
+                    <label><input type="checkbox" name="cuisine" value="62" /> Rolls</label>
+                    <label><input type="checkbox" name="cuisine" value="63" /> Salads</label>
+                    <label><input type="checkbox" name="cuisine" value="30" /> Sandwiches</label>
+                    <label><input type="checkbox" name="cuisine" value="31" /> Seafood</label>
+                    <label><input type="checkbox" name="cuisine" value="47" /> Set Menu</label>
+                    <label><input type="checkbox" name="cuisine" value="49" /> Shakes</label>
+                    <label><input type="checkbox" name="cuisine" value="32" /> Shawarma</label>
+                    <label><input type="checkbox" name="cuisine" value="43" /> Sides</label>
+                    <label><input type="checkbox" name="cuisine" value="64" /> Signature Item</label>
+                    <label><input type="checkbox" name="cuisine" value="33" /> Snacks</label>
+                    <label><input type="checkbox" name="cuisine" value="34" /> Soups</label>
+                    <label><input type="checkbox" name="cuisine" value="35" /> Sweets</label>
+                    <label><input type="checkbox" name="cuisine" value="44" /> Taco</label>
+                    <label><input type="checkbox" name="cuisine" value="36" /> Thai</label>
+                    <label><input type="checkbox" name="cuisine" value="37" /> Turkish</label>
+                    <label><input type="checkbox" name="cuisine" value="38" /> Vegetarian</label>
+                    <label><input type="checkbox" name="cuisine" value="39" /> Western</label>
+                    <label><input type="checkbox" name="cuisine" value="61" /> Wraps</label>
+
+                    <!-- ...repeat for all 30+ options -->
+                </div>
+                <div class="button-group">
+                    <button class="secondary-btn" id="item-cancel-1">Cancel</button>
+                    <button class="primary-btn" id="item-finish">Finish ✔</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 
     <script>
         // JavaScript for Sidebar Toggle
@@ -124,24 +267,68 @@
             mainContent.classList.toggle('expanded');
         });
     </script>
+
     <script>
-        document.getElementById('logoutButton').addEventListener('click', async () => {
+        async function logout() {
+            const sessionId = localStorage.getItem("sessionId");
+
+            if (!sessionId) {
+                alert("No session found.");
+                return;
+            }
+
             try {
-                const response = await fetch('/auth/logout?type=stakeholder', {
-                    method: 'GET',
+                const res = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId }),
+                    credentials: "include", // Include the session cookie in the request
                 });
-    
-                if (response.ok) {
-                    alert('Logout successful');
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.removeItem("sessionId");   // Remove session ID
+                    localStorage.removeItem("stakeholder_id"); // Remove consumer ID
+                    alert(data.message); // Show success message
                     window.location.href = '../login.html';
                 } else {
-                    alert('Error during logout');
+                    alert(data.message || "Logout failed.");
+                    window.location.href = '../login.html'; // Redirect to login page on error
                 }
-            } catch (error) {
-                console.error('Error logging out:', error);
+            } catch (err) {
+                console.error("Logout error:", err);
+                alert("Something went wrong.");
+                window.location.href = '../login.html'; // Redirect to login page on error
             }
+        }
+    </script>
+    <script>
+
+        (function checkAuthOnLoad() {
+            const sessionId = localStorage.getItem("sessionId");
+
+            if (!sessionId) {
+                // Prevent access if not logged in
+                window.location.replace("../login.html");
+            }
+        })();
+    </script>
+    <script>
+        document.querySelectorAll('input[name="cuisine"]').forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    document.querySelectorAll('input[name="cuisine"]').forEach((cb) => {
+                        if (cb !== this) cb.checked = false;
+                    });
+                }
+            });
         });
     </script>
+
+
+    <!-- JS (tabs + popup wiring) -->
+    <script src="js/menu.js"></script>
 </body>
 
 </html>

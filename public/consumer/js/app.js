@@ -1,37 +1,37 @@
-async function loginConsumer(email, password) {
-    try {
-        const response = await fetch('/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            localStorage.setItem('session_id', result.session_id); // Store session ID
-            alert('Login successful!');
-            window.location.href = '/consumer/khadok.consumer.dashboard.html'; // Redirect to dashboard
-        } else {
-            alert(result.message || 'Login failed');
-        }
-    } catch (error) {
-        console.error('Error logging in:', error);
-        alert('An error occurred during login');
+async function logout() {
+    const sessionId = localStorage.getItem("sessionId");
+  
+    if (!sessionId) {
+      alert("No session found.");
+      return;
     }
-}
-
-
-document.getElementById('logoutButton')?.addEventListener('click', async () => {
-    const session_id = localStorage.getItem('session_id');
-   
-        window.location.href = '/login.html';
-        return;
-    
-    
-});
-
-
+  
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+        credentials: "include", // Include the session cookie in the request
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        localStorage.removeItem("sessionId");   // Remove session ID
+        localStorage.removeItem("consumer_id"); // Remove consumer ID
+        alert(data.message); // Show success message
+        window.location.href = '../login.html';
+      } else {
+        alert(data.message || "Logout failed.");
+        window.location.href = '../login.html'; // Redirect to login page on error
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
+      alert("Something went wrong.");
+      window.location.href = '../login.html'; // Redirect to login page on error
+    }
+  }
+  
 
 document.addEventListener("DOMContentLoaded", async () => {
     const restaurantsContainer = document.getElementById("restaurants-container");
@@ -187,3 +187,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     });
 });
+
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();

@@ -1,7 +1,6 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,10 +8,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="css/khadok.stakeholder.dashboard.css">
     <link rel="stylesheet" href="js/khadok.stakeholder.dashboard.js">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Your own styles -->
+
+
+    <!-- later, before your script -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/your-stakeholder-onboarding.js"></script>
+
     <style>
-        html{
+        html {
             font-size: 80%;
         }
+
         /* General styles */
         body {
             margin: 0;
@@ -24,59 +33,69 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 80px; /* Default collapsed width */
+            width: 80px;
+            /* Default collapsed width */
             height: 100%;
-            background-color: #2a3d66; /* Main sidebar color */
+            background-color: #2a3d66;
+            /* Main sidebar color */
             color: #f0f0f0;
             transition: width 0.3s ease-in-out;
             overflow-y: auto;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center-align icons */
+            align-items: center;
+            /* Center-align icons */
         }
 
         .sidebar.expanded {
-            width: 260px; /* Expanded width */
-            align-items: flex-start; /* Align to left for expanded state */
+            width: 260px;
+            /* Expanded width */
+            align-items: flex-start;
+            /* Align to left for expanded state */
         }
-        
-        
+
+
 
         .sidebar ul {
             list-style: none;
             padding: 0;
             margin: 0;
-            width: 100%; /* Full width for clickable area */
+            width: 100%;
+            /* Full width for clickable area */
             text-decoration: none;
-            
+
         }
-        
+
         .sidebar ul li {
-            position: relative; /* Position for tooltip */
+            position: relative;
+            /* Position for tooltip */
             padding: 15px 20px;
             display: flex;
             align-items: center;
-            justify-content: center; /* Center icons in collapsed state */
+            justify-content: center;
+            /* Center icons in collapsed state */
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, transform 0.2s;
             text-decoration: none;
-            color: #f0f0f0; /* Ensure consistent text color */
+            color: #f0f0f0;
+            /* Ensure consistent text color */
             list-style: none;
         }
 
-        
+
         .sidebar.expanded ul li {
-            justify-content: flex-start; /* Align to left in expanded state */
-            
+            justify-content: flex-start;
+            /* Align to left in expanded state */
+
         }
 
         .sidebar ul li i {
             font-size: 1.2rem;
-            
+
         }
 
-        .sidebar ul li a{
+        .sidebar ul li a {
             list-style: none;
             text-decoration: none;
             color: #f0f0f0;
@@ -84,25 +103,32 @@
         }
 
         .sidebar ul li span {
-            display: none; /* Hide names in collapsed state */
-            text-decoration: none; /* Remove underline */
-            
+            display: none;
+            /* Hide names in collapsed state */
+            text-decoration: none;
+            /* Remove underline */
+
         }
-        
+
         .sidebar.expanded ul li span {
-            display: inline; /* Show names in expanded state */
-            margin-left: 15px; /* Add space for expanded state */
+            display: inline;
+            /* Show names in expanded state */
+            margin-left: 15px;
+            /* Add space for expanded state */
             text-decoration: none;
         }
 
         /* Tooltip for hover in collapsed mode only */
         .sidebar:not(.expanded) ul li:hover::after {
-            content: attr(data-title); /* Display the text from the data-title attribute */
+            content: attr(data-title);
+            /* Display the text from the data-title attribute */
             position: absolute;
             left: 90px;
             top: 50%;
-            transform: translateY(-50%) scale(0.8); /* Smooth animation */
-            background-color: #4c5a88; /* Tooltip background */
+            transform: translateY(-50%) scale(0.8);
+            /* Smooth animation */
+            background-color: #4c5a88;
+            /* Tooltip background */
             color: #fff;
             padding: 5px 10px;
             border-radius: 5px;
@@ -110,21 +136,24 @@
             font-size: 0.9rem;
             opacity: 0;
             transition: opacity 0.3s ease, transform 0.3s ease;
-            
+
         }
 
         .sidebar:not(.expanded) ul li:hover::after {
             opacity: 1;
-            transform: translateY(-50%) scale(1); /* Grow animation */
-            
-        
+            transform: translateY(-50%) scale(1);
+            /* Grow animation */
+
+
         }
 
         /* Sidebar hover effects */
         .sidebar ul li:hover {
-            background-color: #4c5a88; /* New hover color */
+            background-color: #4c5a88;
+            /* New hover color */
             transform: scale(1.05);
-            text-decoration: none; /* Ensure no underline on hover */
+            text-decoration: none;
+            /* Ensure no underline on hover */
         }
 
         /* Toggle button styles */
@@ -146,12 +175,14 @@
         }
 
         .toggle-btn:hover {
-            background-color: #354870; /* Hover effect */
+            background-color: #354870;
+            /* Hover effect */
         }
 
-          /* Logout button styles */
-          .logout-btn {
-            margin-top: auto; /* Push to bottom */
+        /* Logout button styles */
+        .logout-btn {
+            margin-top: auto;
+            /* Push to bottom */
             width: 100%;
             text-align: center;
             padding: 15px 0;
@@ -171,18 +202,22 @@
             font-size: 1.2rem;
             margin-right: 10px;
         }
+
         /* Page content adjustment */
         .main-content {
-            margin-left: 80px; /* Adjusted for default collapsed state */
+            margin-left: 80px;
+            /* Adjusted for default collapsed state */
             padding: 20px;
             transition: margin-left 0.3s ease-in-out;
         }
 
         .main-content.expanded {
-            margin-left: 260px; /* Adjusted for expanded state */
+            margin-left: 260px;
+            /* Adjusted for expanded state */
         }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
@@ -190,31 +225,41 @@
             <i class="fas fa-bars"></i>
         </button>
         <ul>
-            <a href="khadok.stakeholder.index.html"><li data-title="Dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></li></a>
-            <a href="menu.html"><li data-title="Menu Management"><i class="fas fa-utensils"></i> <span>Menu Management</span></li></a>
-            <a href="./interior-setup.html"><li data-title="3D Interior View"><i class="fas fa-cube"></i> <span>3D Interior View</span></li></a>
+            <a href="khadok.stakeholder.index.html">
+                <li data-title="Dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></li>
+            </a>
+            <a href="menu.html">
+                <li data-title="Menu Management"><i class="fas fa-utensils"></i> <span>Menu Management</span></li>
+            </a>
+            <a href="./interior-setup.html">
+                <li data-title="3D Interior View"><i class="fas fa-cube"></i> <span>3D Interior View</span></li>
+            </a>
             <li data-title="Live Kitchen Feed"><i class="fas fa-video"></i> <span>Live Kitchen Feed</span></li>
-            <a href="order.html"><li data-title="Orders"><i class="fas fa-box"></i> <span>Orders</span></li></a>
-            <a href="reservation.html"><li data-title="Reservations"><i class="fas fa-calendar-check"></i> <span>Reservations</span></li></a>
+            <a href="order.html">
+                <li data-title="Orders"><i class="fas fa-box"></i> <span>Orders</span></li>
+            </a>
+            <a href="reservation.html">
+                <li data-title="Reservations"><i class="fas fa-calendar-check"></i> <span>Reservations</span></li>
+            </a>
             <li data-title="Reviews & Feedback"><i class="fas fa-comment-alt"></i> <span>Reviews & Feedback</span></li>
             <li data-title="Analytics"><i class="fas fa-chart-line"></i> <span>Analytics</span></li>
             <li data-title="Promotions"><i class="fas fa-tags"></i> <span>Promotions</span></li>
             <li data-title="Profile"><i class="fas fa-user"></i> <span>Profile</span></li>
             <li data-title="Settings"><i class="fas fa-cog"></i> <span>Settings</span></li>
         </ul>
-        <div class="logout-btn" id="logoutButton" >
+        <div class="logout-btn" id="logoutButton" onclick="logout()">
             <i class="fas fa-sign-out-alt"></i>
         </div>
     </div>
 
     <!-- Page Content -->
     <div class="main-content">
-    <!-- Header Section -->
+        <!-- Header Section -->
         <div class="header">
-            <p id="email-display">Logged in as: <span>Loading...</span></p>
+
 
             <h1>Welcome, [Stakeholder Name]</h1>
-            
+
             <p>Here's a summary of your restaurant's performance.</p>
         </div>
 
@@ -287,32 +332,142 @@
                 </tbody>
             </table>
         </div>
+        <!-- Stakeholder Welcome / Setup Popup -->
+        <div id="welcome-popup" class="popup-overlay" style="display:none;">
+            <div class="popup-content">
+
+                <!-- Step 0: Welcome -->
+                <div class="popup-screen active" id="welcome-screen">
+                    <h2>👋 Welcome to <span class="highlight">Khadok</span>!</h2>
+                    <p>Let’s get your restaurant set up so you can start serving customers.</p>
+                    <button class="primary-btn" id="get-started-btn">Get Started</button>
+                </div>
+
+                <!-- Step 1: Basic Info -->
+                <div class="popup-screen" id="step-1">
+                    <h3>
+                        <i class="fa-solid fa-store fa-bounce" style="color: #63E6BE;"></i>
+                        Your Restaurant Info
+                    </h3>
+                    <label>Restaurant Name:
+                        <input type="text" id="stakeholder-name" placeholder="Enter restaurant name" required />
+                    </label>
+                    <label>Contact Number:
+                        <input type="tel" id="stakeholder-number" placeholder="+8801XXXXXXXXX" required />
+                    </label>
+                    <div class="button-group">
+                        <button class="secondary-btn" id="back-to-welcome">← Back</button>
+                        <button class="primary-btn" id="to-step-2">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Location -->
+                <div class="popup-screen" id="step-2">
+                    <h3>
+                        <i class="fa-solid fa-map-pin fa-bounce" style="color: #63E6BE;"></i>
+                        Set Your Restaurant Location
+                    </h3>
+                    <label>Address:</label>
+                    <div class="location-input-wrapper">
+                        <input type="text" id="location-input" placeholder="Search address..." autocomplete="off" />
+                        <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+                        <button id="locate-me-btn" class="locate-me-btn" title="Use my current location">
+                            <img src="../images/location-icon.jpg" alt="Locate Me" />
+                        </button>
+                        <button id="clear-location-btn" title="Clear">×</button>
+                    </div>
+                    <div id="map-container" class="map-placeholder">
+                        <div id="map-center-marker" class="hidden">
+                            <i class="fa-solid fa-map-pin" style="width: 8px; height: 8px;"></i>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="secondary-btn" id="back-to-step-1">← Back</button>
+                        <button class="primary-btn" id="to-step-3">Next →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Restaurant Details -->
+                <div class="popup-screen" id="step-3">
+                    <h3>
+                        <i class="fa-solid fa-cog fa-bounce" style="color: #63E6BE;"></i>
+                        Additional Details
+                    </h3>
+                    <label>Service Types:</label>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <label>
+                            <input type="checkbox" name="stake-type" value="delivery" />
+                            Delivery
+                        </label>
+                        <label>
+                            <input type="checkbox" name="stake-type" value="pickup" />
+                            Pickup
+                        </label>
+                        <label>
+                            <input type="checkbox" name="stake-type" value="dine-in" />
+                            Dine-In
+                        </label>
+                    </div>
+                    <label>Opens At:
+                        <input type="time" id="opens-at" required />
+                    </label>
+                    <label>Closes At:
+                        <input type="time" id="closes-at" required />
+                    </label>
+                    <label>Restaurant Picture (optional):
+                        <input type="file" id="stakeholder-pic" accept="image/*" />
+                    </label>
+                    <div class="button-group">
+                        <button class="secondary-btn" id="back-to-step-2">← Back</button>
+                        <button class="primary-btn" id="finish-setup">Finish ✔</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
-    <script>
-        document.getElementById('logoutButton').addEventListener('click', async () => {
-            try {
-                const response = await fetch('/auth/logout?type=stakeholder', {
-                    method: 'GET',
-                });
-    
-                if (response.ok) {
-                    alert('Logout successful');
-                    window.location.href = '../login.html';
-                } else {
-                    alert('Error during logout');
-                }
-            } catch (error) {
-                console.error('Error logging out:', error);
-            }
-        });
-    </script>
+
+
 
     <script>
-        const stakeholderEmail = "<%= email %>";
-        localStorage.setItem('stakeholderEmail', stakeholderEmail);
+        async function logout() {
+            const sessionId = localStorage.getItem("sessionId");
+
+            if (!sessionId) {
+                alert("No session found.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId }),
+                    credentials: "include", // Include the session cookie in the request
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.removeItem("sessionId");   // Remove session ID
+                    localStorage.removeItem("stakeholder_id"); // Remove consumer ID
+                    alert(data.message); // Show success message
+                    window.location.href = '../login.html';
+                } else {
+                    alert(data.message || "Logout failed.");
+                    window.location.href = '../login.html'; // Redirect to login page on error
+                }
+            } catch (err) {
+                console.error("Logout error:", err);
+                alert("Something went wrong.");
+                window.location.href = '../login.html'; // Redirect to login page on error
+            }
+        }
     </script>
-    
+
+
     <script>
         // JavaScript for Sidebar Toggle
         const toggleBtn = document.getElementById('toggle-btn');
@@ -324,44 +479,255 @@
             mainContent.classList.toggle('expanded');
         });
     </script>
-    
+
 
     <script>
-    // Function to fetch and display the stakeholder's email
-        async function displayStakeholderEmail() {
+        document.addEventListener("DOMContentLoaded", async () => {
+            // ───── Step 0: first-time check & popup wiring ─────
+            const stakeholderId = localStorage.getItem("stakeholder_id");
+            if (!stakeholderId) return console.error("No stakeholder_id in localStorage");
+
+            // ask the backend
+            let isFirst = false;
             try {
-                const response = await fetch('/auth/email?type=stakeholder');
-                const data = await response.json();
-
-                if (response.ok && data.email) {
-                    // Update the email display section with the fetched email
-                    document.getElementById('email-display').innerHTML = `Logged in as: <span>${data.email}</span>`;
-                } else {
-                    console.error('Error fetching stakeholder email:', data.message || 'Unknown error');
-                }
-            } catch (error) {
-                console.error('Error in displayStakeholderEmail:', error);
+                const resp = await fetch(`/api/stakeholder/first-time?stakeholder_id=${stakeholderId}`);
+                const json = await resp.json();
+                isFirst = resp.ok && (json.firstTime === true || json.firstTime === "true");
+            } catch (e) {
+                console.error("First-time check failed:", e);
             }
-        }
+            if (!isFirst) return; // returning user
 
-        // Call the function when the page loads
-        document.addEventListener('DOMContentLoaded', displayStakeholderEmail);
+            // grab popup & screens
+            const popup = document.getElementById("welcome-popup");
+            const screens = {
+                welcome: document.getElementById("welcome-screen"),
+                step1: document.getElementById("step-1"),
+                step2: document.getElementById("step-2"),
+                step3: document.getElementById("step-3"),
+            };
+            function showScreen(el) {
+                Object.values(screens).forEach(s => s.classList.remove("active"));
+                el.classList.add("active");
+            }
+
+            // show popup
+            popup.style.display = "flex";
+            showScreen(screens.welcome);
+
+            // navigation buttons
+            document.getElementById("get-started-btn").onclick = () => showScreen(screens.step1);
+            document.getElementById("back-to-welcome").onclick = () => showScreen(screens.welcome);
+            document.getElementById("to-step-2").onclick = () => {
+                showScreen(screens.step2);
+                setTimeout(() => map && map.invalidateSize(), 100);
+            };
+            document.getElementById("back-to-step-1").onclick = () => showScreen(screens.step1);
+            document.getElementById("to-step-3").onclick = () => showScreen(screens.step3);
+            document.getElementById("back-to-step-2").onclick = () => showScreen(screens.step2);
+
+            // ───────── Step 2: Map & Geocoding (unchanged) ─────────
+            let map, tileURL, debounceTimeout;
+            const locationInput = document.getElementById("location-input");
+            const suggestionsList = document.getElementById("location-suggestions");
+            const locateBtn = document.getElementById("locate-me-btn");
+            const clearBtn = document.getElementById("clear-location-btn");
+            const centerMarker = document.getElementById("map-center-marker");
+
+            // load tile URL
+            (async () => {
+                try {
+                    const resp = await fetch("/api/map/tile-url");
+                    const json = await resp.json();
+                    tileURL = json.tileURL;
+                } catch (err) {
+                    console.error("Failed to fetch tile URL:", err);
+                }
+            })();
+
+            // reverse geocode helper
+            async function reverseGeocode(lat, lon) {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`;
+                try {
+                    const resp = await fetch(url);
+                    const data = await resp.json();
+                    return data.display_name || "";
+                } catch {
+                    return "";
+                }
+            }
+
+            // update input when map moves
+            async function updateInputWithCenter() {
+                if (!map) return;
+                const c = map.getCenter();
+                locationInput.value = await reverseGeocode(c.lat, c.lng);
+            }
+
+            // Locate me button
+            locateBtn.addEventListener("click", () => {
+                if (!navigator.geolocation) return alert("Geolocation not supported.");
+                navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+                    const { latitude, longitude } = coords;
+                    if (!map) {
+                        map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
+                            .setView([latitude, longitude], 16);
+                        L.tileLayer(tileURL, {
+                            tileSize: 512,
+                            zoomOffset: -1,
+                            attribution:
+                                `<a href="https://www.maptiler.com/">© MapTiler</a>
+                     <a href="https://www.openstreetmap.org/">© OSM</a>`
+                        }).addTo(map);
+                        map.on("moveend zoomend", updateInputWithCenter);
+                    } else {
+                        map.setView([latitude, longitude], 16);
+                    }
+                    centerMarker.classList.remove("hidden");
+                    locationInput.value = await reverseGeocode(latitude, longitude);
+                }, () => alert("Please allow location access."));
+            });
+
+            // Clear location
+            clearBtn.addEventListener("click", () => {
+                locationInput.value = "";
+                suggestionsList.innerHTML = "";
+                suggestionsList.classList.add("hidden");
+                centerMarker.classList.add("hidden");
+            });
+
+            // Autocomplete
+            locationInput.addEventListener("input", () => {
+                const q = locationInput.value.trim();
+                clearTimeout(debounceTimeout);
+                if (!q) {
+                    suggestionsList.innerHTML = "";
+                    suggestionsList.classList.add("hidden");
+                    return;
+                }
+                debounceTimeout = setTimeout(async () => {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=bd&q=${encodeURIComponent(q)}`;
+                    try {
+                        const resp = await fetch(url);
+                        const data = await resp.json();
+                        suggestionsList.innerHTML = data.length
+                            ? data.map(p =>
+                                `<li data-lat="${p.lat}" data-lon="${p.lon}">${p.display_name}</li>`
+                            ).join("")
+                            : `<li>No results found</li>`;
+                        suggestionsList.classList.remove("hidden");
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }, 300);
+            });
+
+            // Select suggestion
+            suggestionsList.addEventListener("click", e => {
+                if (e.target.tagName !== "LI") return;
+                const lat = +e.target.dataset.lat;
+                const lon = +e.target.dataset.lon;
+                const name = e.target.textContent;
+                if (!map) {
+                    map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
+                        .setView([lat, lon], 16);
+                    L.tileLayer(tileURL, {
+                        tileSize: 512,
+                        zoomOffset: -1,
+                        attribution:
+                            `<a href="https://www.maptiler.com/">© MapTiler</a>
+                   <a href="https://www.openstreetmap.org/">© OSM</a>`
+                    }).addTo(map);
+                    map.on("moveend zoomend", updateInputWithCenter);
+                } else {
+                    map.setView([lat, lon], 16);
+                }
+                centerMarker.classList.remove("hidden");
+                locationInput.value = name;
+                suggestionsList.innerHTML = "";
+                suggestionsList.classList.add("hidden");
+            });
+
+            // Hide suggestions on outside click
+            document.addEventListener("click", e => {
+                if (!suggestionsList.contains(e.target) && e.target !== locationInput) {
+                    suggestionsList.innerHTML = "";
+                    suggestionsList.classList.add("hidden");
+                }
+            });
+
+            // ───────── Step 3: Finish & submit ─────────
+            document.getElementById("finish-setup").onclick = async () => {
+                // collect fields
+                const name = document.getElementById("stakeholder-name").value.trim();
+                const number = document.getElementById("stakeholder-number").value.trim();
+                const address = locationInput.value.trim();
+                const types = Array.from(document.querySelectorAll("input[name='stake-type']:checked"))
+                    .map(cb => cb.value);
+                const opensAt = document.getElementById("opens-at").value;
+                const closesAt = document.getElementById("closes-at").value;
+                const picFile = document.getElementById("stakeholder-pic").files[0];
+
+                if (!name || !number || !address || !types.length || !opensAt || !closesAt) {
+                    return alert("Please complete all required fields.");
+                }
+
+                // get map center
+                let lat = "", lng = "";
+                if (map) {
+                    const c = map.getCenter();
+                    lat = c.lat.toFixed(6);
+                    lng = c.lng.toFixed(6);
+                }
+
+                // build FormData
+                const formData = new FormData();
+                formData.append("stakeholder_id", stakeholderId);
+                formData.append("restaurant_name", name);
+                formData.append("contact_number", number);
+                formData.append("address", address);
+                formData.append("types", JSON.stringify(types));
+                formData.append("opens_at", opensAt);
+                formData.append("closes_at", closesAt);
+                formData.append("lat", lat);
+                formData.append("lng", lng);
+                if (picFile) formData.append("interior_pic", picFile);
+
+                // send to backend
+                try {
+                    const res = await fetch("/api/stakeholder/update-info", {
+                        method: "POST",
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert("🎉 Setup complete — welcome aboard!");
+                        popup.style.display = "none";
+                    } else {
+                        alert("Error saving info: " + data.error);
+                    }
+                } catch (err) {
+                    console.error("Submit failed:", err);
+                    alert("Something went wrong. Please try again.");
+                }
+            };
+        });
     </script>
-
-
     <script>
-        const getStakeholderId = async () => {
-        const email = localStorage.getItem('stakeholderEmail');
-        try {
-            const response = await fetch(`/api/stakeholder-id?email=${email}`);
-            const data = await response.json();
-            return data.stakeholder_id; // Assuming the API returns this field
-        } catch (error) {
-            console.error('Error fetching stakeholder ID:', error);
-        }
-    };
+        (function checkAuthOnLoad() {
+            const sessionId = localStorage.getItem("sessionId");
 
+            if (!sessionId) {
+                // Prevent access if not logged in
+                window.location.replace("../login.html");
+            }
+        })();
     </script>
+
+
+
+
 
 </body>
+
 </html>

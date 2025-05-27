@@ -1,22 +1,51 @@
-// public/js/login_script.js
-const container = document.getElementById('container');
-const registerBtn = document.getElementById('register'); // Matches the "Stakeholder" button
-const loginBtn = document.getElementById('login'); // Matches the "Go Back" button
-const stakeholderForm = document.querySelector('.sign-up'); // Matches the Stakeholder form container
-const riderForm = document.querySelector('.rider-container'); // Matches the Rider form container
+// Grab the form and fields
+const loginForm = document.getElementById("loginForm");
+const emailField = document.getElementById("log-email");
+const passField  = document.getElementById("log-pass");
 
-// Show Stakeholder form and hide Rider form
-registerBtn.addEventListener('click', () => {
-    stakeholderForm.style.display = 'block';
-    
-    container.classList.add("active");
-});
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
+  const email    = emailField.value.trim();
+  const password = passField.value;
 
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",   // Keep your session cookie
+      body: JSON.stringify({ email, password })
+    });
 
-// Go back to the original form
-loginBtn.addEventListener('click', () => {
-    container.classList.remove("active");
+    const data = await res.json();
+
+    if (res.ok && data.sessionId) {
+      // store session
+      localStorage.setItem("sessionId", data.sessionId);
+
+      // store the appropriate user‐type ID
+      switch (data.user?.role) {
+        case "consumer":
+          localStorage.setItem("consumer_id", data.user.id);
+          break;
+        case "stakeholder":
+          localStorage.setItem("stakeholder_id", data.user.id);
+          break;
+        case "rider":
+          localStorage.setItem("rider_id", data.user.id);
+          break;
+      }
+
+      // redirect
+      window.location.href = data.redirect || "/";
+    } else {
+      alert(data.message || "Login failed.");
+    }
+
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Something went wrong.");
+  }
 });
 
 

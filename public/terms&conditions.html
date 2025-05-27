@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Khadok | Terms & Conditions</title>
+    <link rel="stylesheet" href="css/terms.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+    <!-- Header (You already have CSS for this) -->
+    <header class="nav-bar">
+        <div class="logo">
+            <a href="index.html" class="logo-link">
+                <img src="images/khadok2.png" alt="Brand Logo" class="brand-logo">
+                <span class="logo-text">Khadok</span>
+            </a>
+        </div>
+
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle navigation">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <nav class="nav-menu" id="nav-menu">
+            <ul>
+                <li><a href="about.html" class="about-btn">About</a></li>
+                <li><a href="admin_login.html" class="contact-btn">Admin</a></li>
+                <li><a href="rider_login.html" class="login-btn">Rider</a></li>
+                <li><a href="signup.html" class="signup-btn">Sign up</a></li>
+            </ul>
+        </nav>
+
+        <ul>
+            <li class="user-icon">
+                <a href="login.html"><i class="fas fa-user-circle"></i></a>
+            </li>
+        </ul>
+    </header>
+
+    <!-- Terms Content -->
+    <main class="terms-container">
+        <section class="terms-header">
+            <h1><i class="fas fa-scroll" style="color: #5a8765;"></i> Terms & Conditions</h1>
+            <p>Last updated: May 20, 2025</p>
+        </section>
+
+        <section class="terms-card">
+            <h2><i class="fas fa-user-shield"style="color: #5a8765;"></i> Acceptance of Terms</h2>
+            <p>By accessing or using Khadok, you agree to comply with and be bound by these Terms and Conditions. If you
+                do not agree, please do not use our platform.</p>
+        </section>
+
+        <section class="terms-card">
+            <h2><i class="fas fa-utensils"style="color: #5a8765;"></i>  Use of Service</h2>
+            <p>Khadok is a platform connecting users with restaurants and delivery riders. All users must act
+                respectfully and follow applicable laws while using our services.</p>
+        </section>
+
+        <section class="terms-card">
+            <h2><i class="fas fa-lock"style="color: #5a8765;"></i>  Privacy</h2>
+            <p>We value your privacy. Please review our Privacy Policy to understand how your personal information is
+                collected and used.</p>
+        </section>
+
+        <section class="terms-card">
+            <h2><i class="fas fa-credit-card"style="color: #5a8765;"></i>  Payments</h2>
+            <p>All payments must be made through approved payment methods. Khadok is not liable for issues arising from
+                third-party payment processors.</p>
+        </section>
+
+        <section class="terms-card">
+            <h2 style="color: #101812;"><i class="fas fa-exclamation-triangle"style="color: #5a8765;"></i>  Limitation of Liability</h2>
+            <p>Khadok shall not be liable for any indirect, incidental, or consequential damages arising out of your use
+                of the service.</p>
+        </section>
+
+        <section class="terms-card">
+            <h2><i class="fas fa-sync-alt"style="color: #5a8765;"></i>  Changes to Terms</h2>
+            <p>We may update these terms from time to time. Continued use of Khadok after changes means you accept the
+                new terms.</p>
+        </section>
+
+        <section class="terms-footer">
+            <p><i class="fas fa-envelope-open-text"style="color: #ff5722;"></i>  Questions? Contact us at <a
+                    href="mailto:support@khadok.com">support@khadok.com</a></p>
+        </section>
+    </main>
+     <!-- Scroll to Top Button -->
+     <button id="scrollToTopBtn" title="Go to top"><i class="fas fa-arrow-up"></i></button>
+
+     <script>
+         const scrollBtn = document.getElementById("scrollToTopBtn");
+         window.onscroll = () => {
+             scrollBtn.style.display = (window.scrollY > 300) ? "block" : "none";
+         };
+         scrollBtn.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+     </script>
+
+
+    <script>
+        const toggleBtn = document.getElementById('menu-toggle');
+        const navMenu = document.getElementById('nav-menu');
+
+        toggleBtn.addEventListener('click', () => {
+            navMenu.classList.toggle('show');
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+    <script>
+        // detached scrolling
+        // JavaScript for detached scrolling effect
+        document.addEventListener("DOMContentLoaded", () => {
+            let lastScrollY = window.scrollY;
+            const header = document.querySelector("header");
+
+            window.addEventListener("scroll", () => {
+                if (window.scrollY > lastScrollY) {
+                    header.classList.add("hidden"); // Hide header on scroll down
+                } else {
+                    header.classList.remove("hidden"); // Show header on scroll up
+                }
+                lastScrollY = window.scrollY;
+            });
+        });
+
+    </script>
+
+
+    <footer>
+        <hr class="footer-divider" />
+        <div class="footer-content">
+            <p>&copy; 2024 Khadok. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="terms&conditions.html">Terms & Conditions</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="contact.html">Contact Us</a>
+            </div>
+            <div class="social-media-icons">
+                <a href="https://facebook.com/iamsadikmahmud" target="_blank" aria-label="Facebook">
+                    <i class="fab fa-facebook"></i>
+                </a>
+                <a href="https://twitter.com/iamsadikmahmud" target="_blank" aria-label="Twitter">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://instagram.com/iamsadikmahmud" target="_blank" aria-label="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://linkedin.com" target="_blank" aria-label="LinkedIn">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>

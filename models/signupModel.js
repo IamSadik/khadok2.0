@@ -27,28 +27,25 @@ exports.createUser = (name, email, hashedPassword, role) => {
 };
 
 // Consumer creation
-exports.createConsumer = (userId, name, email, hashedPassword) => {
+exports.createConsumer = (userId, name, email) => {
     return new Promise((resolve, reject) => {
-        const query = `
-            INSERT INTO consumer (consumer_id, name, email, password, created_at, updated_at)
-            VALUES (?, ?, ?, ?, NOW(), NOW())
-        `;
-        const params = [userId, name, email, hashedPassword]; // Pass name, email, and password
-        pool.query(query, params, (err, results) => {
+        const query = 'INSERT INTO consumer (consumer_id, name, email) VALUES (?, ?, ?)';
+        pool.query(query, [userId, name, email], (err, results) => {
             if (err) return reject(err);
-            resolve(results);
+            resolve(results.insertId);
         });
     });
 };
+;
 
 // Rider creation with more details
-exports.createRider = (userId, name, email, hashedPassword) => {
+exports.createRider = (userId, name, email) => {
     return new Promise((resolve, reject) => {
         const query = `
-            INSERT INTO rider (rider_id, name, email, password, created_at, updated_at)
-            VALUES (?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO rider (rider_id, name, email, created_at, updated_at)
+            VALUES (?, ?, ?, NOW(), NOW())
         `;
-        const params = [userId, name, email, hashedPassword]; // Pass name, email, and password
+        const params = [userId, name, email];
         pool.query(query, params, (err, results) => {
             if (err) return reject(err);
             resolve(results);
@@ -56,14 +53,15 @@ exports.createRider = (userId, name, email, hashedPassword) => {
     });
 };
 
+
 // Stakeholder creation with more details
-exports.createStakeholder = (userId, name, email, hashedPassword, restaurantName) => {
+exports.createStakeholder = (userId, name, email, restaurantName) => {
     return new Promise((resolve, reject) => {
         const query = `
-            INSERT INTO stakeholder (stakeholder_id, name, email, password, restaurant_name, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+            INSERT INTO stakeholder (stakeholder_id, name, email, restaurant_name, created_at, updated_at)
+            VALUES (?, ?, ?, ?, NOW(), NOW())
         `;
-        const params = [userId, name, email, hashedPassword, restaurantName]; // Pass name, email, password, and restaurant_name
+        const params = [userId, name, email, restaurantName];
         pool.query(query, params, (err, results) => {
             if (err) return reject(err);
             resolve(results);

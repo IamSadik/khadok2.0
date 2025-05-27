@@ -1,156 +1,93 @@
+// server.js
 const express = require('express');
-require('dotenv').config(); // This should be a separate line
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const path = require('path');
-const mysql = require('mysql');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const http = require('http');
 const socketio = require('socket.io');
+
 const pool = require('./config/configdb');
 const authRoutes = require('./routes/authRoutes');
-const restaurantRoutes = require('./routes/restaurantRoutes');
-const menuRoutes = require('./routes/menuRoutes');
-const sessionMiddleware = require('./middlewares/sessionMiddleware');
-const interiorRoutes = require('./routes/interiorRoutes');
-const consumerMenuRoutes = require("./routes/consumerMenuRoutes"); // Import consumerMenuRoutes
 const signupRoutes = require('./routes/signupRoutes');
-// Initialize dotenv for environment variables
-dotenv.config();
+const sessionMiddleware = require('./middlewares/sessionMiddleware');
+const { requireLogin } = require('./middlewares/authMiddleware');
+const mapRoutes = require('./routes/mapRoutes');
 
 const app = express();
 
-
-// MySQL Session Store
-const sessionStore = new MySQLStore({}, pool);
-
-// Session Middleware (Improved for security & scalability)
-app.use(session({
-    name: process.env.SESSION_NAME,
-    secret: process.env.SESSION_SECRET,
-    store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: parseInt(process.env.SESSION_LIFETIME),
-        httpOnly: true,
-        secure: false, // true only if HTTPS
-        sameSite: 'lax'
-    }
-}));
-
-// CORS configuration
-const corsOptions = {
-    origin: ['https://locationreal.onrender.com', 'http://localhost:3000'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-};
-app.use(cors(corsOptions));
-
-// Middleware
+// Body + CORS
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.json()); // Parse JSON request bodies
-// Routes
-app.use('/auth', authRoutes);
+app.use(cors({ origin: true, credentials: true }));
 
+// Session store
+const sessionStore = new MySQLStore({}, pool);
+app.use(session({
+  name: process.env.SESSION_NAME,
+  secret: process.env.SESSION_SECRET,
+  store: sessionStore,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: parseInt(process.env.SESSION_LIFETIME),
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax'
+  }
+}));
 
-// Serve static files from 'public' folder
-app.use(express.static(path.join(__dirname, 'public')));
-// Serve static files from the uploads directory
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// View engine
-
-app.set("public", path.join(__dirname, "public"));
-app.set("view engine", "ejs");
-
-
-
-
-
-
-const adminRoutes = require("./routes/adminRoutes");
-app.use("/admin", adminRoutes);
-
-
-
-
-
-
-
+// Public API routes
+app.use('/api/auth', authRoutes);
 app.use('/api/signup', signupRoutes);
+app.use('/api/map', mapRoutes);
+// Everything under /api requires a valid session
+//app.use('/api', sessionMiddleware);
+
+// /server.js
+const consumerRoutes = require('./routes/consumerRoutes');
+app.use('/api/consumer', consumerRoutes);
+const stakeholderRoutes = require('./routes/stakeholderRoutes');
+app.use('/api/stakeholder', stakeholderRoutes);
+const menuRoutes = require('./routes/menuRoutes');
+app.use('/api/menu',menuRoutes); // or utilityRoutes if you put it there
 
 
-// Home route
-app.get('/', (req, res) => {
-  res.send('Welcome to Khadok Food Delivery!');
+
+
+
+// Serve login page
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// Database connection check
-pool.query('SELECT 1', (err, results) => {
-    if (err) {
-        console.error("Database connection failed:", err);
-        process.exit(1);
-    } else {
-        console.log("Database connected!");
-    }
-  });
-  
+// Protect dashboard routes by role
+app.use('api/consumer', requireLogin('consumer'));
+app.use('api/stakeholder', requireLogin('stakeholder'));
+app.use('api/rider', requireLogin('rider'));
 
-// Initialize the HTTP server for Socket.IO
+// Now serve the actual dashboards and other static files
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html') && !req.path.includes('/login.html')) {
+        return res.status(403).send('Direct access to HTML files is restricted.');
+    }
+    next();
+});
+
+
+// ... your socket.io setup, other routes, etc.
+
 const server = http.createServer(app);
 const io = socketio(server);
-
-// Socket.IO logic for real-time location updates
-let current_users = {};
-
-io.on('connection', (socket) => {
-    console.log("A User connected! user id: " + socket.id);
-
-    socket.on('client-location', (data) => {
-        current_users[socket.id] = data.username;
-        io.emit('server-location', { ...data, id: socket.id });
-    });
-
-    socket.on('client-join-location', (data) => {
-        io.emit('client-join-server', { ...data, id: socket.id });
-    });
-
-    socket.on('update-cart', (data) => {
-        // Broadcast updated cart count to all clients for the specific user
-        io.emit(`cart-update-${data.consumerId}`, { cartCount: data.cartCount });
-    });
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected: ' + socket.id);
-        io.emit('disconnected_user', { id: socket.id, username: current_users[socket.id] });
-        delete current_users[socket.id];
-    });
-});
-
-// Serve static files for map
-app.get('/rider/map/', (req, res) => {
-    res.sendFile(__dirname + '/public/rider/map.html');
-});
-app.get('/consumer/map/', (req, res) => {
-  res.sendFile(__dirname + '/public/consumer/map.html');
-});
-
-app.get('/session-test', (req, res) => {
-    if (!req.session.user) {
-        req.session.user = { id: 0 };  // Dummy consumer ID for testing
-    }
-    res.json({ session: req.session });
-});
+// attach io to req if needed
 app.set('io', io);
 
-
-
-// Set up the server to listen on both HTTP and Socket.IO
-const port = process.env.PORT || 5000;
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-console.log("Auth routes loaded.");
+// Start
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on ${PORT}`));

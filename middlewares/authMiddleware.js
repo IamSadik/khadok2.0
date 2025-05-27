@@ -1,11 +1,8 @@
-const isStakeholderLoggedIn = (req, res, next) => {
-    if (!req.session.stakeholderId) {
-        return res.status(401).json({ message: 'Unauthorized. Please log in.' });
-    }
-    next();
+exports.requireLogin = (role) => {
+    return (req, res, next) => {
+        if (!req.session.userId || req.session.role !== role) {
+            return res.redirect('/login.html');
+        }
+        next();
+    };
 };
-
-module.exports = { isStakeholderLoggedIn };
-
-
-

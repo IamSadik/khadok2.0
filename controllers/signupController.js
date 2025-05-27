@@ -19,13 +19,13 @@ const signupConsumer = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await signupModel.createUser(name, email, hashedPassword, 'consumer');
-        await signupModel.createConsumer(user.id, name, email, hashedPassword);
+        await signupModel.createConsumer(user.id, name, email );
 
         res.status(201).json({ success: true, message: 'Consumer registered successfully' });
 
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ success: false, message: 'Email already exists (DB-level)' });
+            return res.status(400).json({ success: false, message: 'Email already exists' });
         }
 
         console.error(error);
@@ -49,13 +49,13 @@ const riderSignup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await signupModel.createUser(name, email, hashedPassword, 'rider');
-        await signupModel.createRider(user.id, name, email, hashedPassword);
+        await signupModel.createRider(user.id, name, email);
 
         res.status(201).json({ success: true, message: 'Rider registered successfully' });
 
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ success: false, message: 'Email already exists (DB-level)' });
+            return res.status(400).json({ success: false, message: 'Email already exists' });
         }
 
         console.error(error);
@@ -79,13 +79,13 @@ const stakeholderSignup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await signupModel.createUser(name, email, hashedPassword, 'stakeholder');
-        await signupModel.createStakeholder(user.id, name, email, hashedPassword, restaurant_name);
+        await signupModel.createStakeholder(user.id, name, email,  restaurant_name);
 
         res.status(201).json({ success: true, message: 'Stakeholder registered successfully' });
 
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ success: false, message: 'Email already exists (DB-level)' });
+            return res.status(400).json({ success: false, message: 'Email already exists' });
         }
 
         console.error(error);

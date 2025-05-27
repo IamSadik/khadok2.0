@@ -116,3 +116,11 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
+
+
+const menuToggle = document.getElementById('menu-toggle');
+const navMenu = document.getElementById('main-nav');
+
+menuToggle.addEventListener('click', () => {
+  navMenu.classList.toggle('show');
+});

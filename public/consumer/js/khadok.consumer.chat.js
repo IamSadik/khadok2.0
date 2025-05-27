@@ -90,3 +90,13 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("stakeholder-filter").addEventListener("click", () => loadContacts("stakeholder"));
     loadContacts("rider");
 });
+
+
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();

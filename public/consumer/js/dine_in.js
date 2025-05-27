@@ -282,3 +282,13 @@ document.getElementById('removeTableForm').addEventListener('submit', async func
         console.error('Error booking table:', error);
     }
 });
+
+
+(function checkAuthOnLoad() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+      // Prevent access if not logged in
+      window.location.replace("../login.html");
+    }
+  })();

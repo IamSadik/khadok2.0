@@ -1,31 +1,37 @@
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dashoard</title>
     <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
-    <link rel="stylesheet" href="css/khadok.consumer.dashboard.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">   
+    <link rel="stylesheet" href="css/khadok.consumer.dashboard.css">\
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-A7vV8IFfih/D732iSSl2gBj5b0hyYLtP7kD+3h7gUGI=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-DqmMyN4G2E/J04hWmKZulrVdY0lAM8Q+vHdUqax0DA0=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-yadaYADA..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
     <script src="js/app.js"></script>
-   
+
 
 </head>
+
 <body>
-    
+
     <div class="sidebar">
         <div class="logo_content">
             <div class="logo">
-                
+
                 <div class="logo_name">Khadok
 
                 </div>
@@ -34,10 +40,10 @@
         </div>
         <ul class="nav_list">
             <li>
-                
-                    <i class='bx bx-search-alt'></i>
-                    <input type="text" placeholder="Search...">
-                
+
+                <i class='bx bx-search-alt'></i>
+                <input type="text" placeholder="Search...">
+
                 <span class="tooltip">Search </span>
             </li>
             <li>
@@ -61,7 +67,7 @@
                 </a>
                 <span class="tooltip">Map</span>
             </li>
-            
+
             <li>
                 <a href="khadok.consumer.order.html">
                     <i class='bx bxs-package'></i>
@@ -69,7 +75,7 @@
                 </a>
                 <span class="tooltip">Orders</span>
             </li>
-            
+
             <li>
                 <a href="khadok.consumer.setting.html">
                     <i class='bx bxs-cog'></i>
@@ -86,140 +92,234 @@
                         <div class="job">Consumer</div>
                     </div>
                 </div>
-                <button id="logoutButton" class="logout_button">
+                <button id="logoutButton" class="logout_button" onclick="logout()">
                     <i class='bx bx-log-out-circle' id="log_out"></i>
                     <span class="links_name">Logout</span>
                 </button>
             </div>
         </div>
-        
+
     </div>
 
     <div class="home_content">
-    <div class="dashboard-container">
-        <div class="user-info">
-            <p hidden id="userEmail">Fetching user info...</p>
-        </div>
-        
-        <header>
-            <h1>Welcome Back, Consumer!</h1>
-        </header>
+        <div class="dashboard-container">
+            <div class="user-info">
+                <p hidden id="userEmail">Fetching user info...</p>
+            </div>
 
-        <div class="cards-container">
-            <div class="card">
-                <i class="fas fa-shopping-bag"></i>
-                <div class="card-info">
-                    <h3>Orders</h3>
-                    <p>Manage your past orders</p>
-                </div>
-            </div>
-            <div class="card">
-                <i class="fas fa-store"></i>
-                <div class="card-info">
-                    <h3>Restaurants</h3>
-                    <p>Explore restaurants near you</p>
-                </div>
-            </div>
-            <div class="card">
-                <i class="fas fa-utensils"></i>
-                <div class="card-info">
-                    <h3>Dine-In</h3>
-                    <p>Reserve a table</p>
-                </div>
-            </div>
-            <div class="card">
-                <i class="fas fa-user"></i>
-                <div class="card-info">
-                    <h3>Profile</h3>
-                    <p>Update account details</p>
-                </div>
-            </div>
-            
-        </div>
+            <header>
+                <h1>Welcome Back, Consumer!</h1>
+            </header>
 
-        <section class="upcoming-section">
-            <h2>Upcoming Reservations</h2>
-            <div class="reservation">
-                <i class="fas fa-calendar-alt"></i>
-                <div>
-                    <p><strong>Restaurant Name:</strong> The Gourmet Spot</p>
-                    <p><strong>Date:</strong> Nov 25, 2024</p>
-                    <p><strong>Time:</strong> 7:00 PM</p>
+            <div class="cards-container">
+                <div class="card">
+                    <i class="fas fa-shopping-bag"></i>
+                    <div class="card-info">
+                        <h3>Orders</h3>
+                        <p>Manage your past orders</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <i class="fas fa-store"></i>
+                    <div class="card-info">
+                        <h3>Restaurants</h3>
+                        <p>Explore restaurants near you</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <i class="fas fa-utensils"></i>
+                    <div class="card-info">
+                        <h3>Dine-In</h3>
+                        <p>Reserve a table</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <i class="fas fa-user"></i>
+                    <div class="card-info">
+                        <h3>Profile</h3>
+                        <p>Update account details</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <section class="upcoming-section">
+                <h2>Upcoming Reservations</h2>
+                <div class="reservation">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div>
+                        <p><strong>Restaurant Name:</strong> The Gourmet Spot</p>
+                        <p><strong>Date:</strong> Nov 25, 2024</p>
+                        <p><strong>Time:</strong> 7:00 PM</p>
+                    </div>
+                </div>
+                <div class="reservation">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div>
+                        <p><strong>Restaurant Name:</strong> Bistro Bliss</p>
+                        <p><strong>Date:</strong> Dec 1, 2024</p>
+                        <p><strong>Time:</strong> 8:00 PM</p>
+                    </div>
+                </div>
+            </section>
+            <div id="active-orders-section"></div>
+            <section id="restaurant-section">
+                <h2>Restaurants</h2>
+                <div class="filter-container">
+                    <label>Sort By:</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="sort-option" value="relevance" checked />
+                            Relevance
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="sort-option" value="ratings" />
+                            Ratings
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="sort-option" value="name" />
+                            Name
+                        </label>
+                    </div>
+                </div>
+                <div id="restaurants-container" class="restaurants-container">
+                    <p>Loading restaurants...</p>
+                </div>
+            </section>
+
+            <section id="dinein-section">
+                <h2>Dine In Restaurants</h2>
+                <div class="filter-container">
+                    <label>Sort By:</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="dinein-sort-option" value="relevance" checked />
+                            Relevance
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="dinein-sort-option" value="ratings" />
+                            Ratings
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="dinein-sort-option" value="name" />
+                            Name
+                        </label>
+                    </div>
+                </div>
+                <div id="dinein-restaurants-container" class="restaurants-container">
+                    <p>Loading restaurants...</p>
+                </div>
+            </section>
+
+
+
+            <!-- Welcome / Setup Popup -->
+            <div id="welcome-popup" class="popup-overlay" style="display:none;">
+                <div class="popup-content">
+
+                    <!-- Step 0: Welcome -->
+                    <div class="popup-screen" id="welcome-screen">
+                        <h2>👋 Welcome to <span class="highlight">Khadok</span>!</h2>
+                        <p>We’re excited to have you on board. Let’s set up your profile.</p>
+                        <button class="primary-btn" id="get-started-btn">Get Started</button>
+                    </div>
+
+                    <!-- Step 1: Basic Info -->
+                    <div class="popup-screen" id="step-1">
+                        <h3><i class="fa-solid fa-user fa-bounce" style="color: #63E6BE;"></i> Your Basic Info</h3>
+
+                        <label>Full Name:
+                            <input type="text" id="consumer-name" placeholder="Enter your full name" required />
+                        </label>
+                        <label>Mobile Number:
+                            <input type="tel" id="consumer-number" placeholder="+8801XXXXXXXXX" required />
+                        </label>
+                        <div class="button-group">
+                            <button class="secondary-btn" id="back-to-welcome">← Back</button>
+                            <button class="primary-btn" id="to-step-2">Next →</button>
+                        </div>
+                    </div>
+                    <!-- Step 2: Location -->
+                    <div class="popup-screen" id="step-2">
+                        <h3>
+                            <i class="fa-solid fa-map-pin fa-bounce" style="color: #63E6BE;"></i>
+                            Set Your Location
+                        </h3>
+
+                        <label>Address:</label>
+                        <div class="location-input-wrapper">
+                            <input type="text" id="location-input" placeholder="Search address..." autocomplete="off" />
+                            <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+
+                            <!-- Locate Me button -->
+                            <button id="locate-me-btn" class="locate-me-btn" title="Use my current location"
+                                style="padding: 0; border: none; background: none;">
+                                <img src="../images/location-icon.jpg" alt="Locate Me"
+                                    style="width: 28px; height: 28px; object-fit: contain;" />
+                            </button>
+
+
+                            <button id="clear-location-btn" title="Clear"
+                                style="position:absolute; right: 50px; top: 5px; background:none; border:none; font-size: 16px; cursor: pointer;">×</button>
+                        </div>
+
+                        <div id="map-container" class="map-placeholder" style="height:300px; margin-top:10px;">
+                            <!-- Fixed center-screen pin -->
+                            <div id="map-center-marker" class="hidden" style="width: 14px; height: 14px;">
+                                <i class="fa-solid fa-map-pin" style="color: #63E6BE;"></i>
+                            </div>
+                        </div>
+
+                        <div class="button-group" style="margin-top:15px;">
+                            <button class="secondary-btn" id="back-to-step-1">← Back</button>
+                            <button class="primary-btn" id="to-step-3">Next →</button>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Step 3: Additional Info -->
+                    <div class="popup-screen" id="step-3">
+                        <h3><i class="fa-solid fa-circle-info fa-bounce" style="color: #63E6BE;"></i> Additional Info
+                        </h3>
+                        <label>Gender:
+                            <select id="consumer-gender">
+                                <option value="" disabled selected>Select gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+
+                            </select>
+                        </label>
+                        <label>Age:
+                            <input type="number" id="consumer-age" placeholder="Enter your age" min="10" max="100" />
+                        </label>
+                        <label>Profile Picture (optional):
+                            <input type="file" id="consumer-pic" accept="image/*" />
+                        </label>
+                        <div class="button-group">
+                            <button class="secondary-btn" id="back-to-step-2">← Back</button>
+                            <button class="primary-btn" id="finish-setup">Finish ✔</button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <div class="reservation">
-                <i class="fas fa-calendar-alt"></i>
-                <div>
-                    <p><strong>Restaurant Name:</strong> Bistro Bliss</p>
-                    <p><strong>Date:</strong> Dec 1, 2024</p>
-                    <p><strong>Time:</strong> 8:00 PM</p>
-                </div>
-            </div>
-        </section>
-        <div id="active-orders-section"></div>
-        <section id="restaurant-section">
-            <h2>Restaurants</h2>
-            <div class="filter-container">
-                <label>Sort By:</label>
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="sort-option" value="relevance" checked />
-                        Relevance
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="sort-option" value="ratings" />
-                        Ratings
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="sort-option" value="name" />
-                        Name
-                    </label>
-                </div>
-            </div>
-            <div id="restaurants-container" class="restaurants-container">
-                <p>Loading restaurants...</p>
-            </div>
-        </section>
-        
-        <section id="dinein-section">
-            <h2>Dine In Restaurants</h2>
-            <div class="filter-container">
-                <label>Sort By:</label>
-                <div class="radio-group">
-                    <label class="radio-option">
-                        <input type="radio" name="dinein-sort-option" value="relevance" checked />
-                        Relevance
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="dinein-sort-option" value="ratings" />
-                        Ratings
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="dinein-sort-option" value="name" />
-                        Name
-                    </label>
-                </div>
-            </div>
-            <div id="dinein-restaurants-container" class="restaurants-container">
-                <p>Loading restaurants...</p>
-            </div>
-        </section>
-        
-        
-        
-        
+
+
+
+
+        </div>
     </div>
-    </div>
-    
+
     <script>
-        let btn = document.querySelector("#btn"); 
+        let btn = document.querySelector("#btn");
         let sidebar = document.querySelector(".sidebar");
-        let searchBtn = document.querySelector(".bx-search-alt");  
+        let searchBtn = document.querySelector(".bx-search-alt");
 
-        btn.onclick = function(){
+        btn.onclick = function () {
             sidebar.classList.toggle("active");
         }
-        searchBtn.onclick = function(){
+        searchBtn.onclick = function () {
             sidebar.classList.toggle("active");
         }
     </script>
@@ -239,16 +339,16 @@
             // Fetch orders when the component mounts
             componentDidMount() {
                 fetch('/consumer/active-orders')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    this.setState({ orders: data, loading: false });
-                })
-                .catch(error => console.error('Error fetching orders:', error));
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        this.setState({ orders: data, loading: false });
+                    })
+                    .catch(error => console.error('Error fetching orders:', error));
 
             }
 
@@ -269,7 +369,7 @@
             render() {
                 const { orders, loading } = this.state;
 
-                return ( 
+                return (
                     <section className="active-orders-section">
                         <h2>Active Orders</h2>
                         {loading ? (
@@ -299,76 +399,251 @@
         ReactDOM.render(<ActiveOrders />, document.getElementById('active-orders-section'));
     </script>
 
-<script>
-    document.getElementById('logoutButton').addEventListener('click', async () => {
-        try {
-            const response = await fetch('/auth/logout?type=consumer', {
-                method: 'GET',
-            });
 
-            if (response.ok) {
-                alert('Logout successful');
-                window.location.href = '../login.html';
-            } else {
-                alert('Error during logout');
-            }
-        } catch (error) {
-            console.error('Error logging out:', error);
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      // ───── Step 0: first-time check & popup wiring ─────
+      const consumerId = localStorage.getItem("consumer_id");
+      if (!consumerId) return console.error("No consumer_id in localStorage");
+    
+      // ask the backend
+      let isFirst = false;
+      try {
+        const resp = await fetch(`/api/consumer/first-time?consumer_id=${consumerId}`);
+        const json = await resp.json();
+        isFirst = resp.ok && (json.firstTime === true || json.firstTime === "true");
+      } catch (e) {
+        console.error("First-time check failed:", e);
+      }
+      if (!isFirst) return; // returning user—nothing to do
+    
+      // grab popup & screens
+      const popup   = document.getElementById("welcome-popup");
+      const screens = {
+        welcome: document.getElementById("welcome-screen"),
+        step1:   document.getElementById("step-1"),
+        step2:   document.getElementById("step-2"),
+        step3:   document.getElementById("step-3"),
+      };
+      function showScreen(el) {
+        Object.values(screens).forEach(s => s.classList.remove("active"));
+        el.classList.add("active");
+      }
+      // show popup
+      popup.style.display = "flex";
+      showScreen(screens.welcome);
+    
+      // navigation buttons
+      document.getElementById("get-started-btn").onclick  = () => showScreen(screens.step1);
+      document.getElementById("back-to-welcome").onclick = () => showScreen(screens.welcome);
+      document.getElementById("to-step-2").onclick       = () => {
+        showScreen(screens.step2);
+        // force Leaflet to recalc size
+        setTimeout(() => map && map.invalidateSize(), 100);
+      };
+      document.getElementById("back-to-step-1").onclick  = () => showScreen(screens.step1);
+      document.getElementById("to-step-3").onclick       = () => showScreen(screens.step3);
+      document.getElementById("back-to-step-2").onclick  = () => showScreen(screens.step2);
+    
+      // ───────── Step 2: Map & Geocoding ─────────
+      let map, tileURL, debounceTimeout;
+      const locationInput   = document.getElementById("location-input");
+      const suggestionsList = document.getElementById("location-suggestions");
+      const locateBtn       = document.getElementById("locate-me-btn");
+      const clearBtn        = document.getElementById("clear-location-btn");
+      const centerMarker    = document.getElementById("map-center-marker");
+    
+      // 1) load tile URL
+      (async () => {
+        try {
+          const resp = await fetch("/api/map/tile-url");
+          const json = await resp.json();
+          tileURL = json.tileURL;
+        } catch (err) {
+          console.error("Failed to fetch tile URL:", err);
         }
+      })();
+    
+      // 2) reverse geocode
+      async function reverseGeocode(lat, lon) {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`;
+        try {
+          const resp = await fetch(url);
+          const data = await resp.json();
+          return data.display_name || "";
+        } catch {
+          return "";
+        }
+      }
+    
+      // 3) update input on map move/zoom
+      async function updateInputWithCenter() {
+        if (!map) return;
+        const c = map.getCenter();
+        locationInput.value = await reverseGeocode(c.lat, c.lng);
+      }
+    
+      // 4) Locate me
+      locateBtn.addEventListener("click", () => {
+        if (!navigator.geolocation) return alert("Geolocation not supported.");
+        navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+          const { latitude, longitude } = coords;
+          if (!map) {
+            map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
+                   .setView([latitude, longitude], 16);
+            L.tileLayer(tileURL, {
+              tileSize: 512,
+              zoomOffset: -1,
+              attribution:
+                `<a href="https://www.maptiler.com/">© MapTiler</a>
+                 <a href="https://www.openstreetmap.org/">© OSM</a>`
+            }).addTo(map);
+            map.on("moveend zoomend", updateInputWithCenter);
+          } else {
+            map.setView([latitude, longitude], 16);
+          }
+          centerMarker.classList.remove("hidden");
+          locationInput.value = await reverseGeocode(latitude, longitude);
+        }, () => alert("Please allow location access."));
+      });
+    
+      // 5) Clear
+      clearBtn.addEventListener("click", () => {
+        locationInput.value = "";
+        suggestionsList.innerHTML = "";
+        suggestionsList.classList.add("hidden");
+        centerMarker.classList.add("hidden");
+      });
+    
+      // 6) Autocomplete
+      locationInput.addEventListener("input", () => {
+        const q = locationInput.value.trim();
+        clearTimeout(debounceTimeout);
+        if (!q) {
+          suggestionsList.innerHTML = "";
+          suggestionsList.classList.add("hidden");
+          return;
+        }
+        debounceTimeout = setTimeout(async () => {
+          const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=bd&q=${encodeURIComponent(q)}`;
+          try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            suggestionsList.innerHTML = data.length
+              ? data.map(p =>
+                  `<li data-lat="${p.lat}" data-lon="${p.lon}">${p.display_name}</li>`
+                ).join("")
+              : "<li>No results found</li>";
+            suggestionsList.classList.remove("hidden");
+          } catch (err) {
+            console.error(err);
+          }
+        }, 300);
+      });
+    
+      // 7) Pick suggestion
+      suggestionsList.addEventListener("click", e => {
+        if (e.target.tagName !== "LI") return;
+        const lat = +e.target.dataset.lat;
+        const lon = +e.target.dataset.lon;
+        const name = e.target.textContent;
+        if (!map) {
+          map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
+                 .setView([lat, lon], 16);
+          L.tileLayer(tileURL, {
+            tileSize: 512,
+            zoomOffset: -1,
+            attribution:
+              `<a href="https://www.maptiler.com/">© MapTiler</a>
+               <a href="https://www.openstreetmap.org/">© OSM</a>`
+          }).addTo(map);
+          map.on("moveend zoomend", updateInputWithCenter);
+        } else {
+          map.setView([lat, lon], 16);
+        }
+        centerMarker.classList.remove("hidden");
+        locationInput.value       = name;
+        suggestionsList.innerHTML = "";
+        suggestionsList.classList.add("hidden");
+      });
+    
+      // 8) hide suggestions on outside click
+      document.addEventListener("click", e => {
+        if (
+          !suggestionsList.contains(e.target) &&
+          e.target !== locationInput
+        ) {
+          suggestionsList.innerHTML = "";
+          suggestionsList.classList.add("hidden");
+        }
+      });
+    
+    
+      // ───────── Step 3: Finish & submit ─────────
+      document.getElementById("finish-setup").onclick = async () => {
+        // collect fields
+        const name    = document.getElementById("consumer-name").value.trim();
+        const number  = document.getElementById("consumer-number").value.trim();
+        const address = locationInput.value.trim();
+        const gender  = document.getElementById("consumer-gender").value;
+        const age     = document.getElementById("consumer-age").value;
+        const picFile = document.getElementById("consumer-pic").files[0];
+    
+        if (!name || !number || !address || !gender || !age) {
+          return alert("Please complete all required fields.");
+        }
+    
+        // read current map center
+        let lat = "", lng = "";
+        if (map) {
+          const c = map.getCenter();
+          lat = c.lat.toFixed(6);
+          lng = c.lng.toFixed(6);
+        }
+    
+        // prepare FormData
+        const formData = new FormData();
+        formData.append("consumer_id", consumerId);
+        formData.append("full_name",  name);
+        formData.append("number",     number);
+        formData.append("address",    address);
+        formData.append("gender",     gender);
+        formData.append("age",        age);
+        formData.append("lat",        lat);
+        formData.append("lng",        lng);
+        if (picFile) formData.append("profile_pic", picFile);
+    
+        // send to backend
+        try {
+          const res  = await fetch("/api/consumer/update-info", {
+            method: "POST",
+            body:   formData
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert("🎉 Setup complete — welcome to Khadok!");
+            popup.style.display = "none";
+          } else {
+            alert("Error saving info: " + data.error);
+          }
+        } catch (err) {
+          console.error("Submit failed:", err);
+          alert("Something went wrong. Please try again.");
+        }
+      };
     });
-</script>
-
-
-<script>
-    // Function to fetch and display the logged-in user's email
-    async function fetchEmail() {
-        try {
-            const response = await fetch('/auth/email?type=consumer');
-            if (response.ok) {
-                const data = await response.json();
-                if (data.email) {
-                    document.getElementById('userEmail').innerText = `Logged in as: ${data.email}`;
-                } else {
-                    alert('No email found. Please log in again.');
-                    window.location.href = '/login.html';
-                }
-            } else {
-                alert('Error fetching email');
-                window.location.href = '/login.html';
-            }
-        } catch (error) {
-            console.error('Error fetching email:', error);
-            window.location.href = '/login.html';
-        }
-    }
-
-    // Function to fetch the consumer ID from the session
-    async function fetchConsumerId() {
-        try {
-            const response = await fetch('/auth/consumer-id'); // Updated to use session
-            const data = await response.json();
-
-            if (data.success) {
-                console.log('Logged-in consumer ID:', data.consumer_id);
-                localStorage.setItem('consumer_id', data.consumer_id);  // Save to local storage
-            } else {
-                console.error('Error fetching consumer ID:', data.message);
-            }
-        } catch (error) {
-            console.error('Error fetching consumer ID:', error);
-        }
-    }
+    </script>
     
 
-    // Call the functions on page load
-    document.addEventListener('DOMContentLoaded', function () {
-        fetchEmail();
-        fetchConsumerId();
-    });
-</script>
 
 
-   
+
+
+    <script src="js/app.js"></script>
+
+
 
 </body>
+
 </html>
