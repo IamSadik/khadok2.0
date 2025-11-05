@@ -53,6 +53,8 @@ const stakeholderRoutes = require('./routes/stakeholderRoutes');
 app.use('/api/stakeholder', stakeholderRoutes);
 const menuRoutes = require('./routes/menuRoutes');
 app.use('/api/menu',menuRoutes); // or utilityRoutes if you put it there
+const interiorRoutes = require('./routes/interiorRoutes');
+app.use('/api/interior', interiorRoutes);
 
 
 

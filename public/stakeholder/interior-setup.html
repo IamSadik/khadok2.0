@@ -2,356 +2,276 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stakeholder Sidebar</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/interior-setup.css">
-    <link rel="stylesheet" href="js/khadok.stakeholder.dashboard.js">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="./js/panolens.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/panolens@0.12.1/dist/panolens.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"
-        integrity="sha512-uWKImujbh9CwNa8Eey5s8vlHDB4o1HhrVszkympkm5ciYTnUEQv3t4QHU02CUqPtdKTg62FsHo12x63q6u0wmg=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://pchen66.github.io/js/three/three.min.js"></script>
-    <script src="https://pchen66.github.io/js/panolens/panolens.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stakeholder Sidebar</title>
+  <!-- Styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/interior-setup.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.min.js"></script>
+
+  <!-- Panolens (optional for panoramas) -->
+  <script src="./js/panolens.min.js"></script>
+
+  <script src="https://pchen66.github.io/js/panolens/panolens.min.js"></script>
+
+
+  
+
+ 
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 
 </head>
 
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <button class="toggle-btn" id="toggle-btn">
-            <i class="fas fa-bars"></i>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <button class="toggle-btn" id="toggle-btn">
+      <i class="fas fa-bars"></i>
+    </button>
+    <ul>
+      <a href="khadok.stakeholder.index.html">
+        <li><i class="fas fa-home"></i> <span>Dashboard</span></li>
+      </a>
+      <a href="menu.html">
+        <li><i class="fas fa-utensils"></i> <span>Menu Management</span></li>
+      </a>
+      <a href="./interior-setup.html">
+        <li><i class="fas fa-cube"></i> <span>3D Interior View</span></li>
+      </a>
+      <li><i class="fas fa-video"></i> <span>Live Kitchen Feed</span></li>
+      <a href="order.html">
+        <li><i class="fas fa-box"></i> <span>Orders</span></li>
+      </a>
+      <a href="reservation.html">
+        <li><i class="fas fa-calendar-check"></i> <span>Reservations</span></li>
+      </a>
+      <li><i class="fas fa-comment-alt"></i> <span>Reviews & Feedback</span></li>
+      <li><i class="fas fa-chart-line"></i> <span>Analytics</span></li>
+      <li><i class="fas fa-tags"></i> <span>Promotions</span></li>
+      <li><i class="fas fa-user"></i> <span>Profile</span></li>
+      <li><i class="fas fa-cog"></i> <span>Settings</span></li>
+    </ul>
+    <div class="logout-btn" id="logoutButton" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1 class="page-title">Interior Setup</h1>
+
+    <div class="section">
+      <h2><i class="fas fa-cube"></i> Interactive 3D Floor</h2>
+      <div class="threeD-container">
+        <!-- Placeholder for 3D Model Viewer -->
+      
+
+        <div id="threeDPreview" style="position: relative; width: 100%; height: 100%; overflow: hidden;">
+          <!-- In-canvas overlay controls -->
+          <div id="hudOverlay" 
+               style="position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(255,255,255,0.85);
+                      padding: 10px; border-radius: 8px; font-family: sans-serif;">
+            <div style="margin-bottom: 6px;">
+              <button id="addTableBtn" class="designer-btn">🪑 Table</button>
+              <select id="tableSizeSelect">
+                <option value="2">2-seat</option>
+                <option value="4" selected>4-seat</option>
+                <option value="5">5-seat</option>
+                <option value="6">6-seat</option>
+                <option value="8">8-seat</option>
+                <option value="12">12-seat</option>
+                <option value="16">16-seat</option>
+              </select>
+              <button id="addPillarBtn" class="designer-btn">🧱 Pillar</button>
+              <!-- New Chair button -->
+              <button id="addChairBtn" class="designer-btn">💺 Chair</button>
+              <button id="moveToolBtn" class="designer-btn">✋ Move</button>
+
+            </div>
+            <div style="margin-bottom: 6px;">
+              <label>Floor (LxW):</label>
+              <input id="floorLenInput" type="number" value="100" style="width:60px;">
+              <input id="floorWidInput" type="number" value="100" style="width:60px;">
+              <button id="applyFloorSizeBtn">Apply</button>
+            </div>
+            <div style="margin-bottom: 6px;">
+              <label>Pillar Height:</label>
+              <input id="pillarHeightInput" type="number" value="10" style="width:60px;">
+            </div>
+            <div>
+              <button id="undoBtn">Undo</button>
+              <button id="clearBtn">Clear</button>
+              <label style="margin-left:8px;"><input type="checkbox" id="autoRotateToggle"> Auto Rotate</label>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+
+    <!-- Table Management Section -->
+    <div class="section" id="table-management">
+      <h2><i class="fas fa-chair"></i> Table Management</h2>
+
+      <!-- Toggle Mode Switch -->
+      <div class="mode-toggle">
+        <span class="mode-label">Mode:</span>
+        <div class="switch-container">
+          <span class="mode">Add</span>
+          <label class="switch">
+            <input type="checkbox" id="modeSwitch">
+            <span class="slider round"></span>
+          </label>
+          <span class="mode">Remove</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Table Input Rows -->
+      <div id="table-rows-container">
+        <!-- First Row -->
+        <div class="table-row">
+          <div class="table-options">
+            <button class="table-type" data-type="2">
+              <img src="../images/2PersonTable.png" alt="2 Person Table" class="svg-icon">
+              <span>2 Person</span>
+            </button>
+            <button class="table-type" data-type="4">
+              <img src="../images/4PersonTable.png" alt="4 Person Table" class="svg-icon">
+              <span>4 Person</span>
+            </button>
+            <button class="table-type" data-type="5">
+              <img src="../images/5PersonTable.png" alt="5 Person Table" class="svg-icon">
+              <span>5 Person</span>
+            </button>
+            <button class="table-type" data-type="6">
+              <img src="../images/6PersonTable.png" alt="6 Person Table" class="svg-icon">
+              <span>6 Person</span>
+            </button>
+            <button class="table-type" data-type="8">
+              <img src="../images/8PersonTable.png" alt="8 Person Table" class="svg-icon">
+              <span>8 Person</span>
+            </button>
+            <button class="table-type" data-type="12">
+              <img src="../images/12PersonTable.png" alt="12 Person Table" class="svg-icon">
+              <span>12 Person</span>
+            </button>
+            <button class="table-type" data-type="16">
+              <img src="../images/16PersonTable.png" alt="16 Person Table" class="svg-icon">
+              <span>16 Person</span>
+            </button>
+          </div>
+          <input type="number" class="table-count" placeholder="Enter number of tables" min="1">
+        </div>
+      </div>
+      
+
+
+      <!-- Add/Remove Row Buttons -->
+      <div class="row-controls">
+        <button class="btn add-row" id="addRow"><i class="fas fa-plus"></i> More</button>
+        <button class="btn remove-row" id="removeRow" style="display: none;"><i class="fas fa-minus"></i> Remove
+          Last</button>
+      </div>
+
+      <!-- Execute Button -->
+      <div class="action-btn-wrapper">
+        <button class="btn action" id="executeAction">
+          <i class="fas fa-plus-circle"></i> Add Table
         </button>
-        <ul>
-            <a href="khadok.stakeholder.index.html">
-                <li data-title="Dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></li>
-            </a>
-            <a href="menu.html">
-                <li data-title="Menu Management"><i class="fas fa-utensils"></i> <span>Menu Management</span></li>
-            </a>
-            <a href="./interior-setup.html">
-                <li data-title="3D Interior View"><i class="fas fa-cube"></i> <span>3D Interior View</span></li>
-            </a>
-            <li data-title="Live Kitchen Feed"><i class="fas fa-video"></i> <span>Live Kitchen Feed</span></li>
-            <a href="order.html">
-                <li data-title="Orders"><i class="fas fa-box"></i> <span>Orders</span></li>
-            </a>
-            <a href="reservation.html">
-                <li data-title="Reservations"><i class="fas fa-calendar-check"></i> <span>Reservations</span></li>
-            </a>
-            <li data-title="Reviews & Feedback"><i class="fas fa-comment-alt"></i> <span>Reviews & Feedback</span></li>
-            <li data-title="Analytics"><i class="fas fa-chart-line"></i> <span>Analytics</span></li>
-            <li data-title="Promotions"><i class="fas fa-tags"></i> <span>Promotions</span></li>
-            <li data-title="Profile"><i class="fas fa-user"></i> <span>Profile</span></li>
-            <li data-title="Settings"><i class="fas fa-cog"></i> <span>Settings</span></li>
-        </ul>
-        <div class="logout-btn" id="logoutButton" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <span id="totalTablesDisplay" style="font-family: inherit;font-weight: normal; margin-top: 10px; display: block; margin-bottom:20px;">Total Tables: </span>
+      <div class="table-preview"> 
+        
+        <!-- Inside .table-preview -->
+        <div id="table-preview-wrapper" class="preview-grid">
+          <!-- Populated dynamically with JS -->
         </div>
+
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container mt-4">
-            <!-- Section 0: 3D Animated Floor and Table Count Display -->
-            <div class="section mb-5" id="floorSection">
-                <h2 class="section-title text-center">Interactive 3D Floor</h2>
-                <div id="floor-Container"></div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div id="tableInfo">
-                            <h4>Table Availability</h4>
-                            <div id="tableCountDisplay" class="table-count-display">
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #007bff;"></div>
-                                    <p style="color: #007bff;">
-                                        <strong>2 Person:</strong>
-                                        <span id="twoPersonTable" data-table-type="2">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #198754;"></div>
-                                    <p style="color: #198754;">
-                                        <strong>4 Person:</strong>
-                                        <span id="fourPersonTable" data-table-type="4">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #0DCAF0;"></div>
-                                    <p style="color: #0DCAF0;">
-                                        <strong>8 Person:</strong>
-                                        <span id="eightPersonTable" data-table-type="8">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #FFC13C;"></div>
-                                    <p style="color: #FFC13C;">
-                                        <strong>16 Person:</strong>
-                                        <span id="sixteenPersonTable" data-table-type="16">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #C82333;"></div>
-                                    <p style="color: #C82333;">
-                                        <strong>Round Table:</strong>
-                                        <span id="roundTableTable" data-table-type="5">0</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- New Bookable Table Section -->
-                    <div class="col-md-4">
-                        <div id="bookableTableInfo">
-                            <h4>Bookable Table</h4>
-                            <div id="bookableTableCountDisplay" class="table-count-display">
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #007bff;"></div>
-                                    <p style="color: #007bff;">
-                                        <strong>2 Person:</strong>
-                                        <span id="twoPersonBookable" data-booking="2">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #198754;"></div>
-                                    <p style="color: #198754;">
-                                        <strong>4 Person:</strong>
-                                        <span id="fourPersonBookable" data-booking="4">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #0DCAF0;"></div>
-                                    <p style="color: #0DCAF0;">
-                                        <strong>8 Person:</strong>
-                                        <span id="eightPersonBookable" data-booking="8">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #FFC13C;"></div>
-                                    <p style="color: #FFC13C;">
-                                        <strong>16 Person:</strong>
-                                        <span id="sixteenPersonBookable" data-booking="16">0</span>
-                                    </p>
-                                </div>
-                                <div class="table-count-item">
-                                    <div class="table-icon" style="background-color: #C82333;"></div>
-                                    <p style="color: #C82333;">
-                                        <strong>Round Table:</strong>
-                                        <span id="roundTableBookable" data-booking="5">0</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
 
-            <!-- Section 1: Adding Tables -->
-            <div class="section mb-5">
-                <h2 class="section-title text-center">Add Tables to Database</h2>
-                <form id="tableForm">
-                    <div id="tableFields">
-                        <div class="row align-items-center mb-3">
-                            <div class="col-md-8">
-                                <div class="btn-group d-flex" role="group">
-                                    <input type="radio" class="btn-check" name="tableType-0" id="twoPerson-0" value="2"
-                                        required>
-                                    <label class="btn btn-outline-primary" for="twoPerson-0"><i
-                                            class="fas fa-chair"></i> 2 Person</label>
-
-                                    <input type="radio" class="btn-check" name="tableType-0" id="fourPerson-0"
-                                        value="4">
-                                    <label class="btn btn-outline-success" for="fourPerson-0"><i
-                                            class="fas fa-couch"></i> 4 Person</label>
-
-                                    <input type="radio" class="btn-check" name="tableType-0" id="eightPerson-0"
-                                        value="8">
-                                    <label class="btn btn-outline-info" for="eightPerson-0"><i class="fas fa-table"></i>
-                                        8 Person</label>
-
-                                    <input type="radio" class="btn-check" name="tableType-0" id="sixteenPerson-0"
-                                        value="16">
-                                    <label class="btn btn-outline-warning" for="sixteenPerson-0"><i
-                                            class="fas fa-table-cells"></i> 16 Person</label>
-
-                                    <input type="radio" class="btn-check" name="tableType-0" id="roundTable-0"
-                                        value="5">
-                                    <label class="btn btn-outline-danger" for="roundTable-0"><i
-                                            class="fas fa-circle-notch"></i> Round Table(5)</label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <input type="number" class="form-control" name="tableCount"
-                                    placeholder="Number of Tables" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <button type="button" class="btn btn-primary" id="addMore"><i class="fas fa-plus"></i> Add
-                                More</button>
-                            <button type="button" class="btn btn-danger d-none" id="removeLast"><i
-                                    class="fas fa-trash-alt"></i> Remove</button>
-                        </div>
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Save</button>
-                    </div>
-                </form>
-            </div>
-
-
-            <!-- Section 1.1: Removing Tables -->
-            <div class="section mb-5">
-                <h2 class="section-title text-center">Remove Tables from Database</h2>
-                <form id="removeTableForm">
-                    <div id="removeTableFields">
-                        <div class="row align-items-center mb-3">
-                            <div class="col-md-8">
-                                <div class="btn-group d-flex" role="group">
-                                    <input type="radio" class="btn-check" name="removeTableType" id="removeTwoPerson"
-                                        value="2" required>
-                                    <label class="btn btn-outline-primary" for="removeTwoPerson"><i
-                                            class="fas fa-chair"></i> 2 Person</label>
-
-                                    <input type="radio" class="btn-check" name="removeTableType" id="removeFourPerson"
-                                        value="4">
-                                    <label class="btn btn-outline-success" for="removeFourPerson"><i
-                                            class="fas fa-couch"></i> 4 Person</label>
-
-                                    <input type="radio" class="btn-check" name="removeTableType" id="removeEightPerson"
-                                        value="8">
-                                    <label class="btn btn-outline-info" for="removeEightPerson"><i
-                                            class="fas fa-table"></i> 8 Person</label>
-
-                                    <input type="radio" class="btn-check" name="removeTableType"
-                                        id="removeSixteenPerson" value="16">
-                                    <label class="btn btn-outline-warning" for="removeSixteenPerson"><i
-                                            class="fas fa-table-cells"></i> 16 Person</label>
-
-                                    <input type="radio" class="btn-check" name="removeTableType" id="removeRoundTable"
-                                        value="5">
-                                    <label class="btn btn-outline-danger" for="removeRoundTable"><i
-                                            class="fas fa-circle-notch"></i> Round Table(5)</label>
-                                </div>
-                            </div>
-                            <div class="col-md-4 d-flex align-items-center">
-                                <button type="button" class="btn btn-outline-secondary me-2" id="decrementTableCount">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <input type="number" class="form-control" id="removeTableCount" name="removeTableCount"
-                                    placeholder="Remove Number of Tables" value="1" min="1" required>
-                                <button type="button" class="btn btn-outline-secondary ms-2" id="incrementTableCount">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-danger" id="removeTableButton"><i
-                                class="fas fa-recycle"></i> Remove</button>
-                    </div>
-                </form>
-            </div>
-
-
-            <!-- Section 2: Uploading 360 Image -->
-            <div class="section mb-5">
-                <h2 class="section-title text-center">Upload 360 Interior Image</h2>
-                <div class="example-gallery mb-4" id="preview" style="height: 200px; background-size: cover;"></div>
-                <!-- Warning Section -->
-                <div class="warning-container">
-                    <i class="fas fa-info-circle warning-icon"></i>
-                    <span class="warning-text">
-                        Please upload a 360° image or panorama. Otherwise, the 3D view may not be accurate.
-                    </span>
-                </div>
-                <form id="imageUploadForm">
-                    <div class="mb-3">
-                        <label for="interiorImage" class="form-label">Choose a 360 Image:</label>
-                        <input type="file" class="form-control" id="interiorImage" accept="image/*" required>
-                    </div>
-                    <button type="submit" class="btn btn-info"><i class="fas fa-upload"></i> Upload</button>
-                </form>
-            </div>
-
-
-            <!-- Section 3: Generating 360 View -->
-            <div class="section mb-5">
-                <h2 class="section-title text-center">Generate 360 Interior View</h2>
-                <div id="panolens-container" class="image-container" style="width: 100%; height: 500px;"></div>
-
-                <p class="text-muted">Your 360 view will appear here</p>
-            </div>
-            <button class="btn btn-warning mt-3" id="load360View"><i class="fas fa-trash-alt"></i> Delete 360
-                View</button>
-        </div>
-    </div>
+    <div class="section">
+      <h2><i class="fas fa-image"></i> Upload 360° Image</h2>
+      <div class="upload-box">
+        <input type="file" id="upload360" accept="image/*" />
+        <label for="upload360"><i class="fas fa-cloud-upload-alt"></i> Upload Image</label>
+      </div>
     </div>
 
-    <!-- JavaScript for 3D Floor and Table Count Display -->
+    <div class="section">
+      <h2><i class="fas fa-vr-cardboard"></i> Generate 360° View</h2>
+      <button class="btn generate"><i class="fas fa-play-circle"></i> Generate View</button>
+    </div>
+  </div>
+  <!-- JavaScript for 3D Floor and Table Count Display -->
 
-    <!-- JavaScript for 3D Interior View -->
+  <!-- JavaScript for 3D Interior View -->
 
 
-    <script>
-        async function logout() {
-            const sessionId = localStorage.getItem("sessionId");
+  <script>
+    async function logout() {
+      const sessionId = localStorage.getItem("sessionId");
 
-            if (!sessionId) {
-                alert("No session found.");
-                return;
-            }
+      if (!sessionId) {
+        alert("No session found.");
+        return;
+      }
 
-            try {
-                const res = await fetch("/api/auth/logout", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ sessionId }),
-                    credentials: "include", // Include the session cookie in the request
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    localStorage.removeItem("sessionId");   // Remove session ID
-                    localStorage.removeItem("stakeholder_id"); // Remove consumer ID
-                    alert(data.message); // Show success message
-                    window.location.href = '../login.html';
-                } else {
-                    alert(data.message || "Logout failed.");
-                    window.location.href = '../login.html'; // Redirect to login page on error
-                }
-            } catch (err) {
-                console.error("Logout error:", err);
-                alert("Something went wrong.");
-                window.location.href = '../login.html'; // Redirect to login page on error
-            }
-        }
-    </script>
-
-    
-    <script>
-        // JavaScript for Sidebar Toggle
-        const toggleBtn = document.getElementById('toggle-btn');
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.querySelector('.main-content'); // Fix to target the main content correctly
-
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('expanded');
-            mainContent.classList.toggle('expanded');
+      try {
+        const res = await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+          credentials: "include", // Include the session cookie in the request
         });
-    </script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/interior.js"></script>
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.removeItem("sessionId");   // Remove session ID
+          localStorage.removeItem("stakeholder_id"); // Remove consumer ID
+          alert(data.message); // Show success message
+          window.location.href = '../login.html';
+        } else {
+          alert(data.message || "Logout failed.");
+          window.location.href = '../login.html'; // Redirect to login page on error
+        }
+      } catch (err) {
+        console.error("Logout error:", err);
+        alert("Something went wrong.");
+        window.location.href = '../login.html'; // Redirect to login page on error
+      }
+    }
+  </script>
+
+
+  <script>
+    // JavaScript for Sidebar Toggle
+    const toggleBtn = document.getElementById('toggle-btn');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.querySelector('.main-content'); // Fix to target the main content correctly
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('expanded');
+      mainContent.classList.toggle('expanded');
+    });
+  </script>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="./js/interior.js"></script>
+  
 
 </body>
 
