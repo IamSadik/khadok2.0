@@ -320,6 +320,56 @@ let mode = null;
 let tableType = "4";
 let pillarHeight = 20;
 
+
+// === Spatial Grid for Fast Collision Detection ===
+const GRID_CELL_SIZE = 20; // Adjust based on your average object size
+let spatialGrid = new Map();
+
+function getGridKey(x, z) {
+  const gridX = Math.floor(x / GRID_CELL_SIZE);
+  const gridZ = Math.floor(z / GRID_CELL_SIZE);
+  return `${gridX},${gridZ}`;
+}
+
+function addToGrid(obj) {
+  const key = getGridKey(obj.position.x, obj.position.z);
+  if (!spatialGrid.has(key)) {
+    spatialGrid.set(key, []);
+  }
+  spatialGrid.get(key).push(obj);
+}
+
+function removeFromGrid(obj) {
+  const key = getGridKey(obj.position.x, obj.position.z);
+  if (spatialGrid.has(key)) {
+    const arr = spatialGrid.get(key);
+    const idx = arr.indexOf(obj);
+    if (idx > -1) arr.splice(idx, 1);
+  }
+}
+
+function getNearbyObjects(x, z) {
+  const nearby = [];
+  // Check current cell and 8 neighboring cells
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dz = -1; dz <= 1; dz++) {
+      const checkX = Math.floor(x / GRID_CELL_SIZE) + dx;
+      const checkZ = Math.floor(z / GRID_CELL_SIZE) + dz;
+      const key = `${checkX},${checkZ}`;
+      if (spatialGrid.has(key)) {
+        nearby.push(...spatialGrid.get(key));
+      }
+    }
+  }
+  return nearby;
+}
+
+function rebuildSpatialGrid() {
+  spatialGrid.clear();
+  placed.forEach(obj => addToGrid(obj));
+}
+
+
 // === Core Functions ===
 function createFloor(len, wid) {
   if (!scene) {
@@ -506,6 +556,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     mesh.userData = { kind: "table", type, sizeX, sizeZ };
     scene.add(mesh);
     placed.push(mesh);
+    addToGrid(mesh);
     markDirty();
   }
 
@@ -526,6 +577,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     mesh.userData = { kind: "pillar", height: h, sizeX, sizeZ };
     scene.add(mesh);
     placed.push(mesh);
+    addToGrid(mesh);
     markDirty();
   }
 
@@ -543,6 +595,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     mesh.userData = { kind: "chair", sizeX: size, sizeZ: size };
     scene.add(mesh);
     placed.push(mesh);
+    addToGrid(mesh);
     markDirty();
   }
 
