@@ -773,3 +773,134 @@ input:checked+.slider::before {
         font-size: 11px;
     }
 }
+
+
+
+
+
+
+/* Upload 360 Image Section */
+.example-gallery {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: #f0f0f0;
+    background-image: url('../../../uploads/bg.jpg') ;
+     background-repeat: no-repeat;
+     background-size: contain, cover;
+     background-position: center; /* Center the image */
+}
+
+.example-gallery::before {
+    content: 'Example 360 Image Gallery';
+    font-size: 16px;
+    font-weight: bold;
+    color: #555;
+    display: block;
+    position: absolute;
+    top: -25px;
+    left: 20px;
+}
+
+
+/* Warning Container Styling */
+.warning-container {
+    display: flex;
+    align-items: center;
+    background-color: #fff4e5;
+    border: 1px solid #ffc107;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Icon Styling */
+.warning-icon {
+    font-size: 18px;
+    color: #ffc107;
+    margin-right: 10px;
+}
+
+/* Text Styling */
+.warning-text {
+    font-size: 14px;
+    color: #856404;
+    line-height: 1.5;
+}
+
+/* Hover Effect */
+.warning-container:hover {
+    background-color: #ffe8cc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+
+#imageUploadForm .form-label {
+    font-weight: bold;
+    color: #555;
+}
+
+#interiorImage {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+button[type="submit"]#uploadBtn {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+button[type="submit"]#uploadBtn:hover {
+    background-color: #138496;
+}
+
+
+
+/* Generate 360 View Section */
+#viewer {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #777;
+}
+
+button#load360View {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+button#load360View i {
+    font-size: 16px;
+}
+
+button#load360View:hover {
+    background-color: #b92e3c;
+}

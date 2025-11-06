@@ -39,41 +39,33 @@ app.use(session({
   }
 }));
 
-// Public API routes
+// Protect routes by role first
+app.use('/api/consumer', requireLogin('consumer'));
+app.use('/api/stakeholder', requireLogin('stakeholder'));
+app.use('/api/rider', requireLogin('rider'));
+
+// Then register routes
 app.use('/api/auth', authRoutes);
 app.use('/api/signup', signupRoutes);
 app.use('/api/map', mapRoutes);
-// Everything under /api requires a valid session
-//app.use('/api', sessionMiddleware);
 
-// /server.js
 const consumerRoutes = require('./routes/consumerRoutes');
 app.use('/api/consumer', consumerRoutes);
 const stakeholderRoutes = require('./routes/stakeholderRoutes');
 app.use('/api/stakeholder', stakeholderRoutes);
 const menuRoutes = require('./routes/menuRoutes');
-app.use('/api/menu',menuRoutes); // or utilityRoutes if you put it there
+app.use('/api/menu', menuRoutes);
 const interiorRoutes = require('./routes/interiorRoutes');
 app.use('/api/interior', interiorRoutes);
 
-
-
-
+// Serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve login page
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
-
-// Protect dashboard routes by role
-app.use('api/consumer', requireLogin('consumer'));
-app.use('api/stakeholder', requireLogin('stakeholder'));
-app.use('api/rider', requireLogin('rider'));
-
-// Now serve the actual dashboards and other static files
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 
 app.use((req, res, next) => {
     if (req.path.endsWith('.html') && !req.path.includes('/login.html')) {
@@ -81,7 +73,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
 
 // ... your socket.io setup, other routes, etc.
 
