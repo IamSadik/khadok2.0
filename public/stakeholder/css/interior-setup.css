@@ -264,6 +264,10 @@ body {
   
 
 
+
+
+  
+
 .threeD-preview,
 .table-preview {
     height: 250px;
@@ -904,3 +908,24 @@ button#load360View i {
 button#load360View:hover {
     background-color: #b92e3c;
 }
+
+
+/* Panolens container fix */
+#panolens-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background-color: #000;
+    overflow: hidden;
+  }
+  
+  /* Force Panolens canvas to always stay inside container */
+  #panolens-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }

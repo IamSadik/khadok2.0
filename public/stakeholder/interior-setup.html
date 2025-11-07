@@ -13,8 +13,8 @@
 
   <!-- Three.js r105 (ONLY ONE VERSION) -->
   <script src="https://pchen66.github.io/js/three/three.min.js"></script>
-  
-  
+
+
   <!-- Panolens (must come after THREE.js) -->
   <script src="https://pchen66.github.io/js/panolens/panolens.min.js"></script>
 </head>
@@ -63,40 +63,226 @@
       <h2><i class="fas fa-cube"></i> Interactive 3D Floor</h2>
       <div class="threeD-container">
         <div id="threeDPreview" style="position: relative; width: 100%; height: 500px; overflow: hidden;">
+          <!-- Collapsible Toggle Button -->
+          <button id="toggleHudBtn" style="position:absolute; top:12px; left:12px; z-index:20;
+       background:#1E293B; color:white; border:none; 
+       border-radius:6px; padding:4px 8px; font-size:12px; 
+       cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+            🛠 Tools
+          </button>
+
           <!-- HUD Controls -->
-          <div id="hudOverlay"
-            style="position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(255,255,255,0.85); padding: 10px; border-radius: 8px; font-family: sans-serif;">
-            <div style="margin-bottom: 6px;">
-              <button id="addTableBtn" class="designer-btn">🪑 Table</button>
-              <select id="tableSizeSelect">
-                <option value="2">2-seat</option>
-                <option value="4" selected>4-seat</option>
-                <option value="5">5-seat</option>
-                <option value="6">6-seat</option>
-                <option value="8">8-seat</option>
-                <option value="12">12-seat</option>
-                <option value="16">16-seat</option>
-              </select>
-              <button id="addPillarBtn" class="designer-btn">🧱 Pillar</button>
-              <button id="addChairBtn" class="designer-btn">💺 Chair</button>
-              <button id="moveToolBtn" class="designer-btn">✋ Move</button>
-            </div>
-            <div style="margin-bottom: 6px;">
-              <label>Floor (LxW):</label>
-              <input id="floorLenInput" type="number" value="100" style="width:60px;">
-              <input id="floorWidInput" type="number" value="100" style="width:60px;">
-              <button id="applyFloorSizeBtn">Apply</button>
-            </div>
-            <div style="margin-bottom: 6px;">
-              <label>Pillar Height:</label>
-              <input id="pillarHeightInput" type="number" value="10" style="width:60px;">
-            </div>
+          <div id="hudOverlay" style="position: absolute; 
+    top: 50px; 
+    left: 12px; 
+    z-index: 10; 
+    background: rgba(255,255,255,0.95); 
+    padding: 6px 8px; 
+    border-radius: 10px; 
+    font-family: 'Inter', sans-serif; 
+    font-size: 11px; 
+    line-height: 1.25; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    backdrop-filter: blur(4px);
+    transform-origin: top left;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 140px;
+    transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), 
+                opacity 0.3s ease;">
+
+            <style>
+              .hud-btn {
+                background: linear-gradient(135deg, #2563EB, #3B82F6);
+                border: none;
+                color: white;
+                font-size: 12px;
+                padding: 5px 7px;
+                border-radius: 6px;
+                cursor: pointer;
+                width: 100%;
+                text-align: left;
+                transition: all 0.2s ease;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+                margin-bottom: 4px;
+              }
+
+              .hud-btn:hover {
+                background: linear-gradient(135deg, #1E40AF, #2563EB);
+                transform: translateY(-1px);
+              }
+
+              .hud-btn:active {
+                transform: scale(0.97);
+              }
+
+              .hud-btn.selected {
+                background: linear-gradient(135deg, #10B981, #34D399);
+                /* permanently highlighted */
+              }
+
+              #hudOverlay select,
+              #hudOverlay input {
+                font-size: 11px;
+                padding: 3px 4px;
+                border-radius: 5px;
+                border: 1px solid #ccc;
+                width: 100%;
+                box-sizing: border-box;
+                margin-top: 3px;
+                margin-bottom: 6px;
+              }
+
+              #hudOverlay label {
+                font-weight: 500;
+                color: #334155;
+                margin-bottom: 2px;
+                display: inline-block;
+              }
+
+              /* Auto Rotate Inline */
+              .auto-rotate-label {
+                display: flex;
+                align-items: center;
+                /* vertically center checkbox and text */
+                gap: 6px;
+                /* space between checkbox and text */
+                cursor: pointer;
+                /* makes the whole label clickable */
+              }
+
+
+              /* Collapse Animation */
+              #hudOverlay.hidden {
+                transform: translateX(-160px);
+                opacity: 0;
+                pointer-events: none;
+              }
+
+              @keyframes slideIn {
+                from {
+                  transform: translateX(-160px);
+                  opacity: 0;
+                }
+
+                to {
+                  transform: translateX(0);
+                  opacity: 1;
+                }
+              }
+
+              @keyframes slideOut {
+                from {
+                  transform: translateX(0);
+                  opacity: 1;
+                }
+
+                to {
+                  transform: translateX(-160px);
+                  opacity: 0;
+                }
+              }
+
+              #hudOverlay.sliding-in {
+                animation: slideIn 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+              }
+
+              #hudOverlay.sliding-out {
+                animation: slideOut 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+              }
+            </style>
+
+            <!-- Tool Buttons -->
+            <button id="addTableBtn" class="hud-btn">🪑 Add Table</button>
+            <select id="tableSizeSelect">
+              <option value="2">2-seat</option>
+              <option value="4" selected>4-seat</option>
+              <option value="5">5-seat</option>
+              <option value="6">6-seat</option>
+              <option value="8">8-seat</option>
+              <option value="12">12-seat</option>
+              <option value="16">16-seat</option>
+            </select>
+            <button id="addPillarBtn" class="hud-btn">🧱 Add Pillar</button>
+            <button id="addChairBtn" class="hud-btn">💺 Add Chair</button>
+            <button id="moveToolBtn" class="hud-btn">✋ Move Tool</button>
+
+            <!-- Floor Inputs -->
             <div>
-              <button id="undoBtn">Undo</button>
-              <button id="clearBtn">Clear</button>
-              <label style="margin-left:8px;"><input type="checkbox" id="autoRotateToggle"> Auto Rotate</label>
+              <label>Floor (LxW)</label>
+              <input id="floorLenInput" type="number" value="100" placeholder="Length">
+              <input id="floorWidInput" type="number" value="100" placeholder="Width">
+              <div style="height:6px;"></div>
+              <button id="applyFloorSizeBtn" class="hud-btn">Apply</button>
             </div>
+
+            <!-- Pillar Height -->
+            <div>
+              <label>Pillar Height</label>
+              <input id="pillarHeightInput" type="number" value="10">
+            </div>
+
+            <!-- Undo / Clear Buttons -->
+            <button id="undoBtn" class="hud-btn">↩️ Undo</button>
+            <button id="clearBtn" class="hud-btn" style="background: linear-gradient(135deg, #DC2626, #EF4444);">🧹
+              Clear</button>
+
+            <!-- Auto Rotate Inline -->
+            <!-- Auto Rotate Inline -->
+            <label class="auto-rotate-label" title="Auto rotate">
+              <input type="checkbox" id="autoRotateToggle">
+              <span>Auto Rotate</span>
+            </label>
+
           </div>
+
+          <script>
+            const toggleHudBtn = document.getElementById('toggleHudBtn');
+            const hudOverlay = document.getElementById('hudOverlay');
+            let isHidden = false;
+
+            // Collapse toggle
+            toggleHudBtn.addEventListener('click', () => {
+              if (isHidden) {
+                hudOverlay.classList.remove('hidden', 'sliding-out');
+                hudOverlay.classList.add('sliding-in');
+              } else {
+                hudOverlay.classList.remove('sliding-in');
+                hudOverlay.classList.add('sliding-out');
+                setTimeout(() => hudOverlay.classList.add('hidden'), 350);
+              }
+              isHidden = !isHidden;
+            });
+
+            // Tool buttons toggle (on/off) + single select
+            const buttons = [
+              document.getElementById('addTableBtn'),
+              document.getElementById('addPillarBtn'),
+              document.getElementById('addChairBtn'),
+              document.getElementById('moveToolBtn')
+            ];
+
+            buttons.forEach(btn => {
+              btn.addEventListener('click', () => {
+                if (btn.classList.contains('selected')) {
+                  btn.classList.remove('selected'); // toggle off
+                } else {
+                  buttons.forEach(b => b.classList.remove('selected')); // turn others off
+                  btn.classList.add('selected'); // toggle on
+                }
+              });
+            });
+
+            // Table size select flash effect (optional)
+            const tableSizeSelect = document.getElementById('tableSizeSelect');
+            tableSizeSelect.addEventListener('change', () => {
+              tableSizeSelect.classList.add('selected');
+              setTimeout(() => tableSizeSelect.classList.remove('selected'), 800); // flash
+            });
+          </script>
+
+
         </div>
       </div>
     </div>
@@ -207,8 +393,8 @@
       <i class="fas fa-trash-alt"></i> Delete 360 View
     </button>
   </div>
-  
-  
+
+
 
   <script>
     async function logout() {
