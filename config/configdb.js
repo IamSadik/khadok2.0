@@ -1,4 +1,4 @@
-// config/connectdb.js
+// config/configdb.js
 const mysql = require('mysql');
 const config = require('./config');
 //const mysql2 = require('mysql2/promise');

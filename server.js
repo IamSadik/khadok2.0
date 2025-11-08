@@ -57,6 +57,8 @@ const menuRoutes = require('./routes/menuRoutes');
 app.use('/api/menu', menuRoutes);
 const interiorRoutes = require('./routes/interiorRoutes');
 app.use('/api/interior', interiorRoutes);
+const restaurantRoutes = require('./routes/restaurantRoutes');
+app.use('/api/restaurant', restaurantRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
