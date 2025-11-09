@@ -20,6 +20,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://kit.fontawesome.com/a2d9d6a1f3.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
     <script src="js/app.js"></script>
 
@@ -103,213 +104,242 @@
 
     <div class="home_content">
         <div class="dashboard-container">
-            <div class="user-info">
-                <p hidden id="userEmail">Fetching user info...</p>
+          <div class="user-info">
+            <p hidden id="userEmail">Fetching user info...</p>
+          </div>
+      
+          <!-- Top Navigation Bar -->
+          <nav class="navbar">
+            <div class="nav-left">
+              <img src="images/khadok2.png" alt="Khadok Logo" class="logo" />
+              
             </div>
-
-            <header>
-                <h1>Welcome Back, Consumer!</h1>
-            </header>
-
-            <div class="cards-container">
-                <div class="card">
-                    <i class="fas fa-shopping-bag"></i>
-                    <div class="card-info">
-                        <h3>Orders</h3>
-                        <p>Manage your past orders</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <i class="fas fa-store"></i>
-                    <div class="card-info">
-                        <h3>Restaurants</h3>
-                        <p>Explore restaurants near you</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <i class="fas fa-utensils"></i>
-                    <div class="card-info">
-                        <h3>Dine-In</h3>
-                        <p>Reserve a table</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <i class="fas fa-user"></i>
-                    <div class="card-info">
-                        <h3>Profile</h3>
-                        <p>Update account details</p>
-                    </div>
-                </div>
-
+      
+            <div class="nav-center">
+              <div class="location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="location-name">New Address N1, Dhaka</span>
+                <i class="fas fa-chevron-down"></i>
+              </div>
             </div>
-
-            <section class="upcoming-section">
-                <h2>Upcoming Reservations</h2>
-                <div class="reservation">
-                    <i class="fas fa-calendar-alt"></i>
-                    <div>
-                        <p><strong>Restaurant Name:</strong> The Gourmet Spot</p>
-                        <p><strong>Date:</strong> Nov 25, 2024</p>
-                        <p><strong>Time:</strong> 7:00 PM</p>
-                    </div>
-                </div>
-                <div class="reservation">
-                    <i class="fas fa-calendar-alt"></i>
-                    <div>
-                        <p><strong>Restaurant Name:</strong> Bistro Bliss</p>
-                        <p><strong>Date:</strong> Dec 1, 2024</p>
-                        <p><strong>Time:</strong> 8:00 PM</p>
-                    </div>
-                </div>
-            </section>
-            <div id="active-orders-section"></div>
-            <section id="restaurant-section">
-                <h2>Restaurants</h2>
-                <div class="filter-container">
-                    <label>Sort By:</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="sort-option" value="relevance" checked />
-                            Relevance
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="sort-option" value="ratings" />
-                            Ratings
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="sort-option" value="name" />
-                            Name
-                        </label>
-                    </div>
-                </div>
-                <div id="restaurants-container" class="restaurants-container">
-                    <p>Loading restaurants...</p>
-                </div>
-            </section>
-
-            <section id="dinein-section">
-                <h2>Dine In Restaurants</h2>
-                <div class="filter-container">
-                    <label>Sort By:</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="dinein-sort-option" value="relevance" checked />
-                            Relevance
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="dinein-sort-option" value="ratings" />
-                            Ratings
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="dinein-sort-option" value="name" />
-                            Name
-                        </label>
-                    </div>
-                </div>
-                <div id="dinein-restaurants-container" class="restaurants-container">
-                    <p>Loading restaurants...</p>
-                </div>
-            </section>
-
-
-
-            <!-- Welcome / Setup Popup -->
-            <div id="welcome-popup" class="popup-overlay" style="display:none;">
-                <div class="popup-content">
-
-                    <!-- Step 0: Welcome -->
-                    <div class="popup-screen" id="welcome-screen">
-                        <h2>👋 Welcome to <span class="highlight">Khadok</span>!</h2>
-                        <p>We’re excited to have you on board. Let’s set up your profile.</p>
-                        <button class="primary-btn" id="get-started-btn">Get Started</button>
-                    </div>
-
-                    <!-- Step 1: Basic Info -->
-                    <div class="popup-screen" id="step-1">
-                        <h3><i class="fa-solid fa-user fa-bounce" style="color: #63E6BE;"></i> Your Basic Info</h3>
-
-                        <label>Full Name:
-                            <input type="text" id="consumer-name" placeholder="Enter your full name" required />
-                        </label>
-                        <label>Mobile Number:
-                            <input type="tel" id="consumer-number" placeholder="+8801XXXXXXXXX" required />
-                        </label>
-                        <div class="button-group">
-                            <button class="secondary-btn" id="back-to-welcome">← Back</button>
-                            <button class="primary-btn" id="to-step-2">Next →</button>
-                        </div>
-                    </div>
-                    <!-- Step 2: Location -->
-                    <div class="popup-screen" id="step-2">
-                        <h3>
-                            <i class="fa-solid fa-map-pin fa-bounce" style="color: #63E6BE;"></i>
-                            Set Your Location
-                        </h3>
-
-                        <label>Address:</label>
-                        <div class="location-input-wrapper">
-                            <input type="text" id="location-input" placeholder="Search address..." autocomplete="off" />
-                            <ul id="location-suggestions" class="location-suggestions hidden"></ul>
-
-                            <!-- Locate Me button -->
-                            <button id="locate-me-btn" class="locate-me-btn" title="Use my current location"
-                                style="padding: 0; border: none; background: none;">
-                                <img src="../images/location-icon.jpg" alt="Locate Me"
-                                    style="width: 28px; height: 28px; object-fit: contain;" />
-                            </button>
-
-
-                            <button id="clear-location-btn" title="Clear"
-                                style="position:absolute; right: 50px; top: 5px; background:none; border:none; font-size: 16px; cursor: pointer;">×</button>
-                        </div>
-
-                        <div id="map-container" class="map-placeholder" style="height:300px; margin-top:10px;">
-                            <!-- Fixed center-screen pin -->
-                            <div id="map-center-marker" class="hidden" style="width: 14px; height: 14px;">
-                                <i class="fa-solid fa-map-pin" style="color: #63E6BE;"></i>
-                            </div>
-                        </div>
-
-                        <div class="button-group" style="margin-top:15px;">
-                            <button class="secondary-btn" id="back-to-step-1">← Back</button>
-                            <button class="primary-btn" id="to-step-3">Next →</button>
-                        </div>
-                    </div>
-
-
-
-                    <!-- Step 3: Additional Info -->
-                    <div class="popup-screen" id="step-3">
-                        <h3><i class="fa-solid fa-circle-info fa-bounce" style="color: #63E6BE;"></i> Additional Info
-                        </h3>
-                        <label>Gender:
-                            <select id="consumer-gender">
-                                <option value="" disabled selected>Select gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-
-                            </select>
-                        </label>
-                        <label>Age:
-                            <input type="number" id="consumer-age" placeholder="Enter your age" min="10" max="100" />
-                        </label>
-                        <label>Profile Picture (optional):
-                            <input type="file" id="consumer-pic" accept="image/*" />
-                        </label>
-                        <div class="button-group">
-                            <button class="secondary-btn" id="back-to-step-2">← Back</button>
-                            <button class="primary-btn" id="finish-setup">Finish ✔</button>
-                        </div>
-                    </div>
-
-                </div>
+      
+            
+          </nav>
+      
+          <!-- Hero Section -->
+          <section class="hero">
+            <div class="hero-content">
+              <h1>Find your favourite meals near you</h1>
+              <p>Delicious food from top restaurants, delivered fresh and fast</p>
+      
+              <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input
+                  type="text"
+                  placeholder="Search for restaurants or cuisines"
+                  id="search"
+                />
+                <button class="search-btn">Search</button>
+              </div>
             </div>
-
-
-
-
+          </section>
+      
+          <!-- Main Content -->
+          <main class="main-container">
+            <div class="service-buttons">
+                <button class="active">
+                  <i class="fas fa-motorcycle"></i> Delivery
+                </button>
+                <button>
+                  <i class="fas fa-shopping-bag"></i> Pickup
+                </button>
+                <button>
+                  <i class="fas fa-utensils"></i> Dine-in
+                </button>
+              </div>
+            <!-- Cuisine Categories -->
+            <section class="cuisine-section">
+              <h2>Your Favourite Cuisines</h2>
+              <div class="cuisine-list">
+                <div class="cuisine-card">🍕 Pizza</div>
+                <div class="cuisine-card">🍔 Burgers</div>
+                <div class="cuisine-card">🍛 Biryani</div>
+                <div class="cuisine-card">🍜 Noodles</div>
+                <div class="cuisine-card">🍣 Sushi</div>
+                <div class="cuisine-card">🍰 Cakes</div>
+                <div class="cuisine-card">☕ Coffee</div>
+              </div>
+            </section>
+      
+            <!-- Filter + Sort -->
+            <div class="filter-bar">
+              <div class="sort-options">
+                <label>Sort by:</label>
+                <button class="active">Relevance</button>
+                <button>Top Rated</button>
+                <button>Distance</button>
+                <button>Fastest</button>
+              </div>
+              <button class="filter-btn">
+                <i class="fas fa-sliders-h"></i> Filters
+              </button>
+            </div>
+      
+            <!-- Restaurants Grid -->
+            <section class="restaurant-grid" id="restaurant-container">
+              <div class="loading">Loading delicious options...</div>
+            </section>
+          </main>
+      
+          <!-- Welcome / Setup Popup -->
+          <div id="welcome-popup" class="popup-overlay" style="display:none;">
+            <div class="popup-content">
+              <!-- Step 0: Welcome -->
+              <div class="popup-screen" id="welcome-screen">
+                <h2>👋 Welcome to <span class="highlight">Khadok</span>!</h2>
+                <p>We’re excited to have you on board. Let’s set up your profile.</p>
+                <button class="primary-btn" id="get-started-btn">Get Started</button>
+              </div>
+      
+              <!-- Step 1: Basic Info -->
+              <div class="popup-screen" id="step-1">
+                <h3>
+                  <i class="fa-solid fa-user fa-bounce" style="color: #63E6BE;"></i>
+                  Your Basic Info
+                </h3>
+      
+                <label>Full Name:
+                  <input
+                    type="text"
+                    id="consumer-name"
+                    placeholder="Enter your full name"
+                    required
+                  />
+                </label>
+      
+                <label>Mobile Number:
+                  <input
+                    type="tel"
+                    id="consumer-number"
+                    placeholder="+8801XXXXXXXXX"
+                    required
+                  />
+                </label>
+      
+                <div class="button-group">
+                  <button class="secondary-btn" id="back-to-welcome">← Back</button>
+                  <button class="primary-btn" id="to-step-2">Next →</button>
+                </div>
+              </div>
+      
+              <!-- Step 2: Location -->
+              <div class="popup-screen" id="step-2">
+                <h3>
+                  <i class="fa-solid fa-map-pin fa-bounce" style="color: #63E6BE;"></i>
+                  Set Your Location
+                </h3>
+      
+                <label>Address:</label>
+                <div class="location-input-wrapper">
+                  <input
+                    type="text"
+                    id="location-input"
+                    placeholder="Search address..."
+                    autocomplete="off"
+                  />
+                  <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+      
+                  <!-- Locate Me button -->
+                  <button
+                    id="locate-me-btn"
+                    class="locate-me-btn"
+                    title="Use my current location"
+                    style="padding: 0; border: none; background: none;"
+                  >
+                    <img
+                      src="../images/location-icon.jpg"
+                      alt="Locate Me"
+                      style="width: 28px; height: 28px; object-fit: contain;"
+                    />
+                  </button>
+      
+                  <button
+                    id="clear-location-btn"
+                    title="Clear"
+                    style="
+                      position: absolute;
+                      right: 50px;
+                      top: 5px;
+                      background: none;
+                      border: none;
+                      font-size: 16px;
+                      cursor: pointer;
+                    "
+                  >
+                    ×
+                  </button>
+                </div>
+      
+                <div
+                  id="map-container"
+                  class="map-placeholder"
+                  style="height:300px; margin-top:10px;"
+                >
+                  <!-- Fixed center-screen pin -->
+                  <div
+                    id="map-center-marker"
+                    class="hidden"
+                    style="width: 14px; height: 14px;"
+                  >
+                    <i class="fa-solid fa-map-pin" style="color: #63E6BE;"></i>
+                  </div>
+                </div>
+      
+                <div class="button-group" style="margin-top:15px;">
+                  <button class="secondary-btn" id="back-to-step-1">← Back</button>
+                  <button class="primary-btn" id="to-step-3">Next →</button>
+                </div>
+              </div>
+      
+              <!-- Step 3: Additional Info -->
+              <div class="popup-screen" id="step-3">
+                <h3>
+                  <i class="fa-solid fa-circle-info fa-bounce" style="color: #63E6BE;"></i>
+                  Additional Info
+                </h3>
+      
+                <label>Gender:
+                  <select id="consumer-gender">
+                    <option value="" disabled selected>Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </label>
+      
+                <label>Age:
+                  <input
+                    type="number"
+                    id="consumer-age"
+                    placeholder="Enter your age"
+                    min="10"
+                    max="100"
+                  />
+                </label>
+      
+                <label>Profile Picture (optional):
+                  <input type="file" id="consumer-pic" accept="image/*" />
+                </label>
+      
+                <div class="button-group">
+                  <button class="secondary-btn" id="back-to-step-2">← Back</button>
+                  <button class="primary-btn" id="finish-setup">Finish ✔</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
+      
 
     <script>
         let btn = document.querySelector("#btn");
