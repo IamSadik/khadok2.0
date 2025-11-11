@@ -72,6 +72,9 @@ const updateConsumerInfo = async (req, res) => {
   }
 };
 
+
+
+
 module.exports = {
     checkFirstTimeLogin, updateConsumerInfo
 };

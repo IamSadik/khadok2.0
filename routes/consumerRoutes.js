@@ -14,6 +14,8 @@ router.post(
     upload.single("profile_pic"), // This matches the FormData field name
     consumerController.updateConsumerInfo
   );
+
+
   
 
 module.exports = router;

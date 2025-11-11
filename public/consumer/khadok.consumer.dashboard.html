@@ -2,271 +2,243 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dashoard</title>
-    <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
-    <link rel="stylesheet" href="css/khadok.consumer.dashboard.css">\
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-A7vV8IFfih/D732iSSl2gBj5b0hyYLtP7kD+3h7gUGI=" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-DqmMyN4G2E/J04hWmKZulrVdY0lAM8Q+vHdUqax0DA0=" crossorigin=""></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dashoard</title>
+  <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
+  <link rel="stylesheet" href="css/khadok.consumer.dashboard.css">\
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-A7vV8IFfih/D732iSSl2gBj5b0hyYLtP7kD+3h7gUGI=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-DqmMyN4G2E/J04hWmKZulrVdY0lAM8Q+vHdUqax0DA0=" crossorigin=""></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        integrity="sha512-yadaYADA..." crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://kit.fontawesome.com/a2d9d6a1f3.js" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-    <script src="js/app.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    integrity="sha512-yadaYADA..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <script src="https://kit.fontawesome.com/a2d9d6a1f3.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+  <script src="js/app.js"></script>
 
 
 </head>
 
 <body>
 
-    <div class="sidebar">
-        <div class="logo_content">
-            <div class="logo">
+  <div class="sidebar">
+    <div class="logo_content">
+      <div class="logo">
 
-                <div class="logo_name">Khadok
+        <div class="logo_name">Khadok
 
-                </div>
-            </div>
-            <i class='bx bx-menu' id="btn"></i>
         </div>
-        <ul class="nav_list">
-            <li>
+      </div>
+      <i class='bx bx-menu' id="btn"></i>
+    </div>
+    <ul class="nav_list">
+      <li>
 
-                <i class='bx bx-search-alt'></i>
-                <input type="text" placeholder="Search...">
+        <i class='bx bx-search-alt'></i>
+        <input type="text" placeholder="Search...">
 
-                <span class="tooltip">Search </span>
-            </li>
-            <li>
-                <a href="khadok.consumer.dashboard.html">
-                    <i class='bx bxs-grid-alt'></i>
-                    <span class="links_name">Dashboard</span>
-                </a>
-                <span class="tooltip">Dashboard</span>
-            </li>
-            <li>
-                <a href="khadok.consumer.user.html">
-                    <i class='bx bxs-user-circle'></i>
-                    <span class="links_name">User</span>
-                </a>
-                <span class="tooltip">User</span>
-            </li>
-            <li>
-                <a href="map.html">
-                    <i class='bx bx-navigation'></i>
-                    <span class="links_name">Map</span>
-                </a>
-                <span class="tooltip">Map</span>
-            </li>
+        <span class="tooltip">Search </span>
+      </li>
+      <li>
+        <a href="khadok.consumer.dashboard.html">
+          <i class='bx bxs-grid-alt'></i>
+          <span class="links_name">Dashboard</span>
+        </a>
+        <span class="tooltip">Dashboard</span>
+      </li>
+      <li>
+        <a href="khadok.consumer.user.html">
+          <i class='bx bxs-user-circle'></i>
+          <span class="links_name">User</span>
+        </a>
+        <span class="tooltip">User</span>
+      </li>
+      <li>
+        <a href="map.html">
+          <i class='bx bx-navigation'></i>
+          <span class="links_name">Map</span>
+        </a>
+        <span class="tooltip">Map</span>
+      </li>
 
-            <li>
-                <a href="khadok.consumer.order.html">
-                    <i class='bx bxs-package'></i>
-                    <span class="links_name">Orders</span>
-                </a>
-                <span class="tooltip">Orders</span>
-            </li>
+      <li>
+        <a href="khadok.consumer.order.html">
+          <i class='bx bxs-package'></i>
+          <span class="links_name">Orders</span>
+        </a>
+        <span class="tooltip">Orders</span>
+      </li>
 
-            <li>
-                <a href="khadok.consumer.setting.html">
-                    <i class='bx bxs-cog'></i>
-                    <span class="links_name">Settings</span>
-                </a>
-                <span class="tooltip">Settings</span>
-            </li>
-        </ul>
-        <div class="profile_content">
-            <div class="profile">
-                <div class="profile_details">
-                    <div class="name_job">
-                        <div class="name">Logout</div>
-                        <div class="job">Consumer</div>
-                    </div>
-                </div>
-                <button id="logoutButton" class="logout_button" onclick="logout()">
-                    <i class='bx bx-log-out-circle' id="log_out"></i>
-                    <span class="links_name">Logout</span>
-                </button>
-            </div>
+      <li>
+        <a href="khadok.consumer.setting.html">
+          <i class='bx bxs-cog'></i>
+          <span class="links_name">Settings</span>
+        </a>
+        <span class="tooltip">Settings</span>
+      </li>
+    </ul>
+    <div class="profile_content">
+      <div class="profile">
+        <div class="profile_details">
+          <div class="name_job">
+            <div class="name">Logout</div>
+            <div class="job">Consumer</div>
+          </div>
         </div>
-
+        <button id="logoutButton" class="logout_button" onclick="logout()">
+          <i class='bx bx-log-out-circle' id="log_out"></i>
+          <span class="links_name">Logout</span>
+        </button>
+      </div>
     </div>
 
-    <div class="home_content">
-        <div class="dashboard-container">
-          <div class="user-info">
-            <p hidden id="userEmail">Fetching user info...</p>
+  </div>
+
+  <div class="home_content">
+    <div class="dashboard-container">
+      <div class="user-info">
+        <p hidden id="userEmail">Fetching user info...</p>
+      </div>
+
+      <!-- Top Navigation Bar -->
+      <nav class="navbar">
+        <div class="nav-left">
+          <img src="images/khadok2.png" alt="Khadok Logo" class="logo" /><!-- Logo Image -->
+
+        </div>
+
+        <div class="nav-center">
+          <div class="location" id="open-location-btn" role="button" title="Open location picker">
+            <i class="fas fa-map-marker-alt"></i>
+            <span id="location-name">New Address N1, Dhaka</span>
+            <i class="fas fa-chevron-down"></i>
           </div>
-      
-          <!-- Top Navigation Bar -->
-          <nav class="navbar">
-            <div class="nav-left">
-              <img src="images/khadok2.png" alt="Khadok Logo" class="logo" /><!-- Logo Image -->
-              
+        </div>
+
+
+
+      </nav>
+
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="hero-content">
+          <h1>Find your favourite meals near you</h1>
+          <p>Delicious food from top restaurants, delivered fresh and fast</p>
+
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search for restaurants or cuisines" id="search" />
+            <button class="search-btn">Search</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Content -->
+      <main class="main-container">
+        <div class="service-buttons">
+          <button class="active">
+            <i class="fas fa-motorcycle"></i> Delivery
+          </button>
+          <button>
+            <i class="fas fa-shopping-bag"></i> Pickup
+          </button>
+          <button>
+            <i class="fas fa-utensils"></i> Dine-in
+          </button>
+        </div>
+        <!-- Cuisine Categories -->
+        <section class="cuisine-section">
+          <h2>Your Favourite Cuisines</h2>
+          <div class="cuisine-list">
+            <div class="cuisine-card">🍕 Pizza</div>
+            <div class="cuisine-card">🍔 Burgers</div>
+            <div class="cuisine-card">🍛 Biryani</div>
+            <div class="cuisine-card">🍜 Noodles</div>
+            <div class="cuisine-card">🍣 Sushi</div>
+            <div class="cuisine-card">🍰 Cakes</div>
+            <div class="cuisine-card">☕ Coffee</div>
+          </div>
+        </section>
+
+        <!-- Filter + Sort -->
+        <div class="filter-bar">
+          <div class="sort-options">
+            <label>Sort by:</label>
+            <button class="active">Relevance</button>
+            <button>Top Rated</button>
+            <button>Distance</button>
+            <button>Fastest</button>
+          </div>
+          <button class="filter-btn">
+            <i class="fas fa-sliders-h"></i> Filters
+          </button>
+        </div>
+
+        <!-- Restaurants Grid -->
+        <section class="restaurant-grid" id="restaurant-container">
+          <div class="loading">Loading delicious options...</div>
+        </section>
+      </main>
+
+      <!-- Welcome / Setup Popup -->
+      <div id="welcome-popup" class="popup-overlay" style="display:none;">
+        <div class="popup-content">
+          <!-- Step 0: Welcome -->
+          <div class="popup-screen" id="welcome-screen">
+            <h2>👋 Welcome to <span class="highlight">Khadok</span>!</h2>
+            <p>We’re excited to have you on board. Let’s set up your profile.</p>
+            <button class="primary-btn" id="get-started-btn">Get Started</button>
+          </div>
+
+          <!-- Step 1: Basic Info -->
+          <div class="popup-screen" id="step-1">
+            <h3>
+              <i class="fa-solid fa-user fa-bounce" style="color: #63E6BE;"></i>
+              Your Basic Info
+            </h3>
+
+            <label>Full Name:
+              <input type="text" id="consumer-name" placeholder="Enter your full name" required />
+            </label>
+
+            <label>Mobile Number:
+              <input type="tel" id="consumer-number" placeholder="+8801XXXXXXXXX" required />
+            </label>
+
+            <div class="button-group">
+              <button class="secondary-btn" id="back-to-welcome">← Back</button>
+              <button class="primary-btn" id="to-step-2">Next →</button>
             </div>
-      
-            <div class="nav-center">
-              <div class="location">
-                <i class="fas fa-map-marker-alt"></i>
-                <span id="location-name">New Address N1, Dhaka</span>
-                <i class="fas fa-chevron-down"></i>
-              </div>
-            </div>
-      
-            
-          </nav>
-      
-          <!-- Hero Section -->
-          <section class="hero">
-            <div class="hero-content">
-              <h1>Find your favourite meals near you</h1>
-              <p>Delicious food from top restaurants, delivered fresh and fast</p>
-      
-              <div class="search-bar">
-                <i class="fas fa-search"></i>
-                <input
-                  type="text"
-                  placeholder="Search for restaurants or cuisines"
-                  id="search"
-                />
-                <button class="search-btn">Search</button>
-              </div>
-            </div>
-          </section>
-      
-          <!-- Main Content -->
-          <main class="main-container">
-            <div class="service-buttons">
-                <button class="active">
-                  <i class="fas fa-motorcycle"></i> Delivery
-                </button>
-                <button>
-                  <i class="fas fa-shopping-bag"></i> Pickup
-                </button>
-                <button>
-                  <i class="fas fa-utensils"></i> Dine-in
-                </button>
-              </div>
-            <!-- Cuisine Categories -->
-            <section class="cuisine-section">
-              <h2>Your Favourite Cuisines</h2>
-              <div class="cuisine-list">
-                <div class="cuisine-card">🍕 Pizza</div>
-                <div class="cuisine-card">🍔 Burgers</div>
-                <div class="cuisine-card">🍛 Biryani</div>
-                <div class="cuisine-card">🍜 Noodles</div>
-                <div class="cuisine-card">🍣 Sushi</div>
-                <div class="cuisine-card">🍰 Cakes</div>
-                <div class="cuisine-card">☕ Coffee</div>
-              </div>
-            </section>
-      
-            <!-- Filter + Sort -->
-            <div class="filter-bar">
-              <div class="sort-options">
-                <label>Sort by:</label>
-                <button class="active">Relevance</button>
-                <button>Top Rated</button>
-                <button>Distance</button>
-                <button>Fastest</button>
-              </div>
-              <button class="filter-btn">
-                <i class="fas fa-sliders-h"></i> Filters
+          </div>
+
+          <!-- Step 2: Location -->
+          <div class="popup-screen" id="step-2">
+            <h3>
+              <i class="fa-solid fa-map-pin fa-bounce" style="color: #63E6BE;"></i>
+              Set Your Location
+            </h3>
+
+            <label>Address:</label>
+            <div class="location-input-wrapper">
+              <input type="text" id="location-input" placeholder="Search address..." autocomplete="off" />
+              <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+
+              <!-- Locate Me button -->
+              <button id="locate-me-btn" class="locate-me-btn" title="Use my current location"
+                style="padding: 0; border: none; background: none;">
+                <img src="../images/location-icon.jpg" alt="Locate Me"
+                  style="width: 28px; height: 28px; object-fit: contain;" />
               </button>
-            </div>
-      
-            <!-- Restaurants Grid -->
-            <section class="restaurant-grid" id="restaurant-container">
-              <div class="loading">Loading delicious options...</div>
-            </section>
-          </main>
-      
-          <!-- Welcome / Setup Popup -->
-          <div id="welcome-popup" class="popup-overlay" style="display:none;">
-            <div class="popup-content">
-              <!-- Step 0: Welcome -->
-              <div class="popup-screen" id="welcome-screen">
-                <h2>👋 Welcome to <span class="highlight">Khadok</span>!</h2>
-                <p>We’re excited to have you on board. Let’s set up your profile.</p>
-                <button class="primary-btn" id="get-started-btn">Get Started</button>
-              </div>
-      
-              <!-- Step 1: Basic Info -->
-              <div class="popup-screen" id="step-1">
-                <h3>
-                  <i class="fa-solid fa-user fa-bounce" style="color: #63E6BE;"></i>
-                  Your Basic Info
-                </h3>
-      
-                <label>Full Name:
-                  <input
-                    type="text"
-                    id="consumer-name"
-                    placeholder="Enter your full name"
-                    required
-                  />
-                </label>
-      
-                <label>Mobile Number:
-                  <input
-                    type="tel"
-                    id="consumer-number"
-                    placeholder="+8801XXXXXXXXX"
-                    required
-                  />
-                </label>
-      
-                <div class="button-group">
-                  <button class="secondary-btn" id="back-to-welcome">← Back</button>
-                  <button class="primary-btn" id="to-step-2">Next →</button>
-                </div>
-              </div>
-      
-              <!-- Step 2: Location -->
-              <div class="popup-screen" id="step-2">
-                <h3>
-                  <i class="fa-solid fa-map-pin fa-bounce" style="color: #63E6BE;"></i>
-                  Set Your Location
-                </h3>
-      
-                <label>Address:</label>
-                <div class="location-input-wrapper">
-                  <input
-                    type="text"
-                    id="location-input"
-                    placeholder="Search address..."
-                    autocomplete="off"
-                  />
-                  <ul id="location-suggestions" class="location-suggestions hidden"></ul>
-      
-                  <!-- Locate Me button -->
-                  <button
-                    id="locate-me-btn"
-                    class="locate-me-btn"
-                    title="Use my current location"
-                    style="padding: 0; border: none; background: none;"
-                  >
-                    <img
-                      src="../images/location-icon.jpg"
-                      alt="Locate Me"
-                      style="width: 28px; height: 28px; object-fit: contain;"
-                    />
-                  </button>
-      
-                  <button
-                    id="clear-location-btn"
-                    title="Clear"
-                    style="
+
+              <button id="clear-location-btn" title="Clear" style="
                       position: absolute;
                       right: 50px;
                       top: 5px;
@@ -274,169 +246,128 @@
                       border: none;
                       font-size: 16px;
                       cursor: pointer;
-                    "
-                  >
-                    ×
-                  </button>
-                </div>
-      
-                <div
-                  id="map-container"
-                  class="map-placeholder"
-                  style="height:300px; margin-top:10px;"
-                >
-                  <!-- Fixed center-screen pin -->
-                  <div
-                    id="map-center-marker"
-                    class="hidden"
-                    style="width: 14px; height: 14px;"
-                  >
-                    <i class="fa-solid fa-map-pin" style="color: #63E6BE;"></i>
-                  </div>
-                </div>
-      
-                <div class="button-group" style="margin-top:15px;">
-                  <button class="secondary-btn" id="back-to-step-1">← Back</button>
-                  <button class="primary-btn" id="to-step-3">Next →</button>
-                </div>
+                    ">
+                ×
+              </button>
+            </div>
+
+            <div id="map-container" class="map-placeholder" style="height:300px; margin-top:10px;">
+              <!-- Fixed center-screen pin -->
+              <div id="map-center-marker" class="hidden" style="width: 14px; height: 14px;">
+                <i class="fa-solid fa-map-pin" style="color: #63E6BE;"></i>
               </div>
-      
-              <!-- Step 3: Additional Info -->
-              <div class="popup-screen" id="step-3">
-                <h3>
-                  <i class="fa-solid fa-circle-info fa-bounce" style="color: #63E6BE;"></i>
-                  Additional Info
-                </h3>
-      
-                <label>Gender:
-                  <select id="consumer-gender">
-                    <option value="" disabled selected>Select gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </label>
-      
-                <label>Age:
-                  <input
-                    type="number"
-                    id="consumer-age"
-                    placeholder="Enter your age"
-                    min="10"
-                    max="100"
-                  />
-                </label>
-      
-                <label>Profile Picture (optional):
-                  <input type="file" id="consumer-pic" accept="image/*" />
-                </label>
-      
-                <div class="button-group">
-                  <button class="secondary-btn" id="back-to-step-2">← Back</button>
-                  <button class="primary-btn" id="finish-setup">Finish ✔</button>
-                </div>
-              </div>
+            </div>
+
+            <div class="button-group" style="margin-top:15px;">
+              <button class="secondary-btn" id="back-to-step-1">← Back</button>
+              <button class="primary-btn" id="to-step-3">Next →</button>
+            </div>
+          </div>
+
+          <!-- Step 3: Additional Info -->
+          <div class="popup-screen" id="step-3">
+            <h3>
+              <i class="fa-solid fa-circle-info fa-bounce" style="color: #63E6BE;"></i>
+              Additional Info
+            </h3>
+
+            <label>Gender:
+              <select id="consumer-gender">
+                <option value="" disabled selected>Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
+
+            <label>Age:
+              <input type="number" id="consumer-age" placeholder="Enter your age" min="10" max="100" />
+            </label>
+
+            <label>Profile Picture (optional):
+              <input type="file" id="consumer-pic" accept="image/*" />
+            </label>
+
+            <div class="button-group">
+              <button class="secondary-btn" id="back-to-step-2">← Back</button>
+              <button class="primary-btn" id="finish-setup">Finish ✔</button>
             </div>
           </div>
         </div>
       </div>
-      
 
-    <script>
-        let btn = document.querySelector("#btn");
-        let sidebar = document.querySelector(".sidebar");
-        let searchBtn = document.querySelector(".bx-search-alt");
+      <!-- Location Picker Modal (do not conflict with welcome popup) -->
+      <div id="location-modal" class="location-modal hidden" aria-hidden="true" role="dialog"
+        aria-label="Location picker">
+        <div class="location-modal-backdrop"></div>
 
-        btn.onclick = function () {
-            sidebar.classList.toggle("active");
-        }
-        searchBtn.onclick = function () {
-            sidebar.classList.toggle("active");
-        }
-    </script>
+        <div class="location-modal-panel">
+          <header class="location-modal-header">
+            <div class="location-modal-title">
+              <i class="fas fa-map-marker-alt"></i>
+              <h3>Choose location</h3>
+            </div>
+            <button id="location-modal-close" class="btn-close" title="Close">&times;</button>
+          </header>
+
+          <div class="location-modal-body">
+            <div class="location-search-row">
+              <input id="location-input" type="text" placeholder="Search address..." autocomplete="off" />
+              <button id="locate-me-btn" class="btn-ghost" title="Use my current location">
+                <i class="fas fa-location-arrow"></i>
+              </button>
+              <button id="clear-location-btn" class="btn-ghost" title="Clear">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+
+            <div id="map-container-modal" class="map-container-modal">
+              <div id="map-center-marker" class="map-center-marker hidden"><i class="fas fa-map-pin"></i></div>
+              <div id="map-modal-inner" style="height:100%; width:100%;"></div>
+            </div>
+          </div>
+
+          <footer class="location-modal-footer">
+            <div class="location-modal-info">
+              <small id="selected-coords">Lat: — , Lng: —</small>
+              <small id="selected-address" style="margin-left:12px; color:#555;">Address preview</small>
+            </div>
+
+            <div class="location-modal-actions">
+              <button id="location-save-btn" class="btn-primary">Save location</button>
+              <button id="location-cancel-btn" class="btn-secondary">Cancel</button>
+            </div>
+          </footer>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
 
+  <script>
+    let btn = document.querySelector("#btn");
+    let sidebar = document.querySelector(".sidebar");
+    let searchBtn = document.querySelector(".bx-search-alt");
 
-    <script type="text/babel">
-        class ActiveOrders extends React.Component {
-            constructor(props) {
-                super(props);
-                this.state = {
-                    orders: [], // Holds active orders
-                    loading: true, // Loading state
-                };
-            }
-
-            // Fetch orders when the component mounts
-            componentDidMount() {
-                fetch('/consumer/active-orders')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        this.setState({ orders: data, loading: false });
-                    })
-                    .catch(error => console.error('Error fetching orders:', error));
-
-            }
-
-            // Format time remaining
-            formatTimeRemaining(endTime) {
-                const currentTime = new Date();
-                const remainingTime = new Date(endTime) - currentTime;
-
-                if (remainingTime <= 0) return "Expired";
-
-                const hours = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
-                const minutes = Math.floor((remainingTime / (1000 * 60)) % 60);
-                const seconds = Math.floor((remainingTime / 1000) % 60);
-
-                return `${hours}h ${minutes}m ${seconds}s`;
-            }
-
-            render() {
-                const { orders, loading } = this.state;
-
-                return (
-                    <section className="active-orders-section">
-                        <h2>Active Orders</h2>
-                        {loading ? (
-                            <p>Loading...</p>
-                        ) : orders.length === 0 ? (
-                            <p>No active orders</p>
-                        ) : (
-                            <div className="orders-container">
-                                {orders.map((order, index) => (
-                                    <div className="order-card" key={index}>
-                                        <div className="order-details">
-                                            <i className="fas fa-utensils"></i>
-                                            <p><strong>Order:</strong> {order.item_name}</p>
-                                            <p><strong>Restaurant:</strong> {order.restaurant_name}</p>
-                                            <p><strong>Delivery Time:</strong> {this.formatTimeRemaining(order.delivery_time)}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                );
-            }
-        }
-
-        // Render the React component
-        ReactDOM.render(<ActiveOrders />, document.getElementById('active-orders-section'));
-    </script>
+    btn.onclick = function () {
+      sidebar.classList.toggle("active");
+    }
+    searchBtn.onclick = function () {
+      sidebar.classList.toggle("active");
+    }
+  </script>
 
 
 
-<script>
+
+
+  <script>
     document.addEventListener("DOMContentLoaded", async () => {
       // ───── Step 0: first-time check & popup wiring ─────
       const consumerId = localStorage.getItem("consumer_id");
       if (!consumerId) return console.error("No consumer_id in localStorage");
-    
+
       // ask the backend
       let isFirst = false;
       try {
@@ -447,14 +378,14 @@
         console.error("First-time check failed:", e);
       }
       if (!isFirst) return; // returning user—nothing to do
-    
+
       // grab popup & screens
-      const popup   = document.getElementById("welcome-popup");
+      const popup = document.getElementById("welcome-popup");
       const screens = {
         welcome: document.getElementById("welcome-screen"),
-        step1:   document.getElementById("step-1"),
-        step2:   document.getElementById("step-2"),
-        step3:   document.getElementById("step-3"),
+        step1: document.getElementById("step-1"),
+        step2: document.getElementById("step-2"),
+        step3: document.getElementById("step-3"),
       };
       function showScreen(el) {
         Object.values(screens).forEach(s => s.classList.remove("active"));
@@ -463,27 +394,27 @@
       // show popup
       popup.style.display = "flex";
       showScreen(screens.welcome);
-    
+
       // navigation buttons
-      document.getElementById("get-started-btn").onclick  = () => showScreen(screens.step1);
+      document.getElementById("get-started-btn").onclick = () => showScreen(screens.step1);
       document.getElementById("back-to-welcome").onclick = () => showScreen(screens.welcome);
-      document.getElementById("to-step-2").onclick       = () => {
+      document.getElementById("to-step-2").onclick = () => {
         showScreen(screens.step2);
         // force Leaflet to recalc size
         setTimeout(() => map && map.invalidateSize(), 100);
       };
-      document.getElementById("back-to-step-1").onclick  = () => showScreen(screens.step1);
-      document.getElementById("to-step-3").onclick       = () => showScreen(screens.step3);
-      document.getElementById("back-to-step-2").onclick  = () => showScreen(screens.step2);
-    
+      document.getElementById("back-to-step-1").onclick = () => showScreen(screens.step1);
+      document.getElementById("to-step-3").onclick = () => showScreen(screens.step3);
+      document.getElementById("back-to-step-2").onclick = () => showScreen(screens.step2);
+
       // ───────── Step 2: Map & Geocoding ─────────
       let map, tileURL, debounceTimeout;
-      const locationInput   = document.getElementById("location-input");
+      const locationInput = document.getElementById("location-input");
       const suggestionsList = document.getElementById("location-suggestions");
-      const locateBtn       = document.getElementById("locate-me-btn");
-      const clearBtn        = document.getElementById("clear-location-btn");
-      const centerMarker    = document.getElementById("map-center-marker");
-    
+      const locateBtn = document.getElementById("locate-me-btn");
+      const clearBtn = document.getElementById("clear-location-btn");
+      const centerMarker = document.getElementById("map-center-marker");
+
       // 1) load tile URL
       (async () => {
         try {
@@ -494,7 +425,7 @@
           console.error("Failed to fetch tile URL:", err);
         }
       })();
-    
+
       // 2) reverse geocode
       async function reverseGeocode(lat, lon) {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`;
@@ -506,14 +437,14 @@
           return "";
         }
       }
-    
+
       // 3) update input on map move/zoom
       async function updateInputWithCenter() {
         if (!map) return;
         const c = map.getCenter();
         locationInput.value = await reverseGeocode(c.lat, c.lng);
       }
-    
+
       // 4) Locate me
       locateBtn.addEventListener("click", () => {
         if (!navigator.geolocation) return alert("Geolocation not supported.");
@@ -521,7 +452,7 @@
           const { latitude, longitude } = coords;
           if (!map) {
             map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
-                   .setView([latitude, longitude], 16);
+              .setView([latitude, longitude], 16);
             L.tileLayer(tileURL, {
               tileSize: 512,
               zoomOffset: -1,
@@ -537,7 +468,7 @@
           locationInput.value = await reverseGeocode(latitude, longitude);
         }, () => alert("Please allow location access."));
       });
-    
+
       // 5) Clear
       clearBtn.addEventListener("click", () => {
         locationInput.value = "";
@@ -545,7 +476,7 @@
         suggestionsList.classList.add("hidden");
         centerMarker.classList.add("hidden");
       });
-    
+
       // 6) Autocomplete
       locationInput.addEventListener("input", () => {
         const q = locationInput.value.trim();
@@ -562,8 +493,8 @@
             const data = await resp.json();
             suggestionsList.innerHTML = data.length
               ? data.map(p =>
-                  `<li data-lat="${p.lat}" data-lon="${p.lon}">${p.display_name}</li>`
-                ).join("")
+                `<li data-lat="${p.lat}" data-lon="${p.lon}">${p.display_name}</li>`
+              ).join("")
               : "<li>No results found</li>";
             suggestionsList.classList.remove("hidden");
           } catch (err) {
@@ -571,7 +502,7 @@
           }
         }, 300);
       });
-    
+
       // 7) Pick suggestion
       suggestionsList.addEventListener("click", e => {
         if (e.target.tagName !== "LI") return;
@@ -580,7 +511,7 @@
         const name = e.target.textContent;
         if (!map) {
           map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
-                 .setView([lat, lon], 16);
+            .setView([lat, lon], 16);
           L.tileLayer(tileURL, {
             tileSize: 512,
             zoomOffset: -1,
@@ -593,11 +524,11 @@
           map.setView([lat, lon], 16);
         }
         centerMarker.classList.remove("hidden");
-        locationInput.value       = name;
+        locationInput.value = name;
         suggestionsList.innerHTML = "";
         suggestionsList.classList.add("hidden");
       });
-    
+
       // 8) hide suggestions on outside click
       document.addEventListener("click", e => {
         if (
@@ -608,22 +539,22 @@
           suggestionsList.classList.add("hidden");
         }
       });
-    
-    
+
+
       // ───────── Step 3: Finish & submit ─────────
       document.getElementById("finish-setup").onclick = async () => {
         // collect fields
-        const name    = document.getElementById("consumer-name").value.trim();
-        const number  = document.getElementById("consumer-number").value.trim();
+        const name = document.getElementById("consumer-name").value.trim();
+        const number = document.getElementById("consumer-number").value.trim();
         const address = locationInput.value.trim();
-        const gender  = document.getElementById("consumer-gender").value;
-        const age     = document.getElementById("consumer-age").value;
+        const gender = document.getElementById("consumer-gender").value;
+        const age = document.getElementById("consumer-age").value;
         const picFile = document.getElementById("consumer-pic").files[0];
-    
+
         if (!name || !number || !address || !gender || !age) {
           return alert("Please complete all required fields.");
         }
-    
+
         // read current map center
         let lat = "", lng = "";
         if (map) {
@@ -631,24 +562,24 @@
           lat = c.lat.toFixed(6);
           lng = c.lng.toFixed(6);
         }
-    
+
         // prepare FormData
         const formData = new FormData();
         formData.append("consumer_id", consumerId);
-        formData.append("full_name",  name);
-        formData.append("number",     number);
-        formData.append("address",    address);
-        formData.append("gender",     gender);
-        formData.append("age",        age);
-        formData.append("lat",        lat);
-        formData.append("lng",        lng);
+        formData.append("full_name", name);
+        formData.append("number", number);
+        formData.append("address", address);
+        formData.append("gender", gender);
+        formData.append("age", age);
+        formData.append("lat", lat);
+        formData.append("lng", lng);
         if (picFile) formData.append("profile_pic", picFile);
-    
+
         // send to backend
         try {
-          const res  = await fetch("/api/consumer/update-info", {
+          const res = await fetch("/api/consumer/update-info", {
             method: "POST",
-            body:   formData
+            body: formData
           });
           const data = await res.json();
           if (res.ok) {
@@ -663,16 +594,477 @@
         }
       };
     });
-    </script>
-    
+  </script>
 
 
 
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const userEmail = document.getElementById("userEmail").textContent || localStorage.getItem("userEmail");
+      const locationName = document.getElementById("location-name");
+
+      // assume you already know the consumerId (from login/localStorage)
+      const consumerId = localStorage.getItem("consumer_id");
+
+      try {
+        // 🔹 Step 1: Fetch the MapTiler tile URL from backend proxy
+        let tileURL = "";
+        try {
+          const res = await fetch("/api/map/tile-url");
+          const json = await res.json();
+          tileURL = json.tileURL;
+          console.log("✅ Map tile URL loaded from backend");
+        } catch (err) {
+          console.error("❌ Failed to fetch tile URL:", err);
+          // fallback URL (if backend fails)
+          tileURL = "https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=YOUR_FALLBACK_KEY";
+        }
+
+        // 🔹 Step 2: Fetch user location
+        const res = await fetch(`/api/location/${consumerId}`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error("No location data found");
+
+        const lat = parseFloat(data.lat);
+        const lng = parseFloat(data.lng);
+
+        // 🔹 Step 3: Save location in localStorage
+        localStorage.setItem("current_user_lat", lat);
+        localStorage.setItem("current_user_lng", lng);
+
+        // 🔹 Step 4: Initialize Map
+        const map = L.map("map-container", {
+          zoomControl: true,
+          scrollWheelZoom: true,
+        }).setView([lat, lng], 15);
+
+        L.tileLayer(tileURL, {
+          tileSize: 512,
+          zoomOffset: -1,
+          attribution: `<a href="https://www.maptiler.com/">© MapTiler</a> <a href="https://www.openstreetmap.org/">© OSM</a>`,
+        }).addTo(map);
+
+        // 🔹 Step 5: Add draggable marker
+        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+        // 🔹 Step 6: Update localStorage when marker moves
+        marker.on("dragend", function (e) {
+          const { lat, lng } = e.target.getLatLng();
+          localStorage.setItem("current_user_lat", lat);
+          localStorage.setItem("current_user_lng", lng);
+          console.log("📍 Updated location:", lat, lng);
+        });
+
+        // 🔹 Step 7: Reverse Geocoding — Show current address
+        async function updateAddress(lat, lng) {
+          try {
+            const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+            const resp = await fetch(url);
+            const json = await resp.json();
+            locationName.textContent = json.display_name || "Selected location";
+          } catch (error) {
+            console.error("Reverse geocode failed:", error);
+            locationName.textContent = "Unknown location";
+          }
+        }
+
+        // Initial address load
+        await updateAddress(lat, lng);
+
+        // Update address on drag
+        marker.on("dragend", async (e) => {
+          const { lat, lng } = e.target.getLatLng();
+          await updateAddress(lat, lng);
+        });
+
+      } catch (err) {
+        console.error("⚠️ Map loading error:", err);
+      }
+    });
 
 
-    <script src="js/app.js"></script>
+  </script>
 
 
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const locateBtn = document.getElementById('locate-me-btn');
+    const findBtn = document.getElementById('find-btn');
+    const locationInput = document.getElementById('location-input');
+    const centerMarker = document.getElementById('map-center-marker');
+    const suggestionsList = document.getElementById('location-suggestions');
+    const clearBtn = document.getElementById('clear-location-btn');
+  
+    let map;
+    let debounceTimeout = null;
+    let tileURL = ''; // will be fetched from backend
+  
+    // --- Fetch tile URL from backend
+    async function fetchTileURL() {
+      try {
+        const res = await fetch('api/map/tile-url');
+        const data = await res.json();
+        tileURL = data.tileURL;
+      } catch (err) {
+        console.error('Failed to fetch tile URL:', err);
+        tileURL = '/fallback-tiles/{z}/{x}/{y}.png'; // fallback
+      }
+    }
+  
+    // --- Reverse geocode (coords → readable address)
+    async function reverseGeocode(lat, lon) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1&accept-language=en`
+        );
+        const data = await res.json();
+        return data.display_name || '';
+      } catch (err) {
+        console.error('Reverse geocode failed:', err);
+        return '';
+      }
+    }
+  
+    // --- Update input when map center changes
+    async function updateInputWithCenter() {
+      if (!map) return;
+      const c = map.getCenter();
+      const address = await reverseGeocode(c.lat, c.lng);
+      locationInput.value = address;
+    }
+  
+    // --- Initialize map lazily
+    function initMap(lat, lon) {
+      if (map) return map;
+  
+      map = L.map('map-container', {
+        zoomControl: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: true,
+        touchZoom: true,
+        keyboard: false
+      }).setView([lat, lon], 16);
+  
+      // Use the fetched tile URL
+      L.tileLayer(tileURL, {
+        tileSize: 512,
+        zoomOffset: -1,
+        attribution:
+          "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
+      }).addTo(map);
+  
+      map.on('moveend zoomend', updateInputWithCenter);
+      return map;
+    }
+  
+    // --- Locate user
+    locateBtn.addEventListener('click', async () => {
+      if (!navigator.geolocation) return alert('Geolocation not supported.');
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords }) => {
+          const { latitude, longitude } = coords;
+          const m = initMap(latitude, longitude);
+          m.flyTo([latitude, longitude], 16, { duration: 1.0 });
+          centerMarker.classList.remove('hidden');
+          const address = await reverseGeocode(latitude, longitude);
+          locationInput.value = address;
+        },
+        () => alert('Please allow location access.')
+      );
+    });
+  
+    // --- Clear search input
+    clearBtn.addEventListener('click', () => {
+      locationInput.value = '';
+      suggestionsList.innerHTML = '';
+      suggestionsList.classList.add('hidden');
+    });
+  
+    // --- Save center coordinates
+    findBtn?.addEventListener('click', () => {
+      if (!map) return alert('Map not initialized.');
+      const center = map.getCenter();
+      localStorage.setItem('tempLat', center.lat.toFixed(5));
+      localStorage.setItem('tempLng', center.lng.toFixed(5));
+    });
+  
+    // --- Handle input (suggestions)
+    locationInput.addEventListener('input', () => {
+      const query = locationInput.value.trim();
+      if (debounceTimeout) clearTimeout(debounceTimeout);
+  
+      if (!query) {
+        suggestionsList.innerHTML = '';
+        suggestionsList.classList.add('hidden');
+        return;
+      }
+  
+      debounceTimeout = setTimeout(async () => {
+        try {
+          const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=bd&q=${encodeURIComponent(query)}`;
+          const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+          const data = await res.json();
+          suggestionsList.innerHTML = data.length
+            ? data.map(p => `<li data-lat="${p.lat}" data-lon="${p.lon}">${p.display_name}</li>`).join('')
+            : '<li>No results found</li>';
+          suggestionsList.classList.remove('hidden');
+        } catch (err) {
+          console.error(err);
+        }
+      }, 300);
+    });
+  
+    // --- Click suggestion
+    suggestionsList.addEventListener('click', e => {
+      if (e.target.tagName !== 'LI') return;
+      const lat = parseFloat(e.target.dataset.lat);
+      const lon = parseFloat(e.target.dataset.lon);
+      const name = e.target.textContent;
+      const m = initMap(lat, lon);
+      m.flyTo([lat, lon], 16, { duration: 1.0 });
+      locationInput.value = name;
+      suggestionsList.innerHTML = '';
+      suggestionsList.classList.add('hidden');
+      centerMarker.classList.remove('hidden');
+    });
+  
+    // --- Hide suggestions when clicking elsewhere
+    document.addEventListener('click', e => {
+      if (!locationInput.contains(e.target) && !suggestionsList.contains(e.target)) {
+        suggestionsList.classList.add('hidden');
+      }
+    });
+  
+    // --- Fetch tile URL first
+    fetchTileURL();
+  });
+  </script>
+  
+
+  <script src="js/app.js"></script>
+
+  <!-- Location Modal Map Initialization -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const locationModal = document.getElementById('location-modal');
+      const mapModalInner = document.getElementById('map-modal-inner');
+      const locationInputModal = document.querySelector('.location-modal-body input#location-input');
+      const locateBtnModal = document.querySelector('.location-modal-body button[title*="current location"]');
+      const clearBtnModal = document.querySelector('.location-modal-body button[title="Clear"]');
+      const suggestionsModalList = document.querySelector('.location-modal-body .location-suggestions');
+      const selectedCoordsEl = document.getElementById('selected-coords');
+      const selectedAddressEl = document.getElementById('selected-address');
+      const mapCenterMarkerModal = document.querySelector('.map-center-marker');
+      const saveLocationBtn = document.getElementById('location-save-btn');
+
+      let mapModal;
+      let tileURL = '';
+      let debounceTimeoutModal = null;
+      let currentLat = 23.8103, currentLng = 90.3563; // Default to Dhaka
+
+      // Fetch tile URL
+      async function fetchTileURL() {
+        try {
+          const res = await fetch('/api/map/tile-url');
+          const data = await res.json();
+          tileURL = data.tileURL;
+          console.log('✅ Modal: Tile URL loaded');
+        } catch (err) {
+          console.error('❌ Modal: Failed to fetch tile URL:', err);
+          tileURL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+        }
+      }
+
+      // Reverse geocode
+      async function reverseGeocode(lat, lon) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1&accept-language=en`
+          );
+          const data = await res.json();
+          return data.display_name || 'Unknown location';
+        } catch (err) {
+          console.error('Reverse geocode failed:', err);
+          return 'Unknown location';
+        }
+      }
+
+      // Initialize map in modal
+      function initMapModal(lat, lon) {
+        if (mapModal) {
+          mapModal.setView([lat, lon], 16);
+          return mapModal;
+        }
+
+        // Clear any existing content
+        if (mapModalInner) mapModalInner.innerHTML = '';
+
+        mapModal = L.map(mapModalInner, {
+          zoomControl: true,
+          scrollWheelZoom: false,
+          doubleClickZoom: true,
+          touchZoom: true,
+          keyboard: false
+        }).setView([lat, lon], 16);
+
+        L.tileLayer(tileURL, {
+          tileSize: 512,
+          zoomOffset: -1,
+          attribution: "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
+        }).addTo(mapModal);
+
+        // Update coords when map moves
+        mapModal.on('moveend zoomend', async () => {
+          const center = mapModal.getCenter();
+          currentLat = center.lat;
+          currentLng = center.lng;
+          updateSelectedInfo(currentLat, currentLng);
+        });
+
+        window.mapInstance = mapModal; // Store reference
+        return mapModal;
+      }
+
+      // Update the selected coordinates and address display
+      async function updateSelectedInfo(lat, lon) {
+        currentLat = lat;
+        currentLng = lon;
+        if (selectedCoordsEl) {
+          selectedCoordsEl.textContent = `Lat: ${lat.toFixed(4)}, Lng: ${lon.toFixed(4)}`;
+        }
+        const address = await reverseGeocode(lat, lon);
+        if (selectedAddressEl) {
+          selectedAddressEl.textContent = address;
+        }
+        if (locationInputModal) {
+          locationInputModal.value = address;
+        }
+      }
+
+      // Locate user
+      if (locateBtnModal) {
+        locateBtnModal.addEventListener('click', () => {
+          if (!navigator.geolocation) {
+            alert('Geolocation not supported.');
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(
+            async ({ coords }) => {
+              const { latitude, longitude } = coords;
+              initMapModal(latitude, longitude);
+              currentLat = latitude;
+              currentLng = longitude;
+              mapCenterMarkerModal?.classList.remove('hidden');
+              await updateSelectedInfo(latitude, longitude);
+            },
+            () => alert('Please allow location access.')
+          );
+        });
+      }
+
+      // Clear button
+      if (clearBtnModal) {
+        clearBtnModal.addEventListener('click', () => {
+          if (locationInputModal) locationInputModal.value = '';
+          if (suggestionsModalList) {
+            suggestionsModalList.innerHTML = '';
+            suggestionsModalList.classList.add('hidden');
+          }
+        });
+      }
+
+      // Autocomplete search
+      if (locationInputModal) {
+        locationInputModal.addEventListener('input', () => {
+          const query = locationInputModal.value.trim();
+          if (debounceTimeoutModal) clearTimeout(debounceTimeoutModal);
+
+          if (!query) {
+            if (suggestionsModalList) {
+              suggestionsModalList.innerHTML = '';
+              suggestionsModalList.classList.add('hidden');
+            }
+            return;
+          }
+
+          debounceTimeoutModal = setTimeout(async () => {
+            try {
+              const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=bd&q=${encodeURIComponent(query)}`;
+              const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+              const data = await res.json();
+              if (suggestionsModalList) {
+                suggestionsModalList.innerHTML = data.length
+                  ? data.map(p => `<li data-lat="${p.lat}" data-lon="${p.lon}">${p.display_name}</li>`).join('')
+                  : '<li>No results found</li>';
+                suggestionsModalList.classList.remove('hidden');
+              }
+            } catch (err) {
+              console.error('Search failed:', err);
+            }
+          }, 300);
+        });
+      }
+
+      // Click suggestion
+      if (suggestionsModalList) {
+        suggestionsModalList.addEventListener('click', async (e) => {
+          if (e.target.tagName !== 'LI') return;
+          const lat = parseFloat(e.target.dataset.lat);
+          const lon = parseFloat(e.target.dataset.lon);
+          const name = e.target.textContent;
+          
+          initMapModal(lat, lon);
+          currentLat = lat;
+          currentLng = lon;
+          mapCenterMarkerModal?.classList.remove('hidden');
+          
+          if (locationInputModal) locationInputModal.value = name;
+          if (suggestionsModalList) {
+            suggestionsModalList.innerHTML = '';
+            suggestionsModalList.classList.add('hidden');
+          }
+          await updateSelectedInfo(lat, lon);
+        });
+      }
+
+      // Hide suggestions on outside click
+      document.addEventListener('click', (e) => {
+        if (suggestionsModalList && !locationInputModal?.contains(e.target) && !suggestionsModalList.contains(e.target)) {
+          suggestionsModalList.classList.add('hidden');
+        }
+      });
+
+      // When modal opens, initialize map if not already done
+      const openLocationBtn = document.getElementById('open-location-btn');
+      if (openLocationBtn) {
+        openLocationBtn.addEventListener('click', async () => {
+          await fetchTileURL();
+          
+          // Get user's location from localStorage or use default
+          const savedLat = localStorage.getItem('current_user_lat');
+          const savedLng = localStorage.getItem('current_user_lng');
+          const startLat = savedLat ? parseFloat(savedLat) : currentLat;
+          const startLng = savedLng ? parseFloat(savedLng) : currentLng;
+          
+          setTimeout(() => {
+            if (!mapModal) {
+              initMapModal(startLat, startLng);
+              currentLat = startLat;
+              currentLng = startLng;
+              updateSelectedInfo(startLat, startLng);
+            } else {
+              mapModal.invalidateSize();
+            }
+          }, 200);
+        });
+      }
+
+      // Fetch tile URL on load
+      fetchTileURL();
+    });
+  </script>
 
 </body>
 
