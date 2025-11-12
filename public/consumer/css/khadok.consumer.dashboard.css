@@ -737,11 +737,42 @@ body {
 .location-suggestions li:hover { background:#f7f7f7; }
 
 /* Map container */
-.map-container-modal { flex:1; position:relative; border-radius:8px; overflow:hidden; background:#f4f6f8; }
+.map-container-modal { 
+  flex:1; 
+  position:relative; 
+  border-radius:8px; 
+  overflow:hidden; 
+  background:#f4f6f8; 
+}
 #map-modal-inner { width:100%; height:100%; }
 
-/* Center marker */
-.map-center-marker { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none; font-size:24px; color:#e91e63; z-index:500; }
+/* Center marker - visible pin at center of map */
+.map-center-marker { 
+  position:absolute; 
+  left:50%; 
+  top:50%; 
+  transform:translate(-50%, -100%); /* Center and lift above point */
+  pointer-events:none; 
+  z-index:500;
+  font-size: 2.5rem;
+  color: #e91e63;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  animation: bounce 2s infinite;
+}
+
+.map-center-marker.hidden {
+  display: none;
+}
+
+/* Bounce animation for pin */
+@keyframes bounce {
+  0%, 100% {
+    transform: translate(-50%, -100%);
+  }
+  50% {
+    transform: translate(-50%, -110%);
+  }
+}
 
 /* Footer */
 .location-modal-footer { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-top:1px solid #eee; background:#fcfcfc; }
@@ -751,3 +782,4 @@ body {
 .btn-primary { background:#e91e63; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
 .btn-primary:hover { background:#d81b60; }
 .btn-secondary { background:white; border:1px solid #ddd; padding:10px 14px; border-radius:8px; cursor:pointer; }
+.btn-secondary:hover { background:#f5f5f5; }

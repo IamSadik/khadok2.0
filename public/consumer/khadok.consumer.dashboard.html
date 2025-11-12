@@ -311,15 +311,15 @@
 
           <div class="location-modal-body">
             <div class="location-search-row">
-              <input id="location-input" type="text" placeholder="Search address..." autocomplete="off" />
-              <button id="locate-me-btn" class="btn-ghost" title="Use my current location">
+              <input id="location-input-modal" type="text" placeholder="Search address..." autocomplete="off" />
+              <button id="locate-me-btn-modal" class="btn-ghost" title="Use my current location">
                 <i class="fas fa-location-arrow"></i>
               </button>
-              <button id="clear-location-btn" class="btn-ghost" title="Clear">
+              <button id="clear-location-btn-modal" class="btn-ghost" title="Clear search">
                 <i class="fas fa-times"></i>
               </button>
             </div>
-            <ul id="location-suggestions" class="location-suggestions hidden"></ul>
+            <ul id="location-suggestions-modal" class="location-suggestions hidden"></ul>
 
             <div id="map-container-modal" class="map-container-modal">
               <div id="map-center-marker" class="map-center-marker hidden"><i class="fas fa-map-pin"></i></div>
@@ -428,13 +428,32 @@
 
       // 2) reverse geocode
       async function reverseGeocode(lat, lon) {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`;
         try {
-          const resp = await fetch(url);
-          const data = await resp.json();
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1&accept-language=en`
+          );
+          const data = await res.json();
           return data.display_name || "";
         } catch {
           return "";
+        }
+      }
+
+      // Normalize address - extract key parts for cleaner display
+      function normalizeAddress(fullAddress) {
+        if (!fullAddress) return 'Unknown location';
+        
+        // Split by comma and get relevant parts
+        const parts = fullAddress.split(',').map(p => p.trim());
+        
+        // Try to extract: Area, City/District, Division
+        // Example: "Mirpur 10, Dhaka, Dhaka Division, Bangladesh" → "Mirpur 10, Dhaka"
+        if (parts.length >= 3) {
+          return `${parts[0]}, ${parts[1]}`;
+        } else if (parts.length === 2) {
+          return `${parts[0]}, ${parts[1]}`;
+        } else {
+          return parts[0] || fullAddress;
         }
       }
 
@@ -726,6 +745,24 @@
         return '';
       }
     }
+
+    // Normalize address - extract key parts for cleaner display
+    function normalizeAddress(fullAddress) {
+      if (!fullAddress) return 'Unknown location';
+      
+      // Split by comma and get relevant parts
+      const parts = fullAddress.split(',').map(p => p.trim());
+      
+      // Try to extract: Area, City/District, Division
+      // Example: "Mirpur 10, Dhaka, Dhaka Division, Bangladesh" → "Mirpur 10, Dhaka"
+      if (parts.length >= 3) {
+        return `${parts[0]}, ${parts[1]}`;
+      } else if (parts.length === 2) {
+        return `${parts[0]}, ${parts[1]}`;
+      } else {
+        return parts[0] || fullAddress;
+      }
+    }
   
     // --- Update input when map center changes
     async function updateInputWithCenter() {
@@ -849,15 +886,21 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const locationModal = document.getElementById('location-modal');
+      const locationModalBackdrop = document.querySelector('.location-modal-backdrop');
+      const openLocationBtn = document.getElementById('open-location-btn');
+      const closeModalBtn = document.getElementById('location-modal-close');
+      const cancelBtn = document.getElementById('location-cancel-btn');
+      const saveLocationBtn = document.getElementById('location-save-btn');
+      
       const mapModalInner = document.getElementById('map-modal-inner');
-      const locationInputModal = document.querySelector('.location-modal-body input#location-input');
-      const locateBtnModal = document.querySelector('.location-modal-body button[title*="current location"]');
-      const clearBtnModal = document.querySelector('.location-modal-body button[title="Clear"]');
+      const locationInputModal = document.querySelector('.location-modal-body input#location-input-modal');
+      const locateBtnModal = document.querySelector('.location-modal-body .btn-ghost[title*="current location"]');
+      const clearBtnModal = document.querySelector('.location-modal-body .btn-ghost[title="Clear search"]');
       const suggestionsModalList = document.querySelector('.location-modal-body .location-suggestions');
       const selectedCoordsEl = document.getElementById('selected-coords');
       const selectedAddressEl = document.getElementById('selected-address');
       const mapCenterMarkerModal = document.querySelector('.map-center-marker');
-      const saveLocationBtn = document.getElementById('location-save-btn');
+      const locationNameDisplay = document.getElementById('location-name');
 
       let mapModal;
       let tileURL = '';
@@ -891,6 +934,24 @@
         }
       }
 
+      // Normalize address - extract key parts for cleaner display
+      function normalizeAddress(fullAddress) {
+        if (!fullAddress) return 'Unknown location';
+        
+        // Split by comma and get relevant parts
+        const parts = fullAddress.split(',').map(p => p.trim());
+        
+        // Try to extract: Area, City/District, Division
+        // Example: "Mirpur 10, Dhaka, Dhaka Division, Bangladesh" → "Mirpur 10, Dhaka"
+        if (parts.length >= 3) {
+          return `${parts[0]}, ${parts[1]}`;
+        } else if (parts.length === 2) {
+          return `${parts[0]}, ${parts[1]}`;
+        } else {
+          return parts[0] || fullAddress;
+        }
+      }
+
       // Initialize map in modal
       function initMapModal(lat, lon) {
         if (mapModal) {
@@ -903,10 +964,10 @@
 
         mapModal = L.map(mapModalInner, {
           zoomControl: true,
-          scrollWheelZoom: false,
+          scrollWheelZoom: true,
           doubleClickZoom: true,
           touchZoom: true,
-          keyboard: false
+          keyboard: true
         }).setView([lat, lon], 16);
 
         L.tileLayer(tileURL, {
@@ -920,10 +981,9 @@
           const center = mapModal.getCenter();
           currentLat = center.lat;
           currentLng = center.lng;
-          updateSelectedInfo(currentLat, currentLng);
+          await updateSelectedInfo(currentLat, currentLng);
         });
 
-        window.mapInstance = mapModal; // Store reference
         return mapModal;
       }
 
@@ -943,23 +1003,111 @@
         }
       }
 
+      // Open modal
+      if (openLocationBtn) {
+        openLocationBtn.addEventListener('click', async () => {
+          locationModal.classList.remove('hidden');
+          locationModal.setAttribute('aria-hidden', 'false');
+          
+          await fetchTileURL();
+          
+          // Get user's location from localStorage or use default
+          const savedLat = localStorage.getItem('current_user_lat');
+          const savedLng = localStorage.getItem('current_user_lng');
+          const startLat = savedLat ? parseFloat(savedLat) : currentLat;
+          const startLng = savedLng ? parseFloat(savedLng) : currentLng;
+          
+          setTimeout(() => {
+            if (!mapModal) {
+              initMapModal(startLat, startLng);
+              currentLat = startLat;
+              currentLng = startLng;
+              updateSelectedInfo(startLat, startLng);
+              mapCenterMarkerModal?.classList.remove('hidden');
+            } else {
+              mapModal.invalidateSize();
+              mapModal.setView([startLat, startLng], 16);
+              updateSelectedInfo(startLat, startLng);
+              mapCenterMarkerModal?.classList.remove('hidden');
+            }
+          }, 100);
+        });
+      }
+
+      // Close modal handlers
+      function closeModal() {
+        locationModal.classList.add('hidden');
+        locationModal.setAttribute('aria-hidden', 'true');
+        if (suggestionsModalList) {
+          suggestionsModalList.innerHTML = '';
+          suggestionsModalList.classList.add('hidden');
+        }
+      }
+
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+      }
+
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeModal);
+      }
+
+      if (locationModalBackdrop) {
+        locationModalBackdrop.addEventListener('click', closeModal);
+      }
+
+      // Save location (ONLY to localStorage - temporary change)
+      if (saveLocationBtn) {
+        saveLocationBtn.addEventListener('click', async () => {
+          const fullAddress = locationInputModal?.value || await reverseGeocode(currentLat, currentLng);
+          const normalizedAddr = normalizeAddress(fullAddress);
+
+          // Update localStorage with temporary location
+          localStorage.setItem('current_user_lat', currentLat);
+          localStorage.setItem('current_user_lng', currentLng);
+          localStorage.setItem('temp_location_address', fullAddress);
+          
+          // Update navbar location display with normalized address
+          if (locationNameDisplay) {
+            locationNameDisplay.textContent = normalizedAddr;
+          }
+          
+          console.log('📍 Temporary location saved to localStorage:', {
+            lat: currentLat,
+            lng: currentLng,
+            fullAddress: fullAddress,
+            displayAddress: normalizedAddr
+          });
+          
+          alert('✅ Location updated temporarily!');
+          closeModal();
+        });
+      }
+
       // Locate user
       if (locateBtnModal) {
         locateBtnModal.addEventListener('click', () => {
           if (!navigator.geolocation) {
-            alert('Geolocation not supported.');
+            alert('Geolocation not supported by your browser.');
             return;
           }
           navigator.geolocation.getCurrentPosition(
             async ({ coords }) => {
               const { latitude, longitude } = coords;
-              initMapModal(latitude, longitude);
+              if (!mapModal) {
+                initMapModal(latitude, longitude);
+              } else {
+                mapModal.flyTo([latitude, longitude], 16, { duration: 1.0 });
+              }
               currentLat = latitude;
               currentLng = longitude;
               mapCenterMarkerModal?.classList.remove('hidden');
               await updateSelectedInfo(latitude, longitude);
             },
-            () => alert('Please allow location access.')
+            (error) => {
+              console.error('Geolocation error:', error);
+              alert('Please allow location access to use this feature.');
+            }
           );
         });
       }
@@ -1015,7 +1163,12 @@
           const lon = parseFloat(e.target.dataset.lon);
           const name = e.target.textContent;
           
-          initMapModal(lat, lon);
+          if (!mapModal) {
+            initMapModal(lat, lon);
+          } else {
+            mapModal.flyTo([lat, lon], 16, { duration: 1.0 });
+          }
+          
           currentLat = lat;
           currentLng = lon;
           mapCenterMarkerModal?.classList.remove('hidden');
@@ -1035,31 +1188,6 @@
           suggestionsModalList.classList.add('hidden');
         }
       });
-
-      // When modal opens, initialize map if not already done
-      const openLocationBtn = document.getElementById('open-location-btn');
-      if (openLocationBtn) {
-        openLocationBtn.addEventListener('click', async () => {
-          await fetchTileURL();
-          
-          // Get user's location from localStorage or use default
-          const savedLat = localStorage.getItem('current_user_lat');
-          const savedLng = localStorage.getItem('current_user_lng');
-          const startLat = savedLat ? parseFloat(savedLat) : currentLat;
-          const startLng = savedLng ? parseFloat(savedLng) : currentLng;
-          
-          setTimeout(() => {
-            if (!mapModal) {
-              initMapModal(startLat, startLng);
-              currentLat = startLat;
-              currentLng = startLng;
-              updateSelectedInfo(startLat, startLng);
-            } else {
-              mapModal.invalidateSize();
-            }
-          }, 200);
-        });
-      }
 
       // Fetch tile URL on load
       fetchTileURL();
