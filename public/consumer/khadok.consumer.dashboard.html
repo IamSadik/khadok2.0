@@ -622,87 +622,80 @@
       const userEmail = document.getElementById("userEmail").textContent || localStorage.getItem("userEmail");
       const locationName = document.getElementById("location-name");
 
-      // assume you already know the consumerId (from login/localStorage)
+      // Get consumerId from localStorage
       const consumerId = localStorage.getItem("consumer_id");
 
-      try {
-        // 🔹 Step 1: Fetch the MapTiler tile URL from backend proxy
-        let tileURL = "";
-        try {
-          const res = await fetch("/api/map/tile-url");
-          const json = await res.json();
-          tileURL = json.tileURL;
-          console.log("✅ Map tile URL loaded from backend");
-        } catch (err) {
-          console.error("❌ Failed to fetch tile URL:", err);
-          // fallback URL (if backend fails)
-          tileURL = "https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=YOUR_FALLBACK_KEY";
-        }
+      if (!consumerId) {
+        console.error("No consumer_id found in localStorage");
+        return;
+      }
 
-        // 🔹 Step 2: Fetch user location
+      // 🔹 Fetch user location from database and save to localStorage
+      try {
         const res = await fetch(`/api/location/${consumerId}`);
         const data = await res.json();
 
-        if (!data.success) throw new Error("No location data found");
+        if (data.success && data.lat && data.lng) {
+          const lat = parseFloat(data.lat);
+          const lng = parseFloat(data.lng);
 
-        const lat = parseFloat(data.lat);
-        const lng = parseFloat(data.lng);
-
-        // 🔹 Step 3: Save location in localStorage
-        localStorage.setItem("current_user_lat", lat);
-        localStorage.setItem("current_user_lng", lng);
-
-        // 🔹 Step 4: Initialize Map
-        const map = L.map("map-container", {
-          zoomControl: true,
-          scrollWheelZoom: true,
-        }).setView([lat, lng], 15);
-
-        L.tileLayer(tileURL, {
-          tileSize: 512,
-          zoomOffset: -1,
-          attribution: `<a href="https://www.maptiler.com/">© MapTiler</a> <a href="https://www.openstreetmap.org/">© OSM</a>`,
-        }).addTo(map);
-
-        // 🔹 Step 5: Add draggable marker
-        const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-
-        // 🔹 Step 6: Update localStorage when marker moves
-        marker.on("dragend", function (e) {
-          const { lat, lng } = e.target.getLatLng();
+          // Save to localStorage
           localStorage.setItem("current_user_lat", lat);
           localStorage.setItem("current_user_lng", lng);
-          console.log("📍 Updated location:", lat, lng);
-        });
 
-        // 🔹 Step 7: Reverse Geocoding — Show current address
-        async function updateAddress(lat, lng) {
-          try {
+          console.log("✅ Location loaded from database:", { lat, lng });
+        } else {
+          console.warn("⚠️ No location data found in database");
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch location from database:", err);
+      }
+
+      // Normalize address - extract key parts for cleaner display
+      function normalizeAddress(fullAddress) {
+        if (!fullAddress) return 'Unknown location';
+        
+        // Split by comma and get relevant parts
+        const parts = fullAddress.split(',').map(p => p.trim());
+        
+        // Try to extract: Area, City/District
+        // Example: "Mirpur 10, Dhaka, Dhaka Division, Bangladesh" → "Mirpur 10, Dhaka"
+        if (parts.length >= 3) {
+          return `${parts[0]}, ${parts[1]}`;
+        } else if (parts.length === 2) {
+          return `${parts[0]}, ${parts[1]}`;
+        } else {
+          return parts[0] || fullAddress;
+        }
+      }
+
+      // 🔹 Load and display location name immediately on page load
+      async function loadLocationName() {
+        try {
+          const lat = localStorage.getItem('current_user_lat');
+          const lng = localStorage.getItem('current_user_lng');
+          
+          if (lat && lng) {
+            // Reverse geocode to get address
             const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
             const resp = await fetch(url);
             const json = await resp.json();
-            locationName.textContent = json.display_name || "Selected location";
-          } catch (error) {
-            console.error("Reverse geocode failed:", error);
-            locationName.textContent = "Unknown location";
+            const fullAddress = json.display_name || "Your location";
+            const normalizedAddr = normalizeAddress(fullAddress);
+            locationName.textContent = normalizedAddr;
           }
+        } catch (error) {
+          console.error("Failed to load location name:", error);
+          locationName.textContent = "Set your location";
         }
-
-        // Initial address load
-        await updateAddress(lat, lng);
-
-        // Update address on drag
-        marker.on("dragend", async (e) => {
-          const { lat, lng } = e.target.getLatLng();
-          await updateAddress(lat, lng);
-        });
-
-      } catch (err) {
-        console.error("⚠️ Map loading error:", err);
       }
+
+      // Load location name immediately
+      await loadLocationName();
+
+      // Don't initialize map on dashboard - it's not visible and causes issues
+      // Map is only needed in the location modal
     });
-
-
   </script>
 
 
@@ -998,6 +991,7 @@
         if (selectedAddressEl) {
           selectedAddressEl.textContent = address;
         }
+        // Show FULL address in modal input (not normalized)
         if (locationInputModal) {
           locationInputModal.value = address;
         }
@@ -1194,6 +1188,9 @@
     });
   </script>
 
+
+
 </body>
 
 </html>
+``` 

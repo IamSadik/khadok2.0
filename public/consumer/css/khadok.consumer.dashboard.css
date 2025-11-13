@@ -12,12 +12,9 @@ body {
     font-family: 'Arial', sans-serif;
     background-color: #f9f9f9;
     color: #333;
-    display: flex;
-    transform: scale(0.95);
-    transform-origin: top left;
-    width: 100vw;
-    height: 100vh;
-  
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scrollbar */
 }
 
 .sidebar{
@@ -404,6 +401,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
 .logo {
@@ -449,6 +447,21 @@ body {
   gap: 6px;
   cursor: pointer;
   color: #333;
+  max-width: 300px; /* Limit maximum width */
+  min-width: 150px; /* Minimum width to prevent collapse */
+}
+
+/* Add text truncation for location name */
+.nav-center .location span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px; /* Adjust based on your needs */
+  display: inline-block;
+}
+
+.nav-center .location i {
+  flex-shrink: 0; /* Prevent icons from shrinking */
 }
 
 .nav-right button {
@@ -638,6 +651,7 @@ body {
 
 .restaurant-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
 .restaurant-card img {
@@ -664,21 +678,58 @@ body {
   margin-top: 8px;
 }
 
+/* Restaurant status badges */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.badge-open {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge-closed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* No restaurants / Error states */
+.no-restaurants,
+.error-message {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.no-restaurants h3,
+.error-message h3 {
+  margin: 20px 0 10px;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.no-restaurants p,
+.error-message p {
+  color: #777;
+  font-size: 1rem;
+  margin: 10px 0;
+}
+
 .loading {
-  grid-column: span 3;
+  grid-column: 1 / -1;
   text-align: center;
   color: #777;
   font-size: 1.1rem;
   padding: 40px 0;
 }
-
-
-
-
-
-
-
-
 
 /* Location modal */
 .location-modal.hidden { display: none; }
@@ -725,6 +776,19 @@ body {
 /* Body */
 .location-modal-body { padding: 12px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
 .location-search-row { display:flex; gap:8px; align-items:center; }
+
+/* Location input in modal - show FULL address without truncation */
+#location-input-modal {
+  flex:1; 
+  padding:10px 12px; 
+  border-radius:8px; 
+  border:1px solid #ddd; 
+  outline:none;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
 #location-input {
   flex:1; padding:10px 12px; border-radius:8px; border:1px solid #ddd; outline:none;
 }
@@ -783,3 +847,56 @@ body {
 .btn-primary:hover { background:#d81b60; }
 .btn-secondary { background:white; border:1px solid #ddd; padding:10px 14px; border-radius:8px; cursor:pointer; }
 .btn-secondary:hover { background:#f5f5f5; }
+
+/* Responsive Design for Navbar */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 10px 20px;
+    gap: 10px;
+  }
+  
+  .logo {
+    width: 40px;
+  }
+  
+  .nav-center {
+    order: 3; /* Move location to bottom on small screens */
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .nav-center .location {
+    width: 100%;
+    max-width: 100%;
+    justify-content: center;
+  }
+  
+  .nav-center .location span {
+    max-width: calc(100vw - 150px); /* Dynamic width based on viewport */
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 8px 15px;
+  }
+  
+  .logo {
+    width: 35px;
+    margin-right: 10px;
+  }
+  
+  .nav-center .location {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .nav-center .location span {
+    max-width: calc(100vw - 120px);
+    font-size: 0.85rem;
+  }
+  
+  .nav-center .location i {
+    font-size: 0.9rem;
+  }
+}

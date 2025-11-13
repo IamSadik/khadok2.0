@@ -63,8 +63,11 @@ const getNearbyRestaurants = async (req, res) => {
             opens_at: restaurant.opens_at,
             closes_at: restaurant.closes_at,
             straight_line_distance: parseFloat(restaurant.distance.toFixed(2)),
-            road_distance: roadInfo ? parseFloat(roadInfo.distance.toFixed(2)) : null,
-            estimated_time: roadInfo ? roadInfo.duration : null, // in minutes
+            road_distance: roadInfo ? roadInfo.distance : null, // Distance in km
+            road_distance_meters: roadInfo ? roadInfo.distance_meters : null, // Distance in meters
+            travel_time: roadInfo ? roadInfo.travel_time : null, // Travel time only (minutes)
+            food_prep_time: roadInfo ? roadInfo.food_prep_time : null, // Food preparation time (minutes)
+            estimated_time: roadInfo ? roadInfo.total_time : null, // Total delivery time (minutes)
             distance_unit: 'km'
           };
         })
