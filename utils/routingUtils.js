@@ -76,34 +76,34 @@ function calculateFoodPrepTime(distanceKm) {
   // Distance-based food preparation time algorithm
   if (distanceMeters < 200) {
     // Very close (< 200m) - Quick prep: 8-10 minutes
-    return 10;
+    return 19;
   } else if (distanceMeters < 500) {
     // Close (200-500m) - Standard prep: 10-12 minutes
-    return 12;
+    return 22;
   } else if (distanceMeters < 800) {
     // Nearby (500-800m) - Normal prep: 12-15 minutes
-    return 15;
+    return 26;
   } else if (distanceKm < 1) {
     // Under 1km - Standard prep: 15 minutes
-    return 20;
+    return 30;
   } else if (distanceKm < 2) {
     // 1-2 km - More prep time: 18 minutes
-    return 20;
+    return 30;
   } else if (distanceKm < 3) {
     // 2-3 km - Extended prep: 20 minutes
-    return 20;
+    return 30;
   } else if (distanceKm < 5) {
     // 3-5 km - Longer prep: 22 minutes
-    return 22;
+    return 30;
   } else if (distanceKm < 8) {
     // 5-8 km - Extended prep: 25 minutes
-    return 22;
+    return 30;
   } else if (distanceKm < 12) {
     // 8-12 km - Long distance prep: 28 minutes
-    return 22;
+    return 30;
   } else {
     // 12+ km - Maximum prep time: 30 minutes
-    return 25;
+    return 30;
   }
 }
 
