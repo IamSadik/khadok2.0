@@ -103,7 +103,7 @@ function calculateFoodPrepTime(distanceKm) {
     return 30;
   } else {
     // 12+ km - Maximum prep time: 30 minutes
-    return 30;
+    return 32;
   }
 }
 
