@@ -141,41 +141,31 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
     const restaurantContainer = document.getElementById('restaurant-container');
     const consumerId = localStorage.getItem("consumer_id");
 
-    // 🔹 FIRST: Fetch location from database and update localStorage
-    async function fetchLocationFromDatabase() {
-      if (!consumerId) {
-        console.error("No consumer_id found");
-        return false;
-      }
+    // Store the current map instance globally so we can remove it when refreshing
+    let currentRestaurantsMap = null;
 
-      try {
-        const res = await fetch(`/api/location/${consumerId}`);
-        const data = await res.json();
-
-        if (data.success && data.lat && data.lng) {
-          const lat = parseFloat(data.lat);
-          const lng = parseFloat(data.lng);
-
-          // Update localStorage with fresh data from database
-          localStorage.setItem("current_user_lat", lat);
-          localStorage.setItem("current_user_lng", lng);
-
-          console.log("✅ Location refreshed from database:", { lat, lng });
-          return true;
-        } else {
-          console.warn("⚠️ No location data in database");
-          return false;
-        }
-      } catch (err) {
-        console.error("❌ Failed to fetch location from database:", err);
-        return false;
-      }
+    // 🔹 Wait for location to be loaded from database before proceeding
+    console.log('⏳ Waiting for location to be loaded from database...');
+    const locationReady = await window.locationReadyPromise;
+    
+    if (!locationReady) {
+      console.warn('❌ Location not ready, cannot load restaurants');
+      restaurantContainer.innerHTML = `
+        <div class="no-restaurants">
+          <i class="fas fa-map-marker-alt" style="font-size: 3rem; color: #ccc;"></i>
+          <h3>Location not set</h3>
+          <p>Please set your location to see nearby restaurants</p>
+        </div>
+      `;
+      return;
     }
+
+    console.log('✅ Location ready, proceeding to load restaurants...');
 
     // Function to fetch and display nearby restaurants
     async function loadNearbyRestaurants() {
       try {
-        // Get coordinates from localStorage (already updated from database)
+        // 🔥 Get coordinates directly from localStorage
         const lat = localStorage.getItem('current_user_lat');
         const lng = localStorage.getItem('current_user_lng');
 
@@ -188,11 +178,37 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
               <p>Please set your location to see nearby restaurants</p>
             </div>
           `;
+          
+          // Show empty map container message
+          const mapContainer = document.getElementById('restaurants-map-container');
+          if (mapContainer) {
+            mapContainer.innerHTML = `
+              <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; border-radius: 12px;">
+                <p style="color: #999; font-size: 1.1rem;">
+                  <i class="fas fa-map-marker-alt"></i> Set your location to view restaurants on map
+                </p>
+              </div>
+            `;
+          }
           return;
         }
 
+        console.log('📍 Loading restaurants for location:', { lat, lng });
+
         // Show loading state
         restaurantContainer.innerHTML = '<div class="loading">🔍 Finding delicious restaurants near you...</div>';
+        
+        // Show loading in map section
+        const mapContainer = document.getElementById('restaurants-map-container');
+        if (mapContainer) {
+          mapContainer.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; border-radius: 12px;">
+              <p style="color: #999; font-size: 1.1rem;">
+                <i class="fas fa-spinner fa-spin"></i> Loading map...
+              </p>
+            </div>
+          `;
+        }
 
         // Fetch nearby restaurants from API
         const radius = 12; // 12 km radius
@@ -216,11 +232,29 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
               <p>Try expanding your search radius or check back later</p>
             </div>
           `;
+          
+          // Show empty map for no restaurants
+          if (mapContainer && currentRestaurantsMap) {
+            currentRestaurantsMap.remove();
+            currentRestaurantsMap = null;
+          }
+          if (mapContainer) {
+            mapContainer.innerHTML = `
+              <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; border-radius: 12px;">
+                <p style="color: #999; font-size: 1.1rem;">
+                  <i class="fas fa-utensils"></i> No restaurants found in this area
+                </p>
+              </div>
+            `;
+          }
           return;
         }
 
         // Display restaurants
         displayRestaurants(data.restaurants);
+        
+        // 🗺️ Initialize restaurants map with CURRENT localStorage coordinates
+        await initializeRestaurantsMap(data.restaurants, parseFloat(lat), parseFloat(lng));
 
       } catch (error) {
         console.error('❌ Error loading restaurants:', error);
@@ -229,12 +263,182 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
             <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ff6b6b;"></i>
             <h3>Oops! Something went wrong</h3>
             <p>Unable to load restaurants. Please try again later.</p>
-            <button onclick="loadNearbyRestaurants()" class="primary-btn" style="margin-top: 15px;">
+            <button onclick="window.loadNearbyRestaurants()" class="primary-btn" style="margin-top: 15px;">
               <i class="fas fa-redo"></i> Retry
             </button>
           </div>
         `;
       }
+    }
+
+    // 🗺️ Function to initialize the restaurants map
+    async function initializeRestaurantsMap(restaurants, userLat, userLng) {
+      const mapContainer = document.getElementById('restaurants-map-container');
+      
+      if (!mapContainer || !restaurants || restaurants.length === 0) {
+        console.warn('Map container not found or no restaurants to display');
+        return;
+      }
+
+      // 🔥 Remove existing map instance if it exists to prevent duplication
+      if (currentRestaurantsMap) {
+        console.log('🗑️ Removing old map instance...');
+        try {
+          currentRestaurantsMap.off();
+          currentRestaurantsMap.remove();
+          currentRestaurantsMap = null;
+        } catch (err) {
+          console.warn('Error removing old map:', err);
+        }
+      }
+
+      // 🔥 Clear the container HTML completely and recreate it
+      mapContainer.innerHTML = '';
+      const mapDiv = document.createElement('div');
+      mapDiv.id = 'restaurants-map-inner';
+      mapDiv.style.height = '100%';
+      mapDiv.style.width = '100%';
+      mapContainer.appendChild(mapDiv);
+
+      // Fetch tile URL
+      let tileURL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+      try {
+        const res = await fetch('/api/map/tile-url');
+        const data = await res.json();
+        tileURL = data.tileURL;
+      } catch (err) {
+        console.error('Failed to fetch tile URL:', err);
+      }
+
+      // Initialize map centered on user's location using the new div
+      currentRestaurantsMap = L.map('restaurants-map-inner', {
+        zoomControl: true,
+        scrollWheelZoom: true,
+        doubleClickZoom: true,
+        touchZoom: true
+      }).setView([userLat, userLng], 13);
+
+      // Add tile layer
+      L.tileLayer(tileURL, {
+        tileSize: 512,
+        zoomOffset: -1,
+        attribution: "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
+      }).addTo(currentRestaurantsMap);
+
+      // Create custom user icon
+      const userIcon = L.divIcon({
+        html: `<div style="
+          background-color: #4285f4;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <i class="fas fa-user" style="color: white; font-size: 12px;"></i>
+        </div>`,
+        className: 'custom-user-marker',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+
+      // Add user marker
+      const userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(currentRestaurantsMap);
+      userMarker.bindPopup(`
+        <div class="restaurant-popup">
+          <h4><i class="fas fa-map-marker-alt"></i> Your Location</h4>
+          <p>You are here</p>
+        </div>
+      `);
+
+      // Create custom restaurant icon
+      const createRestaurantIcon = (restaurantName) => {
+        return L.divIcon({
+          html: `<div style="
+            background-color: #e91e63;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+          ">
+            <i class="fas fa-utensils" style="color: white; font-size: 13px;"></i>
+          </div>`,
+          className: 'custom-restaurant-marker',
+          iconSize: [34, 34],
+          iconAnchor: [17, 17]
+        });
+      };
+
+      // Add restaurant markers
+      restaurants.forEach(restaurant => {
+        if (restaurant.lat && restaurant.lng) {
+          const restaurantIcon = createRestaurantIcon(restaurant.restaurant_name);
+          
+          // Calculate distance display
+          let distance;
+          if (restaurant.road_distance !== null && restaurant.road_distance !== undefined) {
+            if (restaurant.road_distance < 1 && restaurant.road_distance_meters !== null) {
+              distance = `${restaurant.road_distance_meters} m`;
+            } else {
+              distance = `${restaurant.road_distance.toFixed(1)} km`;
+            }
+          } else {
+            distance = 'N/A';
+          }
+
+          const rating = restaurant.ratings !== null && restaurant.ratings !== undefined
+            ? restaurant.ratings 
+            : 'N/A';
+          
+          const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
+            ? `${Math.max(1, Math.round(restaurant.estimated_time))} min` 
+            : 'N/A';
+
+          const marker = L.marker([parseFloat(restaurant.lat), parseFloat(restaurant.lng)], { 
+            icon: restaurantIcon,
+            title: restaurant.restaurant_name // Show name on hover
+          }).addTo(currentRestaurantsMap);
+
+          // Bind popup with restaurant details
+          marker.bindPopup(`
+            <div class="restaurant-popup">
+              <h4><i class="fas fa-store"></i> ${restaurant.restaurant_name}</h4>
+              <p style="margin: 5px 0;"><i class="fas fa-map-marker-alt" style="color: #e91e63;"></i> ${distance} away</p>
+              <p style="margin: 5px 0;"><i class="fas fa-star" style="color: #ffc107;"></i> Rating: ${rating}</p>
+              <p style="margin: 5px 0;"><i class="fas fa-clock" style="color: #4CAF50;"></i> ${deliveryTime}</p>
+              ${restaurant.address ? `<p style="margin: 5px 0; font-size: 12px; color: #888;">${restaurant.address}</p>` : ''}
+            </div>
+          `);
+
+          // Add hover effect to show restaurant name
+          marker.on('mouseover', function(e) {
+            this.openPopup();
+          });
+        }
+      });
+
+      // Fit map to show all markers
+      const allLatLngs = [
+        [userLat, userLng],
+        ...restaurants
+          .filter(r => r.lat && r.lng)
+          .map(r => [parseFloat(r.lat), parseFloat(r.lng)])
+      ];
+      
+      if (allLatLngs.length > 1) {
+        const bounds = L.latLngBounds(allLatLngs);
+        currentRestaurantsMap.fitBounds(bounds, { padding: [50, 50] });
+      }
+
+      console.log('✅ Restaurants map initialized with', restaurants.length, 'restaurants');
     }
 
     // Function to display restaurants in the grid
@@ -347,26 +551,9 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
       window.location.href = `restaurant-details.html?id=${restaurantId}`;
     };
 
-    // Make loadNearbyRestaurants globally accessible for retry button
+    // Make loadNearbyRestaurants globally accessible
     window.loadNearbyRestaurants = loadNearbyRestaurants;
 
-    // 🔹 IMPORTANT: First fetch location from database, THEN load restaurants
-    const locationFetched = await fetchLocationFromDatabase();
-    if (locationFetched) {
-      await loadNearbyRestaurants();
-    } else {
-      // Try to load with existing localStorage data if database fetch fails
-      await loadNearbyRestaurants();
-    }
-
-    // Reload restaurants when location is updated from the modal
-    const saveLocationBtn = document.getElementById('location-save-btn');
-    if (saveLocationBtn) {
-      saveLocationBtn.addEventListener('click', () => {
-        // Wait a bit for localStorage to update, then reload
-        setTimeout(() => {
-          loadNearbyRestaurants();
-        }, 500);
-      });
-    }
+    // 🔹 Load restaurants (localStorage is now guaranteed to be set)
+    await loadNearbyRestaurants();
   });

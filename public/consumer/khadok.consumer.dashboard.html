@@ -182,10 +182,20 @@
           </button>
         </div>
 
+        
+
         <!-- Restaurants Grid -->
         <section class="restaurant-grid" id="restaurant-container">
           <div class="loading">Loading delicious options...</div>
         </section>
+
+        <!-- View Restaurants in Map Section -->
+        <section class="map-view-section">
+          <h2><i class="fas fa-map-marked-alt"></i> View Restaurants in Map</h2>
+          <div id="restaurants-map-container" style="height: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
+        </section>
+
+        
       </main>
 
       <!-- Welcome / Setup Popup -->
@@ -618,6 +628,11 @@
 
 
   <script>
+    // 🔹 Create a promise that resolves when location is loaded from database
+    window.locationReadyPromise = new Promise((resolve) => {
+      window.resolveLocationReady = resolve;
+    });
+
     document.addEventListener("DOMContentLoaded", async () => {
       const userEmail = document.getElementById("userEmail").textContent || localStorage.getItem("userEmail");
       const locationName = document.getElementById("location-name");
@@ -627,10 +642,12 @@
 
       if (!consumerId) {
         console.error("No consumer_id found in localStorage");
+        window.resolveLocationReady(false); // Resolve with false if no consumer_id
         return;
       }
 
-      // 🔹 Fetch user location from database and save to localStorage
+      // 🔹 ALWAYS fetch user location from database on page load/refresh
+      // This resets temporary location to permanent address
       try {
         const res = await fetch(`/api/location/${consumerId}`);
         const data = await res.json();
@@ -639,16 +656,24 @@
           const lat = parseFloat(data.lat);
           const lng = parseFloat(data.lng);
 
-          // Save to localStorage
+          // ALWAYS update localStorage with database values (permanent address)
           localStorage.setItem("current_user_lat", lat);
           localStorage.setItem("current_user_lng", lng);
 
-          console.log("✅ Location loaded from database:", { lat, lng });
+          console.log("✅ Location reset to permanent address from database:", { lat, lng });
+          
+          // Load location name
+          await loadLocationName();
+          
+          // 🔥 Resolve the promise to signal that location is ready
+          window.resolveLocationReady(true);
         } else {
           console.warn("⚠️ No location data found in database");
+          window.resolveLocationReady(false);
         }
       } catch (err) {
         console.error("❌ Failed to fetch location from database:", err);
+        window.resolveLocationReady(false);
       }
 
       // Normalize address - extract key parts for cleaner display
@@ -689,12 +714,6 @@
           locationName.textContent = "Set your location";
         }
       }
-
-      // Load location name immediately
-      await loadLocationName();
-
-      // Don't initialize map on dashboard - it's not visible and causes issues
-      // Map is only needed in the location modal
     });
   </script>
 
@@ -1073,6 +1092,14 @@
             displayAddress: normalizedAddr
           });
           
+          // 🔥 Refresh restaurants and map with new location
+          if (window.loadNearbyRestaurants) {
+            console.log('🔄 Refreshing restaurants based on new location...');
+            setTimeout(() => {
+              window.loadNearbyRestaurants();
+            }, 300); // Small delay to ensure localStorage is updated
+          }
+          
           alert('✅ Location updated temporarily!');
           closeModal();
         });
@@ -1193,4 +1220,3 @@
 </body>
 
 </html>
-``` 
