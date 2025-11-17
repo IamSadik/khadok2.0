@@ -79,12 +79,13 @@ body {
 .home_content {
     position: absolute;
     height: 100vh;
-    left: 78px;
-    
+    left: 70px;
+    width: 100vw;
     transition: all 0.5s ease; /* Smooth transition for expansion */
     align-items: center;
     margin-top: 40px;
     overflow: auto;
+    justify-content: center;
 }
 
 .sidebar.active ~ .home_content {
@@ -735,120 +736,323 @@ body {
 
 /* Location modal */
 .location-modal.hidden { display: none; }
-.location-modal { position: fixed; inset: 0; z-index: 2000; font-family: inherit; }
+.location-modal { 
+  position: fixed; 
+  inset: 0; 
+  z-index: 2000; 
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 /* Backdrop */
 .location-modal-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.45);
+  position: absolute; 
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
 }
 
-/* Panel */
+/* Panel - redesigned to match map-view-section */
 .location-modal-panel {
-  position: absolute;
-  top: 6%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(900px, 94%);
-  height: 74vh;
+  position: relative;
+  width: min(95%, 1000px);
+  max-height: 90vh;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(10,10,10,0.2);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: slideUp 0.3s ease-out;
 }
 
-/* Header */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header - matching map-view-section style */
 .location-modal-header {
-  display:flex;
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
-  border-bottom: 1px solid #eee;
+  padding: 20px 24px;
+  border-bottom: 2px solid #f0f0f0;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
 }
-.location-modal-title { display:flex; gap:10px; align-items:center; }
-.location-modal-title h3 { margin:0; font-size:1.1rem; }
+
+.location-modal-title { 
+  display: flex; 
+  gap: 12px; 
+  align-items: center;
+}
+
+.location-modal-title i {
+  color: #e91e63;
+  font-size: 1.5rem;
+}
+
+.location-modal-title h3 { 
+  margin: 0; 
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #333;
+}
 
 /* Close button */
 .btn-close {
-  background: transparent; border: none; font-size: 22px; cursor:pointer; padding:6px;
+  background: #f3f4f6;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #666;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.btn-close:hover {
+  background: #101812;
+  color: white;
+  transform: rotate(90deg);
 }
 
 /* Body */
-.location-modal-body { padding: 12px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
-.location-search-row { display:flex; gap:8px; align-items:center; }
+.location-modal-body { 
+  padding: 24px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  flex: 1;
+  overflow: hidden;
+}
 
-/* Location input in modal - show FULL address without truncation */
+.location-search-row { 
+  display: flex; 
+  gap: 10px; 
+  align-items: center;
+}
+
+/* Location input in modal - matching design */
 #location-input-modal {
-  flex:1; 
-  padding:10px 12px; 
-  border-radius:8px; 
-  border:1px solid #ddd; 
-  outline:none;
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
+  flex: 1; 
+  padding: 12px 16px; 
+  border-radius: 10px; 
+  border: 2px solid #e0e0e0; 
+  outline: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
 }
 
-#location-input {
-  flex:1; padding:10px 12px; border-radius:8px; border:1px solid #ddd; outline:none;
+#location-input-modal:focus {
+  border-color: #101812;
+  box-shadow: 0 0 0 3px rgba(16, 24, 18, 0.1);
 }
-.btn-ghost { background:#f3f4f6; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
-.btn-ghost:hover { background:#ececec; }
+
+.btn-ghost { 
+  background: #101812;
+  color: white;
+  border: none; 
+  padding: 12px 16px; 
+  border-radius: 10px; 
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-ghost:hover { 
+  background: #2a3420;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 24, 18, 0.3);
+}
+
+.btn-ghost i {
+  font-size: 1.1rem;
+}
 
 /* Suggestions */
-.location-suggestions { margin:0; padding:6px 0; list-style:none; border-radius:8px; background:white; border:1px solid #eee; max-height:200px; overflow:auto; }
-.location-suggestions li { padding:8px 12px; cursor:pointer; border-bottom:1px solid #fafafa; }
-.location-suggestions li:hover { background:#f7f7f7; }
-
-/* Map container */
-.map-container-modal { 
-  flex:1; 
-  position:relative; 
-  border-radius:8px; 
-  overflow:hidden; 
-  background:#f4f6f8; 
+.location-suggestions { 
+  margin: 0; 
+  padding: 8px 0; 
+  list-style: none; 
+  border-radius: 12px; 
+  background: white; 
+  border: 2px solid #f0f0f0;
+  max-height: 200px; 
+  overflow: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-#map-modal-inner { width:100%; height:100%; }
 
-/* Center marker - visible pin at center of map */
+.location-suggestions li { 
+  padding: 12px 16px; 
+  cursor: pointer; 
+  border-bottom: 1px solid #f5f5f5;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.location-suggestions li:last-child {
+  border-bottom: none;
+}
+
+.location-suggestions li:hover { 
+  background: #f8f9fa;
+  padding-left: 20px;
+}
+
+/* Map container - matching map-view-section */
+.map-container-modal { 
+  flex: 1; 
+  position: relative; 
+  border-radius: 12px; 
+  overflow: hidden; 
+  background: #f4f6f8;
+  box-shadow: inset 0 0 0 2px #e0e0e0;
+  min-height: 450px; /* 🔥 Set explicit minimum height */
+  height: 450px; /* 🔥 Set explicit height */
+}
+
+#map-modal-inner { 
+  width: 100%; 
+  height: 100%; 
+  min-height: 450px; /* 🔥 Match parent height */
+}
+
+/* Center marker - user location indicator */
 .map-center-marker { 
-  position:absolute; 
-  left:50%; 
-  top:50%; 
-  transform:translate(-50%, -100%); /* Center and lift above point */
-  pointer-events:none; 
-  z-index:500;
-  font-size: 2.5rem;
-  color: #e91e63;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-  animation: bounce 2s infinite;
+  position: absolute; 
+  left: 50%; 
+  top: 50%; 
+  transform: translate(-50%, -50%);
+  pointer-events: none; 
+  z-index: 1000;
+  animation: pulse 2s infinite;
 }
 
 .map-center-marker.hidden {
   display: none;
 }
 
-/* Bounce animation for pin */
-@keyframes bounce {
+/* Pulse animation for center marker */
+@keyframes pulse {
   0%, 100% {
-    transform: translate(-50%, -100%);
+    transform: translate(-50%, -50%) scale(1);
   }
   50% {
-    transform: translate(-50%, -110%);
+    transform: translate(-50%, -50%) scale(1.1);
   }
 }
 
-/* Footer */
-.location-modal-footer { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-top:1px solid #eee; background:#fcfcfc; }
-.location-modal-info small { color:#333; }
-.location-modal-actions { display:flex; gap:8px; }
+/* Footer - matching design */
+.location-modal-footer { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 20px 24px; 
+  border-top: 2px solid #f0f0f0; 
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
-.btn-primary { background:#e91e63; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-weight:600; }
-.btn-primary:hover { background:#d81b60; }
-.btn-secondary { background:white; border:1px solid #ddd; padding:10px 14px; border-radius:8px; cursor:pointer; }
-.btn-secondary:hover { background:#f5f5f5; }
+.location-modal-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.location-modal-info small { 
+  color: #666;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.location-modal-actions { 
+  display: flex; 
+  gap: 12px;
+}
+
+.btn-primary { 
+  background: #101812;
+  color: white;
+  border: none; 
+  padding: 12px 24px; 
+  border-radius: 10px; 
+  cursor: pointer; 
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover { 
+  background: #2a3420;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 24, 18, 0.3);
+}
+
+.btn-secondary { 
+  background: white; 
+  border: 2px solid #e0e0e0; 
+  padding: 12px 24px; 
+  border-radius: 10px; 
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover { 
+  background: #f8f9fa;
+  border-color: #101812;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .location-modal-panel {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .location-modal-header,
+  .location-modal-footer {
+    padding: 16px;
+  }
+  
+  .location-modal-body {
+    padding: 16px;
+  }
+  
+  .location-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .location-modal-actions {
+    width: 100%;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+  }
+}
 
 /* Responsive Design for Navbar */
 @media (max-width: 768px) {
@@ -955,4 +1159,314 @@ body {
   margin: 3px 0;
   color: #666;
   font-size: 13px;
+}
+
+/* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
+
+/* Tablet and below (768px) */
+@media (max-width: 768px) {
+  .home_content {
+    left: 78px;
+    width: calc(100% - 78px);
+    margin-top: 20px;
+  }
+  
+  .sidebar.active ~ .home_content {
+    left: 240px;
+    width: calc(100% - 240px);
+  }
+  
+  .dashboard-container {
+    padding: 15px;
+  }
+  
+  /* Hero section */
+  .hero {
+    padding: 40px 15px;
+  }
+  
+  .hero-content h1 {
+    font-size: 1.8rem;
+  }
+  
+  .hero-content p {
+    font-size: 0.95rem;
+  }
+  
+  /* Main container */
+  .main-container {
+    padding: 0 15px;
+  }
+  
+  .cuisine-section h2,
+  .map-view-section h2 {
+    font-size: 1.5rem;
+  }
+  
+  /* Filter bar */
+  .filter-bar {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .sort-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .sort-options label {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+  
+  .filter-btn {
+    width: 100%;
+  }
+  
+  /* Restaurant grid */
+  .restaurant-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+  
+  /* Map section */
+  .map-view-section {
+    padding: 15px;
+  }
+  
+  #restaurants-map-container {
+    height: 400px !important;
+  }
+}
+
+/* Mobile (480px and below) */
+@media (max-width: 480px) {
+  .home_content {
+    left: 0;
+    width: 100%;
+    margin-top: 0;
+    padding-top: 60px; /* Account for fixed navbar */
+  }
+  
+  .sidebar.active ~ .home_content {
+    left: 240px;
+    width: calc(100% - 240px);
+  }
+  
+  .dashboard-container {
+    padding: 10px;
+  }
+  
+  /* Navbar mobile adjustments */
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 15px;
+  }
+  
+  .nav-left,
+  .nav-center,
+  .nav-right {
+    width: 100%;
+  }
+  
+  .nav-center {
+    margin: 10px 0;
+  }
+  
+  /* Hero */
+  .hero {
+    padding: 30px 10px;
+  }
+  
+  .hero-content h1 {
+    font-size: 1.5rem;
+  }
+  
+  .hero-content p {
+    font-size: 0.9rem;
+  }
+  
+  /* Service buttons */
+  .service-buttons {
+    overflow-x: auto;
+    padding: 15px 0;
+    gap: 8px;
+  }
+  
+  .service-buttons button {
+    white-space: nowrap;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+  }
+  
+  /* Cuisine list */
+  .cuisine-list {
+    gap: 10px;
+  }
+  
+  .cuisine-card {
+    min-width: 90px;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  
+  /* Restaurant grid - single column on very small screens */
+  .restaurant-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .restaurant-card img {
+    height: 160px;
+  }
+  
+  .restaurant-info h4 {
+    font-size: 1rem;
+  }
+  
+  .restaurant-meta {
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.85rem;
+  }
+  
+  /* Map section */
+  .map-view-section {
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .map-view-section h2 {
+    font-size: 1.3rem;
+  }
+  
+  #restaurants-map-container {
+    height: 300px !important;
+  }
+  
+  /* Location modal mobile */
+  .location-modal-panel {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .map-container-modal {
+    height: 350px;
+    min-height: 350px;
+  }
+  
+  #map-modal-inner {
+    min-height: 350px;
+  }
+  
+  .location-modal-header {
+    padding: 15px;
+  }
+  
+  .location-modal-title h3 {
+    font-size: 1.2rem;
+  }
+  
+  .location-modal-body {
+    padding: 12px;
+  }
+  
+  .location-search-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  #location-input-modal {
+    width: 100%;
+  }
+  
+  .btn-ghost {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Extra small devices (360px and below) */
+@media (max-width: 360px) {
+  .hero-content h1 {
+    font-size: 1.3rem;
+  }
+  
+  .search-bar {
+    padding: 6px;
+  }
+  
+  .search-bar input {
+    font-size: 13px;
+    padding: 8px;
+  }
+  
+  .search-bar .search-btn {
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+  
+  .restaurant-card img {
+    height: 140px;
+  }
+  
+  #restaurants-map-container {
+    height: 250px !important;
+  }
+  
+  .map-container-modal {
+    height: 300px;
+    min-height: 300px;
+  }
+  
+  #map-modal-inner {
+    min-height: 300px;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .hero {
+    padding: 25px 15px;
+  }
+  
+  .hero-content h1 {
+    font-size: 1.6rem;
+  }
+  
+  #restaurants-map-container {
+    height: 350px !important;
+  }
+  
+  .map-container-modal {
+    height: 300px;
+    min-height: 300px;
+  }
+}
+
+/* Prevent content overflow */
+* {
+  box-sizing: border-box;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure proper scrolling on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow-x: hidden;
+  }
+  
+  .home_content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
 }

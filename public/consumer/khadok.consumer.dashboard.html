@@ -966,37 +966,99 @@
 
       // Initialize map in modal
       function initMapModal(lat, lon) {
-        if (mapModal) {
-          mapModal.setView([lat, lon], 16);
+        try {
+          console.log('🗺️ Attempting to initialize map with:', { lat, lon, tileURL });
+          
+          if (mapModal) {
+            console.log('🔄 Map already exists, just updating view');
+            mapModal.setView([lat, lon], 16);
+            return mapModal;
+          }
+
+          // Ensure container exists and is visible
+          if (!mapModalInner) {
+            console.error('❌ Map container not found!');
+            return null;
+          }
+
+          const containerRect = mapModalInner.getBoundingClientRect();
+          console.log('📏 Container dimensions:', { 
+            width: containerRect.width, 
+            height: containerRect.height 
+          });
+
+          if (containerRect.width === 0 || containerRect.height === 0) {
+            console.error('❌ Container has zero dimensions!');
+            return null;
+          }
+
+          // Clear any existing content
+          mapModalInner.innerHTML = '';
+
+          console.log('🎯 Creating new Leaflet map instance...');
+          mapModal = L.map(mapModalInner, {
+            zoomControl: true,
+            scrollWheelZoom: true,
+            doubleClickZoom: true,
+            touchZoom: true,
+            keyboard: true
+          }).setView([lat, lon], 16);
+
+          console.log('🗺️ Adding tile layer with URL:', tileURL);
+          L.tileLayer(tileURL, {
+            tileSize: 512,
+            zoomOffset: -1,
+            attribution: "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
+          }).addTo(mapModal);
+
+          // 🔥 Add custom user icon marker at center (matching restaurants map style)
+          const userIcon = L.divIcon({
+            html: `<div style="
+              background-color: #4285f4;
+              width: 30px;
+              height: 30px;
+              border-radius: 50%;
+              border: 3px solid white;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <i class="fas fa-user" style="color: white; font-size: 14px;"></i>
+            </div>`,
+            className: 'modal-user-marker',
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+          });
+
+          console.log('📍 Adding user marker to map...');
+          const userMarker = L.marker([lat, lon], { 
+            icon: userIcon,
+            draggable: false
+          }).addTo(mapModal);
+
+          userMarker.bindPopup(`
+            <div class="restaurant-popup">
+              <h4><i class="fas fa-map-marker-alt"></i> Your Location</h4>
+              <p>Pan the map to select a location</p>
+            </div>
+          `);
+
+          // Update marker position when map moves to keep it centered
+          mapModal.on('moveend zoomend drag', () => {
+            const center = mapModal.getCenter();
+            userMarker.setLatLng(center);
+            currentLat = center.lat;
+            currentLng = center.lng;
+            updateSelectedInfo(currentLat, currentLng);
+          });
+
+          console.log('✅ Map initialized successfully!');
           return mapModal;
+        } catch (error) {
+          console.error('❌ Error initializing map:', error);
+          return null;
         }
-
-        // Clear any existing content
-        if (mapModalInner) mapModalInner.innerHTML = '';
-
-        mapModal = L.map(mapModalInner, {
-          zoomControl: true,
-          scrollWheelZoom: true,
-          doubleClickZoom: true,
-          touchZoom: true,
-          keyboard: true
-        }).setView([lat, lon], 16);
-
-        L.tileLayer(tileURL, {
-          tileSize: 512,
-          zoomOffset: -1,
-          attribution: "<a href='https://www.maptiler.com/' target='_blank'>© MapTiler</a> <a href='https://www.openstreetmap.org/' target='_blank'>© OSM</a>"
-        }).addTo(mapModal);
-
-        // Update coords when map moves
-        mapModal.on('moveend zoomend', async () => {
-          const center = mapModal.getCenter();
-          currentLat = center.lat;
-          currentLng = center.lng;
-          await updateSelectedInfo(currentLat, currentLng);
-        });
-
-        return mapModal;
       }
 
       // Update the selected coordinates and address display
@@ -1030,20 +1092,21 @@
           const startLat = savedLat ? parseFloat(savedLat) : currentLat;
           const startLng = savedLng ? parseFloat(savedLng) : currentLng;
           
+          // 🔥 Wait for modal to be visible before initializing map
           setTimeout(() => {
             if (!mapModal) {
+              console.log('🗺️ Initializing modal map...');
               initMapModal(startLat, startLng);
               currentLat = startLat;
               currentLng = startLng;
               updateSelectedInfo(startLat, startLng);
-              mapCenterMarkerModal?.classList.remove('hidden');
             } else {
-              mapModal.invalidateSize();
+              console.log('🔄 Refreshing existing modal map...');
+              mapModal.invalidateSize(); // Force Leaflet to recalculate size
               mapModal.setView([startLat, startLng], 16);
               updateSelectedInfo(startLat, startLng);
-              mapCenterMarkerModal?.classList.remove('hidden');
             }
-          }, 100);
+          }, 300); // Increased delay to ensure modal is fully rendered
         });
       }
 
