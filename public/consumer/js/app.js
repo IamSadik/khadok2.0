@@ -143,6 +143,10 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
     // Store the current map instance globally so we can remove it when refreshing
     let currentRestaurantsMap = null;
+    
+    // 🔥 Store all restaurants globally for filtering
+    let allRestaurants = [];
+    let currentFilter = 'all'; // Track current filter: 'all', 'delivery', 'pickup', 'dine-in'
 
     // 🔹 Wait for location to be loaded from database before proceeding
     console.log('⏳ Waiting for location to be loaded from database...');
@@ -161,6 +165,73 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
     }
 
     console.log('✅ Location ready, proceeding to load restaurants...');
+
+    // 🔥 Setup filter buttons
+    function setupFilterButtons() {
+      const filterButtons = document.querySelectorAll('.service-buttons button');
+      
+      filterButtons.forEach((button, index) => {
+        button.addEventListener('click', () => {
+          // Remove active class from all buttons
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          
+          // Add active class to clicked button
+          button.classList.add('active');
+          
+          // Determine filter type based on button index or text
+          const buttonText = button.textContent.trim().toLowerCase();
+          if (buttonText.includes('delivery')) {
+            currentFilter = 'delivery';
+          } else if (buttonText.includes('pickup')) {
+            currentFilter = 'pickup';
+          } else if (buttonText.includes('dine-in')) {
+            currentFilter = 'dine-in';
+          }
+          
+          console.log('🔍 Filter applied:', currentFilter);
+          
+          // Apply filter to existing restaurants
+          applyFilter();
+        });
+      });
+    }
+
+    // 🔥 Function to parse type string from database
+    function parseRestaurantTypes(typeString) {
+      if (!typeString) return [];
+      
+      try {
+        // Type comes as string like: "[\"delivery\",\"pickup\",\"dine-in\"]"
+        // Parse it to array
+        const types = JSON.parse(typeString);
+        return types.map(t => t.toLowerCase().trim());
+      } catch (error) {
+        console.error('Error parsing restaurant types:', error, typeString);
+        return [];
+      }
+    }
+
+    // 🔥 Function to filter restaurants based on selected service type
+    function applyFilter() {
+      let filteredRestaurants = allRestaurants;
+      
+      if (currentFilter !== 'all') {
+        filteredRestaurants = allRestaurants.filter(restaurant => {
+          const types = parseRestaurantTypes(restaurant.type);
+          return types.includes(currentFilter);
+        });
+        
+        console.log(`✅ Filtered ${filteredRestaurants.length} restaurants with ${currentFilter} service`);
+      }
+      
+      // Display filtered restaurants
+      displayRestaurants(filteredRestaurants);
+      
+      // Update map with filtered restaurants
+      const lat = parseFloat(localStorage.getItem('current_user_lat'));
+      const lng = parseFloat(localStorage.getItem('current_user_lng'));
+      initializeRestaurantsMap(filteredRestaurants, lat, lng);
+    }
 
     // Function to fetch and display nearby restaurants
     async function loadNearbyRestaurants() {
@@ -225,6 +296,7 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
         // Check if we have restaurants
         if (!data.restaurants || data.restaurants.length === 0) {
+          allRestaurants = []; // Clear stored restaurants
           restaurantContainer.innerHTML = `
             <div class="no-restaurants">
               <i class="fas fa-utensils" style="font-size: 3rem; color: #ccc;"></i>
@@ -250,11 +322,14 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
           return;
         }
 
-        // Display restaurants
-        displayRestaurants(data.restaurants);
+        // 🔥 Store all restaurants globally for filtering
+        allRestaurants = data.restaurants;
         
-        // 🗺️ Initialize restaurants map with CURRENT localStorage coordinates
-        await initializeRestaurantsMap(data.restaurants, parseFloat(lat), parseFloat(lng));
+        // Reset filter to 'delivery' (first button is active by default)
+        currentFilter = 'delivery';
+        
+        // Apply initial filter
+        applyFilter();
 
       } catch (error) {
         console.error('❌ Error loading restaurants:', error);
@@ -277,6 +352,17 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
       
       if (!mapContainer || !restaurants || restaurants.length === 0) {
         console.warn('Map container not found or no restaurants to display');
+        
+        // Show message when no restaurants match filter
+        if (mapContainer && restaurants && restaurants.length === 0) {
+          mapContainer.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #f5f5f5; border-radius: 12px;">
+              <p style="color: #999; font-size: 1.1rem;">
+                <i class="fas fa-filter"></i> No restaurants available for selected filter
+              </p>
+            </div>
+          `;
+        }
         return;
       }
 
@@ -444,7 +530,13 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
     // Function to display restaurants in the grid
     function displayRestaurants(restaurants) {
       if (!restaurants || restaurants.length === 0) {
-        restaurantContainer.innerHTML = '<div class="loading">No restaurants available</div>';
+        restaurantContainer.innerHTML = `
+          <div class="no-restaurants">
+            <i class="fas fa-filter" style="font-size: 3rem; color: #ccc;"></i>
+            <h3>No restaurants found</h3>
+            <p>No restaurants available with the selected filter (${currentFilter})</p>
+          </div>
+        `;
         return;
       }
 
@@ -553,6 +645,9 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
     // Make loadNearbyRestaurants globally accessible
     window.loadNearbyRestaurants = loadNearbyRestaurants;
+
+    // 🔥 Setup filter buttons
+    setupFilterButtons();
 
     // 🔹 Load restaurants (localStorage is now guaranteed to be set)
     await loadNearbyRestaurants();

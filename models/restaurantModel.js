@@ -20,7 +20,7 @@ const testBasicQuery = () => {
 const getNearbyRestaurants = (lat, lng, radius = 10) => {
   return new Promise((resolve, reject) => {
     const query = `
-      SELECT stakeholder_id, restaurant_name, address, lat, lng, ratings, picture, opens_at, closes_at,
+      SELECT stakeholder_id, restaurant_name, address, lat, lng, ratings, picture, opens_at, closes_at, type,
         (6371 * ACOS(
           LEAST(1,
             COS(RADIANS(?)) * COS(RADIANS(lat)) * COS(RADIANS(lng) - RADIANS(?)) +

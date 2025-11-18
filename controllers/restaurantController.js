@@ -62,6 +62,7 @@ const getNearbyRestaurants = async (req, res) => {
             picture: restaurant.picture,
             opens_at: restaurant.opens_at,
             closes_at: restaurant.closes_at,
+            type: restaurant.type, // delivery, pickup, dine-in
             straight_line_distance: parseFloat(restaurant.distance.toFixed(2)),
             road_distance: roadInfo ? roadInfo.distance : null, // Distance in km
             road_distance_meters: roadInfo ? roadInfo.distance_meters : null, // Distance in meters
@@ -92,6 +93,7 @@ const getNearbyRestaurants = async (req, res) => {
         picture: restaurant.picture,
         opens_at: restaurant.opens_at,
         closes_at: restaurant.closes_at,
+        type: restaurant.type, // delivery, pickup, dine-in
         distance: parseFloat(restaurant.distance.toFixed(2)),
         distance_unit: 'km',
         distance_type: 'straight_line'
