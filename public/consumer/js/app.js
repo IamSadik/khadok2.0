@@ -721,11 +721,18 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
       }).join('');
     }
 
-    // Function to view restaurant details (you can implement this later)
+    // Function to view restaurant details
     window.viewRestaurant = function(restaurantId) {
       console.log('Opening restaurant:', restaurantId);
-      // Navigate to consumer menu page with restaurant_id parameter
-      window.location.href = `menu.html?restaurant_id=${restaurantId}`;
+      
+      // Check current filter to determine which page to navigate to
+      if (currentFilter === 'dine-in') {
+        // Navigate to dine-in page for table reservations
+        window.location.href = `dine-in.html?restaurant_id=${restaurantId}`;
+      } else {
+        // Navigate to menu page for delivery/pickup
+        window.location.href = `menu.html?restaurant_id=${restaurantId}`;
+      }
     };
 
     // Make loadNearbyRestaurants globally accessible

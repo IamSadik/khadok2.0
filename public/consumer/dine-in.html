@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Restaurant Dine-In | Khadok</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+
+    <!-- Font Awesome & Boxicons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
+    <link rel="stylesheet" href="css/dine-in.css" />
+</head>
+
+<body>
+    <!-- Consumer Sidebar -->
+    <div class="sidebar">
+        <div class="logo_content">
+            <div class="logo">
+                <div class="logo_name">Khadok</div>
+            </div>
+            <i class='bx bx-menu' id="btn"></i>
+        </div>
+        <ul class="nav_list">
+            <li>
+                <i class='bx bx-search-alt'></i>
+                <input type="text" placeholder="Search...">
+                <span class="tooltip">Search</span>
+            </li>
+            <li>
+                <a href="khadok.consumer.dashboard.html">
+                    <i class='bx bxs-grid-alt'></i>
+                    <span class="links_name">Dashboard</span>
+                </a>
+                <span class="tooltip">Dashboard</span>
+            </li>
+            <li>
+                <a href="khadok.consumer.user.html">
+                    <i class='bx bxs-user-circle'></i>
+                    <span class="links_name">User</span>
+                </a>
+                <span class="tooltip">User</span>
+            </li>
+            <li>
+                <a href="map.html">
+                    <i class='bx bx-navigation'></i>
+                    <span class="links_name">Map</span>
+                </a>
+                <span class="tooltip">Map</span>
+            </li>
+            <li>
+                <a href="khadok.consumer.order.html">
+                    <i class='bx bxs-package'></i>
+                    <span class="links_name">Orders</span>
+                </a>
+                <span class="tooltip">Orders</span>
+            </li>
+            <li>
+                <a href="khadok.consumer.setting.html">
+                    <i class='bx bxs-cog'></i>
+                    <span class="links_name">Settings</span>
+                </a>
+                <span class="tooltip">Settings</span>
+            </li>
+        </ul>
+        <div class="profile_content">
+            <div class="profile">
+                <div class="profile_details">
+                    <div class="name_job">
+                        <div class="name">Logout</div>
+                        <div class="job">Consumer</div>
+                    </div>
+                </div>
+                <button id="logoutButton" class="logout_button" onclick="logout()">
+                    <i class='bx bx-log-out-circle' id="log_out"></i>
+                    <span class="links_name">Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header / Breadcrumbs -->
+        <div class="page-header">
+            <div class="breadcrumbs">
+                <span><a href="khadok.consumer.dashboard.html">Dashboard</a></span> &gt;
+                <span id="restaurant-breadcrumb">Restaurant Dine-In</span>
+            </div>
+            <h1 id="restaurant-name">Restaurant Dine-In</h1>
+        </div>
+
+        <!-- Restaurant Info Card -->
+        <div class="restaurant-info-card">
+            <div class="restaurant-image">
+                <img id="restaurant-picture" src="images/placeholder-restaurant.jpg" alt="Restaurant">
+            </div>
+            <div class="restaurant-details">
+                <h2 id="restaurant-name-detail">Loading...</h2>
+                <p id="restaurant-address"><i class="fas fa-map-marker-alt"></i> <span>Loading address...</span></p>
+                <p id="restaurant-hours"><i class="fas fa-clock"></i> <span>Loading hours...</span></p>
+                <p id="restaurant-rating"><i class="fas fa-star"></i> <span>Loading rating...</span></p>
+                <p id="restaurant-phone"><i class="fas fa-phone"></i> <span>Loading contact...</span></p>
+            </div>
+        </div>
+
+        <!-- Reservation Form -->
+        <div class="reservation-section">
+            <h2><i class="fas fa-calendar-check"></i> Make a Reservation</h2>
+            
+            <form id="reservation-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="guest-name"><i class="fas fa-user"></i> Your Name</label>
+                        <input type="text" id="guest-name" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="guest-phone"><i class="fas fa-phone"></i> Phone Number</label>
+                        <input type="tel" id="guest-phone" placeholder="Enter your phone number" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="reservation-date"><i class="fas fa-calendar"></i> Date</label>
+                        <input type="date" id="reservation-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reservation-time"><i class="fas fa-clock"></i> Time</label>
+                        <input type="time" id="reservation-time" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="num-guests"><i class="fas fa-users"></i> Number of Guests</label>
+                        <select id="num-guests" required>
+                            <option value="">Select guests</option>
+                            <option value="1">1 Guest</option>
+                            <option value="2">2 Guests</option>
+                            <option value="3">3 Guests</option>
+                            <option value="4">4 Guests</option>
+                            <option value="5">5 Guests</option>
+                            <option value="6">6 Guests</option>
+                            <option value="7">7 Guests</option>
+                            <option value="8">8 Guests</option>
+                            <option value="9">9+ Guests</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="table-preference"><i class="fas fa-chair"></i> Table Preference</label>
+                        <select id="table-preference">
+                            <option value="">No preference</option>
+                            <option value="window">Window Seat</option>
+                            <option value="outdoor">Outdoor</option>
+                            <option value="private">Private Room</option>
+                            <option value="booth">Booth</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="special-requests"><i class="fas fa-comment"></i> Special Requests (Optional)</label>
+                    <textarea id="special-requests" rows="4" placeholder="Any special requests or dietary requirements?"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="window.history.back()">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-check"></i> Confirm Reservation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let btn = document.querySelector("#btn");
+        let sidebar = document.querySelector(".sidebar");
+        let searchBtn = document.querySelector(".bx-search-alt");
+
+        btn.onclick = function () {
+            sidebar.classList.toggle("active");
+        }
+        searchBtn.onclick = function () {
+            sidebar.classList.toggle("active");
+        }
+    </script>
+
+    <script>
+        async function logout() {
+            const sessionId = localStorage.getItem("sessionId");
+
+            if (!sessionId) {
+                alert("No session found.");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId }),
+                    credentials: "include",
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.removeItem("sessionId");
+                    localStorage.removeItem("consumer_id");
+                    alert(data.message);
+                    window.location.href = '../login.html';
+                } else {
+                    alert(data.message || "Logout failed.");
+                    window.location.href = '../login.html';
+                }
+            } catch (err) {
+                console.error("Logout error:", err);
+                alert("Something went wrong.");
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+
+    <script>
+        (function checkAuthOnLoad() {
+            const sessionId = localStorage.getItem("sessionId");
+            if (!sessionId) {
+                window.location.replace("../login.html");
+            }
+        })();
+    </script>
+
+    <!-- Dine-In JS -->
+    <script src="js/dine-in.js"></script>
+</body>
+
+</html>

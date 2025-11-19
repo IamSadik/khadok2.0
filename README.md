@@ -41,6 +41,9 @@ Khadok streamlines every step of the ordering journey:
 - **Panolens.js**  
   - Embed 360° panoramic tours of restaurant interiors.  
   - Allows consumers to virtually “look around” before booking tables.
+- **Three.js**  
+  - Renders interactive 3D models of table layouts.  
+  - Consumers can select specific tables during booking.
 
 ### 4. Payments & Invoicing
 - **bKash Checkout Integration**  
@@ -86,7 +89,7 @@ Khadok streamlines every step of the ordering journey:
 |---------------|--------------------------------------------------|
 | **Frontend**  | HTML5, CSS3, Vanilla JavaScript                  |
 | **Mapping**   | MapTiler (tiles), Leaflet.js, OSRM routing       |
-| **3D Tours**  | Panolens.js                                      |
+| **3D Tours**  | Panolens.js, Three.js                            |
 | **Backend**   | Node.js, Express.js                              |
 | **Real-Time** | Socket.io                                        |
 | **Payments**  | bKash API                                        |
