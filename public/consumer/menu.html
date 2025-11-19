@@ -1,69 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Khadok - Menu</title>
-    <link rel="stylesheet" href="css/menu.css">
-    <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">   
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-    <script src="js/menu.js" defer></script>
-    <link rel="stylesheet" href="css/cart.css">
-    <script src="/socket.io/socket.io.js"></script>
 
-   
+<head>
+    <meta charset="UTF-8" />
+    <title>Restaurant Menu | Khadok</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+
+    <!-- Font Awesome & Boxicons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
+    <link rel="stylesheet" href="css/consumer-menu.css" />
 </head>
+
 <body>
+    <!-- Consumer Sidebar -->
     <div class="sidebar">
         <div class="logo_content">
             <div class="logo">
                 <div class="logo_name">Khadok</div>
             </div>
-            <i class="bx bx-menu" id="btn"></i>
+            <i class='bx bx-menu' id="btn"></i>
         </div>
         <ul class="nav_list">
             <li>
-                <i class="bx bx-search-alt"></i>
+                <i class='bx bx-search-alt'></i>
                 <input type="text" placeholder="Search...">
                 <span class="tooltip">Search</span>
             </li>
             <li>
                 <a href="khadok.consumer.dashboard.html">
-                    <i class="bx bxs-grid-alt"></i>
+                    <i class='bx bxs-grid-alt'></i>
                     <span class="links_name">Dashboard</span>
                 </a>
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
                 <a href="khadok.consumer.user.html">
-                    <i class="bx bxs-user-circle"></i>
+                    <i class='bx bxs-user-circle'></i>
                     <span class="links_name">User</span>
                 </a>
                 <span class="tooltip">User</span>
             </li>
             <li>
                 <a href="map.html">
-                    <i class="bx bx-navigation"></i>
+                    <i class='bx bx-navigation'></i>
                     <span class="links_name">Map</span>
                 </a>
                 <span class="tooltip">Map</span>
             </li>
-            
             <li>
                 <a href="khadok.consumer.order.html">
-                    <i class="bx bxs-package"></i>
+                    <i class='bx bxs-package'></i>
                     <span class="links_name">Orders</span>
                 </a>
                 <span class="tooltip">Orders</span>
             </li>
-            
             <li>
                 <a href="khadok.consumer.setting.html">
-                    <i class="bx bxs-cog"></i>
+                    <i class='bx bxs-cog'></i>
                     <span class="links_name">Settings</span>
                 </a>
                 <span class="tooltip">Settings</span>
@@ -77,34 +74,78 @@
                         <div class="job">Consumer</div>
                     </div>
                 </div>
-                <button id="logoutButton" class="logout_button">
-                    <i class="bx bx-log-out-circle" id="log_out"></i>
+                <button id="logoutButton" class="logout_button" onclick="logout()">
+                    <i class='bx bx-log-out-circle' id="log_out"></i>
                     <span class="links_name">Logout</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <section id="menu-list">
-        <h2>Menu Items</h2>
-        <!-- Container for Category Filter Buttons -->
-        <div id="category-filters" class="category-filters">
-            <!-- Dynamic category buttons will be injected here -->
-        </div>
-    
-        <div class="horizontal-scroll-container">
-            <button class="scroll-btn left" id="menu-scroll-left" aria-label="Scroll Left">&lt;</button>
-            <div id="menu-items-container" class="menu-item-container">
-                <!-- Dynamic Menu Items Will Be Injected Here -->
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header / Breadcrumbs -->
+        <div class="page-header">
+            <div class="breadcrumbs">
+                <span><a href="khadok.consumer.dashboard.html">Dashboard</a></span> &gt;
+                <span id="restaurant-breadcrumb">Restaurant Menu</span>
             </div>
-            <button class="scroll-btn right" id="menu-scroll-right" aria-label="Scroll Right">&gt;</button>
+            <h1 id="restaurant-name">Restaurant Menu</h1>
         </div>
-    </section>
-    
-     <!-- Cart icon and popup -->
-     <div class="cart-icon" id="cart-icon">
-        <i class="fas fa-shopping-cart"></i><span id="cart-count">0</span>
+
+        <!-- Sorting & Search -->
+        <div class="controls">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search menu items..." />
+
+                <!-- Live search results -->
+                <div id="searchResults" class="search-results" style="display: none;"></div>
+            </div>
+
+            <div class="sort-wrapper">
+                <i class="fas fa-sort-amount-down-alt sort-icon"></i>
+                <select id="sortSelect">
+                    <option value="default">Sort By</option>
+                    <option value="priceLow">Price: Low to High</option>
+                    <option value="priceHigh">Price: High to Low</option>
+                    <option value="alphaAZ">Alphabetical (A–Z)</option>
+                    <option value="alphaZA">Alphabetical (Z–A)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Category Tabs with Scroll Buttons -->
+        <div class="tabs-container">
+            <div class="tabs-scroll-wrapper">
+                <button id="scrollLeft" class="scroll-btn" aria-label="Scroll left">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <div class="scrollable-tabs">
+                    <div class="tabs" id="categoryTabs">
+                        <!-- JS will inject category tabs here -->
+                    </div>
+                </div>
+
+                <button id="scrollRight" class="scroll-btn" aria-label="Scroll right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu Sections -->
+        <div id="menuSections">
+            <!-- dynamically injected -->
+        </div>
     </div>
+
+    <!-- Cart icon and popup -->
+    <div class="cart-icon" id="cart-icon">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="cart-count">0</span>
+    </div>
+    
     <div class="cart-popup" id="cart-popup">
         <h3>Your Cart</h3>
         <ul id="cart-items"></ul>
@@ -113,58 +154,67 @@
             <button id="checkout-pickup-btn">Checkout for Pickup</button>
         </div>
     </div>
-    
-    <script>
-        let btn = document.querySelector("#btn"); 
-        let sidebar = document.querySelector(".sidebar");
-        let searchBtn = document.querySelector(".bx-search-alt");  
 
-        btn.onclick = function(){
+    <script>
+        let btn = document.querySelector("#btn");
+        let sidebar = document.querySelector(".sidebar");
+        let searchBtn = document.querySelector(".bx-search-alt");
+
+        btn.onclick = function () {
             sidebar.classList.toggle("active");
         }
-        searchBtn.onclick = function(){
+        searchBtn.onclick = function () {
             sidebar.classList.toggle("active");
         }
     </script>
 
-<script>
-    async function logout() {
-        const sessionId = localStorage.getItem("sessionId");
+    <script>
+        async function logout() {
+            const sessionId = localStorage.getItem("sessionId");
 
-        if (!sessionId) {
-            alert("No session found.");
-            return;
-        }
-
-        try {
-            const res = await fetch("/api/auth/logout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId }),
-                credentials: "include", // Include the session cookie in the request
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.removeItem("sessionId"); // Clear sessionId from localStorage after logout
-                alert(data.message); // Show success message
-                window.location.href = '../login.html';
-            } else {
-                alert(data.message || "Logout failed.");
-                window.location.href = '../login.html'; // Redirect to login page on error
+            if (!sessionId) {
+                alert("No session found.");
+                return;
             }
-        } catch (err) {
-            console.error("Logout error:", err);
-            alert("Something went wrong.");
-            window.location.href = '../login.html'; // Redirect to login page on error
-        }
-    }
 
-    const logoutButton = document.getElementById("logoutButton");
-    logoutButton.addEventListener("click", logout);
-</script>
-      
-    
+            try {
+                const res = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId }),
+                    credentials: "include",
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.removeItem("sessionId");
+                    localStorage.removeItem("consumer_id");
+                    alert(data.message);
+                    window.location.href = '../login.html';
+                } else {
+                    alert(data.message || "Logout failed.");
+                    window.location.href = '../login.html';
+                }
+            } catch (err) {
+                console.error("Logout error:", err);
+                alert("Something went wrong.");
+                window.location.href = '../login.html';
+            }
+        }
+    </script>
+
+    <script>
+        (function checkAuthOnLoad() {
+            const sessionId = localStorage.getItem("sessionId");
+            if (!sessionId) {
+                window.location.replace("../login.html");
+            }
+        })();
+    </script>
+
+    <!-- Consumer Menu JS -->
+    <script src="js/consumer-menu.js"></script>
 </body>
+
 </html>

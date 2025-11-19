@@ -724,8 +724,8 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
     // Function to view restaurant details (you can implement this later)
     window.viewRestaurant = function(restaurantId) {
       console.log('Opening restaurant:', restaurantId);
-      // TODO: Navigate to restaurant details page or show modal
-      window.location.href = `menu.html?id=${restaurantId}`;
+      // Navigate to consumer menu page with restaurant_id parameter
+      window.location.href = `menu.html?restaurant_id=${restaurantId}`;
     };
 
     // Make loadNearbyRestaurants globally accessible
