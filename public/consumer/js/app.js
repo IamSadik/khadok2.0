@@ -144,9 +144,10 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
     // Store the current map instance globally so we can remove it when refreshing
     let currentRestaurantsMap = null;
     
-    // 🔥 Store all restaurants globally for filtering
+    // 🔥 Store all restaurants globally for filtering and sorting
     let allRestaurants = [];
     let currentFilter = 'all'; // Track current filter: 'all', 'delivery', 'pickup', 'dine-in'
+    let currentSort = 'relevance'; // Track current sort: 'relevance', 'rating', 'distance', 'fastest'
 
     // 🔹 Wait for location to be loaded from database before proceeding
     console.log('⏳ Waiting for location to be loaded from database...');
@@ -166,7 +167,7 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
     console.log('✅ Location ready, proceeding to load restaurants...');
 
-    // 🔥 Setup filter buttons
+    // 🔥 Setup service filter buttons (Delivery, Pickup, Dine-in)
     function setupFilterButtons() {
       const filterButtons = document.querySelectorAll('.service-buttons button');
       
@@ -190,8 +191,40 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
           
           console.log('🔍 Filter applied:', currentFilter);
           
-          // Apply filter to existing restaurants
-          applyFilter();
+          // Apply filter and current sort
+          applyFilterAndSort();
+        });
+      });
+    }
+
+    // 🔥 Setup sort buttons (Relevance, Top Rated, Distance, Fastest)
+    function setupSortButtons() {
+      const sortButtons = document.querySelectorAll('.sort-options button');
+      
+      sortButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          // Remove active class from all sort buttons
+          sortButtons.forEach(btn => btn.classList.remove('active'));
+          
+          // Add active class to clicked button
+          button.classList.add('active');
+          
+          // Determine sort type based on button text
+          const buttonText = button.textContent.trim().toLowerCase();
+          if (buttonText.includes('relevance')) {
+            currentSort = 'relevance';
+          } else if (buttonText.includes('top rated') || buttonText.includes('rated')) {
+            currentSort = 'rating';
+          } else if (buttonText.includes('distance')) {
+            currentSort = 'distance';
+          } else if (buttonText.includes('fastest')) {
+            currentSort = 'fastest';
+          }
+          
+          console.log('📊 Sort applied:', currentSort);
+          
+          // Apply current filter and new sort
+          applyFilterAndSort();
         });
       });
     }
@@ -211,10 +244,56 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
       }
     }
 
-    // 🔥 Function to filter restaurants based on selected service type
-    function applyFilter() {
+    // 🔥 Function to sort restaurants based on selected criteria
+    function sortRestaurants(restaurants) {
+      const sorted = [...restaurants]; // Create a copy to avoid mutating original
+      
+      switch (currentSort) {
+        case 'rating':
+          // Sort by rating (highest first), null ratings go to end
+          sorted.sort((a, b) => {
+            const ratingA = a.ratings !== null ? parseFloat(a.ratings) : -1;
+            const ratingB = b.ratings !== null ? parseFloat(b.ratings) : -1;
+            return ratingB - ratingA;
+          });
+          console.log('✅ Sorted by rating (highest first)');
+          break;
+          
+        case 'distance':
+          // Sort by road distance (nearest first)
+          sorted.sort((a, b) => {
+            const distA = a.road_distance !== null ? parseFloat(a.road_distance) : Infinity;
+            const distB = b.road_distance !== null ? parseFloat(b.road_distance) : Infinity;
+            return distA - distB;
+          });
+          console.log('✅ Sorted by distance (nearest first)');
+          break;
+          
+        case 'fastest':
+          // Sort by estimated_time (fastest delivery first)
+          sorted.sort((a, b) => {
+            const timeA = a.estimated_time !== null ? parseFloat(a.estimated_time) : Infinity;
+            const timeB = b.estimated_time !== null ? parseFloat(b.estimated_time) : Infinity;
+            return timeA - timeB;
+          });
+          console.log('✅ Sorted by delivery time (fastest first)');
+          break;
+          
+        case 'relevance':
+        default:
+          // Keep original order (API returns by distance by default)
+          console.log('✅ Using default relevance order');
+          break;
+      }
+      
+      return sorted;
+    }
+
+    // 🔥 Function to filter and sort restaurants
+    function applyFilterAndSort() {
       let filteredRestaurants = allRestaurants;
       
+      // Step 1: Apply service type filter
       if (currentFilter !== 'all') {
         filteredRestaurants = allRestaurants.filter(restaurant => {
           const types = parseRestaurantTypes(restaurant.type);
@@ -224,13 +303,16 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
         console.log(`✅ Filtered ${filteredRestaurants.length} restaurants with ${currentFilter} service`);
       }
       
-      // Display filtered restaurants
-      displayRestaurants(filteredRestaurants);
+      // Step 2: Apply sorting
+      const sortedRestaurants = sortRestaurants(filteredRestaurants);
       
-      // Update map with filtered restaurants
+      // Step 3: Display filtered and sorted restaurants
+      displayRestaurants(sortedRestaurants);
+      
+      // Step 4: Update map with filtered restaurants
       const lat = parseFloat(localStorage.getItem('current_user_lat'));
       const lng = parseFloat(localStorage.getItem('current_user_lng'));
-      initializeRestaurantsMap(filteredRestaurants, lat, lng);
+      initializeRestaurantsMap(sortedRestaurants, lat, lng);
     }
 
     // Function to fetch and display nearby restaurants
@@ -322,14 +404,17 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
           return;
         }
 
-        // 🔥 Store all restaurants globally for filtering
+        // 🔥 Store all restaurants globally for filtering and sorting
         allRestaurants = data.restaurants;
         
         // Reset filter to 'delivery' (first button is active by default)
         currentFilter = 'delivery';
         
-        // Apply initial filter
-        applyFilter();
+        // Reset sort to 'relevance' (first sort button is active by default)
+        currentSort = 'relevance';
+        
+        // Apply initial filter and sort
+        applyFilterAndSort();
 
       } catch (error) {
         console.error('❌ Error loading restaurants:', error);
@@ -640,7 +725,7 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
     window.viewRestaurant = function(restaurantId) {
       console.log('Opening restaurant:', restaurantId);
       // TODO: Navigate to restaurant details page or show modal
-      window.location.href = `restaurant-details.html?id=${restaurantId}`;
+      window.location.href = `menu.html?id=${restaurantId}`;
     };
 
     // Make loadNearbyRestaurants globally accessible
@@ -648,6 +733,9 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
     // 🔥 Setup filter buttons
     setupFilterButtons();
+    
+    // 🔥 Setup sort buttons
+    setupSortButtons();
 
     // 🔹 Load restaurants (localStorage is now guaranteed to be set)
     await loadNearbyRestaurants();

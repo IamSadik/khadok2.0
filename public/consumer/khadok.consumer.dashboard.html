@@ -177,7 +177,7 @@
             <button>Distance</button>
             <button>Fastest</button>
           </div>
-          <button class="filter-btn">
+          <button class="filter-btn" id="open-filter-panel">
             <i class="fas fa-sliders-h"></i> Filters
           </button>
         </div>
@@ -348,6 +348,294 @@
               <button id="location-cancel-btn" class="btn-secondary">Cancel</button>
             </div>
           </footer>
+        </div>
+      </div>
+
+      <!-- Filter Panel -->
+      <div class="filter-overlay" id="filter-overlay"></div>
+      <div class="filter-panel" id="filter-panel">
+        <div class="filter-panel-header">
+          <h3><i class="fas fa-filter"></i> Filters</h3>
+          <button class="filter-close-btn" id="filter-close-btn">&times;</button>
+        </div>
+
+        <div class="filter-panel-body">
+          <!-- Offers Section -->
+          <div class="filter-section">
+            <h4 class="filter-section-title">Offers</h4>
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="offer-free-delivery" value="free-delivery">
+                <label for="offer-free-delivery">Free Delivery</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="offer-vouchers" value="vouchers">
+                <label for="offer-vouchers">Accepts Vouchers</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="offer-deals" value="deals">
+                <label for="offer-deals">Deals</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cuisines Section -->
+          <div class="filter-section">
+            <h4 class="filter-section-title">Cuisines</h4>
+            <div class="cuisine-search-box">
+              <input type="text" id="cuisine-search" placeholder="Search for cuisines">
+              <i class="fas fa-search"></i>
+            </div>
+            <div class="checkbox-group cuisine-grid" id="cuisine-list">
+              <!-- Initial 10 cuisines -->
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-appetizer" value="Appetizer">
+                <label for="cuisine-appetizer">Appetizer</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-asian" value="Asian">
+                <label for="cuisine-asian">Asian</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-bakery" value="Bakery">
+                <label for="cuisine-bakery">Bakery</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-bangladeshi" value="Bangladeshi">
+                <label for="cuisine-bangladeshi">Bangladeshi</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-beverage" value="Beverage">
+                <label for="cuisine-beverage">Beverage</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-biryani" value="Biryani">
+                <label for="cuisine-biryani">Biryani</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-burgers" value="Burgers">
+                <label for="cuisine-burgers">Burgers</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-cafe" value="Cafe">
+                <label for="cuisine-cafe">Cafe</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-cakes" value="Cakes">
+                <label for="cuisine-cakes">Cakes</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="cuisine-chicken" value="Chicken">
+                <label for="cuisine-chicken">Chicken</label>
+              </div>
+
+              <!-- Hidden cuisines (show on "Show More") -->
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-chinese" value="Chinese">
+                <label for="cuisine-chinese">Chinese</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-chotpoti" value="Chotpoti & Fuchka">
+                <label for="cuisine-chotpoti">Chotpoti & Fuchka</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-chowmein" value="Chowmein">
+                <label for="cuisine-chowmein">Chowmein</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-combo" value="Combo">
+                <label for="cuisine-combo">Combo</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-curry" value="Curry">
+                <label for="cuisine-curry">Curry</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-dessert" value="Dessert">
+                <label for="cuisine-dessert">Dessert</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-drinks" value="Drinks">
+                <label for="cuisine-drinks">Drinks</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-dumpling" value="Dumpling">
+                <label for="cuisine-dumpling">Dumpling</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-fastfood" value="Fast Food">
+                <label for="cuisine-fastfood">Fast Food</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-fish" value="Fish">
+                <label for="cuisine-fish">Fish</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-friedchicken" value="Fried Chicken">
+                <label for="cuisine-friedchicken">Fried Chicken</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-grill" value="Grill">
+                <label for="cuisine-grill">Grill</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-indian" value="Indian">
+                <label for="cuisine-indian">Indian</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-italian" value="Italian">
+                <label for="cuisine-italian">Italian</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-japanese" value="Japanese">
+                <label for="cuisine-japanese">Japanese</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-juice" value="Juice Corner">
+                <label for="cuisine-juice">Juice Corner</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-kebab" value="Kebab">
+                <label for="cuisine-kebab">Kebab</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-korean" value="Korean">
+                <label for="cuisine-korean">Korean</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-meat" value="Meat">
+                <label for="cuisine-meat">Meat</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-mediterranean" value="Mediterranean">
+                <label for="cuisine-mediterranean">Mediterranean</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-middleeastern" value="Middle Eastern">
+                <label for="cuisine-middleeastern">Middle Eastern</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-momos" value="Momos">
+                <label for="cuisine-momos">Momos</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-nachos" value="Nachos">
+                <label for="cuisine-nachos">Nachos</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-noodles" value="Noodles">
+                <label for="cuisine-noodles">Noodles</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-pasta" value="Pasta">
+                <label for="cuisine-pasta">Pasta</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-pastry" value="Pastry">
+                <label for="cuisine-pastry">Pastry</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-pizza" value="Pizza">
+                <label for="cuisine-pizza">Pizza</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-platters" value="Platters">
+                <label for="cuisine-platters">Platters</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-puri" value="Puri">
+                <label for="cuisine-puri">Puri</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-ricebowl" value="Rice Bowl">
+                <label for="cuisine-ricebowl">Rice Bowl</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-ricedishes" value="Rice Dishes">
+                <label for="cuisine-ricedishes">Rice Dishes</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-rolls" value="Rolls">
+                <label for="cuisine-rolls">Rolls</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-salads" value="Salads">
+                <label for="cuisine-salads">Salads</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-sandwiches" value="Sandwiches">
+                <label for="cuisine-sandwiches">Sandwiches</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-seafood" value="Seafood">
+                <label for="cuisine-seafood">Seafood</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-setmenu" value="Set Menu">
+                <label for="cuisine-setmenu">Set Menu</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-shakes" value="Shakes">
+                <label for="cuisine-shakes">Shakes</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-shawarma" value="Shawarma">
+                <label for="cuisine-shawarma">Shawarma</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-sides" value="Sides">
+                <label for="cuisine-sides">Sides</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-signature" value="Signature Item">
+                <label for="cuisine-signature">Signature Item</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-snacks" value="Snacks">
+                <label for="cuisine-snacks">Snacks</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-soups" value="Soups">
+                <label for="cuisine-soups">Soups</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-sweets" value="Sweets">
+                <label for="cuisine-sweets">Sweets</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-taco" value="Taco">
+                <label for="cuisine-taco">Taco</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-thai" value="Thai">
+                <label for="cuisine-thai">Thai</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-turkish" value="Turkish">
+                <label for="cuisine-turkish">Turkish</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-vegetarian" value="Vegetarian">
+                <label for="cuisine-vegetarian">Vegetarian</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-western" value="Western">
+                <label for="cuisine-western">Western</label>
+              </div>
+              <div class="checkbox-item hidden">
+                <input type="checkbox" id="cuisine-wraps" value="Wraps">
+                <label for="cuisine-wraps">Wraps</label>
+              </div>
+            </div>
+            <button class="show-more-btn" id="show-more-cuisines">
+              Show More <i class="fas fa-chevron-down"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-panel-footer">
+          <button class="filter-clear-btn" id="filter-clear-btn">Clear All</button>
+          <button class="filter-apply-btn" id="filter-apply-btn">Apply Filters</button>
         </div>
       </div>
 
@@ -893,6 +1181,154 @@
   
 
   <script src="js/app.js"></script>
+
+  <!-- Filter Panel JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openFilterBtn = document.getElementById('open-filter-panel');
+      const filterOverlay = document.getElementById('filter-overlay');
+      const filterPanel = document.getElementById('filter-panel');
+      const filterCloseBtn = document.getElementById('filter-close-btn');
+      const filterApplyBtn = document.getElementById('filter-apply-btn');
+      const filterClearBtn = document.getElementById('filter-clear-btn');
+      const showMoreBtn = document.getElementById('show-more-cuisines');
+      const cuisineSearch = document.getElementById('cuisine-search');
+      const cuisineList = document.getElementById('cuisine-list');
+
+      // Open filter panel
+      if (openFilterBtn) {
+        openFilterBtn.addEventListener('click', () => {
+          filterOverlay.classList.add('active');
+          filterPanel.classList.add('active');
+        });
+      }
+
+      // Close filter panel
+      function closeFilterPanel() {
+        filterOverlay.classList.remove('active');
+        filterPanel.classList.remove('active');
+      }
+
+      if (filterCloseBtn) {
+        filterCloseBtn.addEventListener('click', closeFilterPanel);
+      }
+
+      if (filterOverlay) {
+        filterOverlay.addEventListener('click', closeFilterPanel);
+      }
+
+      // Show More / Show Less Cuisines
+      let showingAll = false;
+      if (showMoreBtn) {
+        showMoreBtn.addEventListener('click', () => {
+          const allCuisineItems = cuisineList.querySelectorAll('.checkbox-item');
+          
+          if (showingAll) {
+            // Hide extra cuisines (keep only first 10 visible)
+            allCuisineItems.forEach((item, index) => {
+              if (index >= 10) {
+                item.classList.add('hidden');
+              }
+            });
+            showMoreBtn.innerHTML = 'Show More <i class="fas fa-chevron-down"></i>';
+            showMoreBtn.classList.remove('expanded');
+            showingAll = false;
+          } else {
+            // Show all cuisines
+            allCuisineItems.forEach(item => {
+              item.classList.remove('hidden');
+            });
+            showMoreBtn.innerHTML = 'Show Less <i class="fas fa-chevron-up"></i>';
+            showMoreBtn.classList.add('expanded');
+            showingAll = true;
+          }
+        });
+      }
+
+      // Cuisine Search Functionality
+      if (cuisineSearch) {
+        cuisineSearch.addEventListener('input', (e) => {
+          const searchTerm = e.target.value.toLowerCase().trim();
+          const allCuisineItems = cuisineList.querySelectorAll('.checkbox-item');
+          
+          if (!searchTerm) {
+            // Reset to default view when search is empty
+            allCuisineItems.forEach((item, index) => {
+              if (showingAll) {
+                item.classList.remove('hidden');
+              } else {
+                if (index < 10) {
+                  item.classList.remove('hidden');
+                } else {
+                  item.classList.add('hidden');
+                }
+              }
+            });
+            return;
+          }
+
+          // Show matching cuisines, hide non-matching
+          allCuisineItems.forEach(item => {
+            const label = item.querySelector('label').textContent.toLowerCase();
+            if (label.includes(searchTerm)) {
+              item.classList.remove('hidden');
+            } else {
+              item.classList.add('hidden');
+            }
+          });
+        });
+      }
+
+      // Clear All Filters
+      if (filterClearBtn) {
+        filterClearBtn.addEventListener('click', () => {
+          // Uncheck all checkboxes
+          const allCheckboxes = filterPanel.querySelectorAll('input[type="checkbox"]');
+          allCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+          });
+          
+          // Clear search
+          if (cuisineSearch) {
+            cuisineSearch.value = '';
+            cuisineSearch.dispatchEvent(new Event('input'));
+          }
+          
+          console.log('✅ All filters cleared');
+        });
+      }
+
+      // Apply Filters
+      if (filterApplyBtn) {
+        filterApplyBtn.addEventListener('click', () => {
+          // Collect selected offers
+          const selectedOffers = [];
+          const offerCheckboxes = document.querySelectorAll('#filter-panel input[id^="offer-"]:checked');
+          offerCheckboxes.forEach(checkbox => {
+            selectedOffers.push(checkbox.value);
+          });
+
+          // Collect selected cuisines
+          const selectedCuisines = [];
+          const cuisineCheckboxes = document.querySelectorAll('#filter-panel input[id^="cuisine-"]:checked');
+          cuisineCheckboxes.forEach(checkbox => {
+            selectedCuisines.push(checkbox.value);
+          });
+
+          console.log('🔍 Filters applied:', {
+            offers: selectedOffers,
+            cuisines: selectedCuisines
+          });
+
+          // TODO: Apply filters to restaurant list
+          // This will be implemented when we integrate with backend cuisine data
+          
+          alert(`Filters applied!\nOffers: ${selectedOffers.length}\nCuisines: ${selectedCuisines.length}`);
+          closeFilterPanel();
+        });
+      }
+    });
+  </script>
 
   <!-- Location Modal Map Initialization -->
   <script>
