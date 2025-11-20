@@ -273,14 +273,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Checkout button for delivery only
-    document.getElementById("checkout-delivery-btn").addEventListener("click", () => {
+    // Checkout button for pickup only
+    document.getElementById("checkout-pickup-btn").addEventListener("click", () => {
       if (cart.length === 0) {
         alert("Your cart is empty!");
         return;
       }
-      alert("Delivery checkout - Feature coming soon!");
-      // TODO: Implement delivery checkout
+      alert("Pickup checkout - Feature coming soon!");
+      // TODO: Implement pickup checkout
     });
   }
 

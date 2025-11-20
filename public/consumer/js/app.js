@@ -729,8 +729,11 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
       if (currentFilter === 'dine-in') {
         // Navigate to dine-in page for table reservations
         window.location.href = `dine-in.html?restaurant_id=${restaurantId}`;
+      } else if (currentFilter === 'pickup') {
+        // Navigate to pickup page
+        window.location.href = `pickup.html?restaurant_id=${restaurantId}`;
       } else {
-        // Navigate to menu page for delivery/pickup
+        // Navigate to menu page for delivery
         window.location.href = `menu.html?restaurant_id=${restaurantId}`;
       }
     };
