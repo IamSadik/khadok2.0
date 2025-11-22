@@ -117,6 +117,37 @@ document.addEventListener("DOMContentLoaded", () => {
   // Render sections
   function renderSections(cats, items) {
     sectionsContainer.innerHTML = "";
+    
+    // Check if there are no menu items at all
+    if (!items || items.length === 0) {
+      sectionsContainer.innerHTML = `
+        <div style="
+          text-align: center;
+          padding: 4rem 2rem;
+          background: white;
+          border-radius: 12px;
+          margin-top: 2rem;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        ">
+          <i class="fas fa-utensils" style="font-size: 4rem; color: #ddd; margin-bottom: 1rem;"></i>
+          <h2 style="color: #666; font-size: 1.5rem; margin-bottom: 0.5rem;">No Menu Items Available</h2>
+          <p style="color: #999; font-size: 1rem;">This restaurant doesn't have any menu items yet.</p>
+        </div>
+      `;
+      
+      // Hide tabs, search, and sort controls when no items
+      if (tabsContainer) tabsContainer.style.display = 'none';
+      document.querySelector('.controls')?.style.setProperty('display', 'none');
+      document.querySelector('.tabs-container')?.style.setProperty('display', 'none');
+      
+      return;
+    }
+    
+    // Show controls if items exist
+    if (tabsContainer) tabsContainer.style.display = '';
+    document.querySelector('.controls')?.style.removeProperty('display');
+    document.querySelector('.tabs-container')?.style.removeProperty('display');
+    
     cats.forEach(name => {
       const section = document.createElement("section");
       section.id = `section-${name.toLowerCase()}`;

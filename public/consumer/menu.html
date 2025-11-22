@@ -88,9 +88,12 @@
         <div class="page-header">
             <div class="breadcrumbs">
                 <span><a href="khadok.consumer.dashboard.html">Dashboard</a></span> &gt;
-                <span id="restaurant-breadcrumb">Restaurant Menu</span>
+                <span id="restaurant-breadcrumb">Loading...</span>
             </div>
-            <h1 id="restaurant-name">Restaurant Menu</h1>
+            <h1 id="restaurant-name">Loading Restaurant...</h1>
+            <p style="color: #666; margin-top: 0.5rem; font-size: 1rem;">
+                <i class="fas fa-utensils"></i> Menu for Delivery
+            </p>
         </div>
 
         <!-- Sorting & Search -->
@@ -147,10 +150,42 @@
     </div>
     
     <div class="cart-popup" id="cart-popup">
-        <h3>Your Cart (Delivery)</h3>
-        <ul id="cart-items"></ul>
+        <!-- Order Type Toggle -->
+        <div class="order-type-tabs">
+            <button id="delivery-tab" class="order-type-tab active">
+                Delivery
+            </button>
+            <button id="pickup-tab" class="order-type-tab">Pick-up</button>
+        </div>
+
+        <h3>Your items</h3>
+        
+        <!-- Cart Items -->
+        <div id="cart-items"></div>
+
+        <!-- Cart Summary -->
+        <div id="cart-summary" class="cart-summary">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal-amount">Tk 0</span>
+            </div>
+            <div class="summary-row">
+                <span>Standard delivery</span>
+                <span id="delivery-fee-amount">Tk 24</span>
+            </div>
+            <div class="summary-row">
+                <span>Service fee <i class="fas fa-info-circle"></i></span>
+                <span id="service-fee-amount">Tk 4</span>
+            </div>
+            <div class="summary-row total-row">
+                <span>Total (incl. fees and tax)</span>
+                <span id="total-amount">Tk 0</span>
+            </div>
+        </div>
+
+        <!-- Checkout Button -->
         <div class="cart-footer">
-            <button id="checkout-delivery-btn">Checkout for Delivery</button>
+            <button id="checkout-btn" class="checkout-btn">Review payment and address</button>
         </div>
     </div>
 

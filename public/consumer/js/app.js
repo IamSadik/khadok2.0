@@ -108,20 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-document.querySelectorAll(".restaurant-card").forEach((card) => {
-    card.addEventListener("click", () => {
-        const restaurantId = card.getAttribute("data-id");
-        const restaurantName = card.getAttribute("data-name");
-
-        // Save to localStorage
-        localStorage.setItem("selectedRestaurantId", restaurantId);
-        localStorage.setItem("selectedRestaurantName", restaurantName);
-
-        // Navigate to the menu page
-        window.location.href = "menu.html";
-    });
-});
-
+// ✅ REMOVED OLD CODE - Now using viewRestaurant() function instead
 
 (function checkAuthOnLoad() {
     const sessionId = localStorage.getItem("sessionId");
@@ -134,7 +121,89 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
 
   
+// 🔥 GLOBAL SCOPE - Store restaurants data globally
+let allRestaurants = [];
+let currentFilter = 'delivery'; // Track current filter: 'all', 'delivery', 'pickup', 'dine-in'
+let currentSort = 'relevance'; // Track current sort: 'relevance', 'rating', 'distance', 'fastest'
 
+// 🔥 GLOBAL FUNCTION - View restaurant details (must be global for onclick to work)
+window.viewRestaurant = function(restaurantId) {
+  console.log('🔥 Opening restaurant:', restaurantId, typeof restaurantId);
+  console.log('🔥 All available restaurants:', allRestaurants);
+  
+  // 🔥 Convert restaurantId to number for proper comparison (since it comes from onclick as string)
+  const idToFind = parseInt(restaurantId);
+  
+  // Find the restaurant data from allRestaurants - compare as numbers
+  const restaurant = allRestaurants.find(r => parseInt(r.stakeholder_id) === idToFind);
+  
+  console.log('🔥 Found restaurant object:', restaurant);
+  
+  if (restaurant) {
+    // 🔥 Store comprehensive restaurant data in localStorage for use in menu/cart
+    localStorage.setItem('selectedRestaurantId', restaurantId);
+    localStorage.setItem('selectedRestaurantName', restaurant.restaurant_name || '');
+    
+    // 🔥 Store location data (check for undefined/null)
+    localStorage.setItem('selectedRestaurantLat', restaurant.lat !== undefined && restaurant.lat !== null ? restaurant.lat : '');
+    localStorage.setItem('selectedRestaurantLng', restaurant.lng !== undefined && restaurant.lng !== null ? restaurant.lng : '');
+    
+    // 🔥 Store service types (delivery, pickup, dine-in)
+    localStorage.setItem('selectedRestaurantType', restaurant.type || '[]');
+    
+    // 🔥 Store distance data (ensure we store as string)
+    localStorage.setItem('selectedRestaurantDistance', restaurant.road_distance !== undefined && restaurant.road_distance !== null ? String(restaurant.road_distance) : '0');
+    localStorage.setItem('selectedRestaurantDistanceMeters', restaurant.road_distance_meters !== undefined && restaurant.road_distance_meters !== null ? String(restaurant.road_distance_meters) : '0');
+    
+    // 🔥 Store time data (ensure we store as string)
+    localStorage.setItem('selectedRestaurantTravelTime', restaurant.travel_time !== undefined && restaurant.travel_time !== null ? String(restaurant.travel_time) : '0');
+    localStorage.setItem('selectedRestaurantFoodPrepTime', restaurant.food_prep_time !== undefined && restaurant.food_prep_time !== null ? String(restaurant.food_prep_time) : '0');
+    localStorage.setItem('selectedRestaurantEstimatedTime', restaurant.estimated_time !== undefined && restaurant.estimated_time !== null ? String(restaurant.estimated_time) : '0');
+    
+    console.log('✅ Restaurant data saved to localStorage:', {
+      id: restaurantId,
+      name: restaurant.restaurant_name,
+      lat: restaurant.lat,
+      lng: restaurant.lng,
+      type: restaurant.type,
+      distance: restaurant.road_distance,
+      distanceMeters: restaurant.road_distance_meters,
+      travelTime: restaurant.travel_time,
+      foodPrepTime: restaurant.food_prep_time,
+      estimatedTime: restaurant.estimated_time
+    });
+    
+    // 🔥 Verify data was saved
+    console.log('✅ Verification - Reading back from localStorage:', {
+      id: localStorage.getItem('selectedRestaurantId'),
+      name: localStorage.getItem('selectedRestaurantName'),
+      lat: localStorage.getItem('selectedRestaurantLat'),
+      lng: localStorage.getItem('selectedRestaurantLng'),
+      type: localStorage.getItem('selectedRestaurantType'),
+      distance: localStorage.getItem('selectedRestaurantDistance'),
+      distanceMeters: localStorage.getItem('selectedRestaurantDistanceMeters'),
+      travelTime: localStorage.getItem('selectedRestaurantTravelTime'),
+      foodPrepTime: localStorage.getItem('selectedRestaurantFoodPrepTime'),
+      estimatedTime: localStorage.getItem('selectedRestaurantEstimatedTime')
+    });
+  } else {
+    console.error('❌ Restaurant not found in allRestaurants array!');
+    console.error('❌ Looking for ID:', idToFind, typeof idToFind);
+    console.error('❌ Available restaurant IDs:', allRestaurants.map(r => ({ id: r.stakeholder_id, type: typeof r.stakeholder_id })));
+  }
+  
+  // Check current filter to determine which page to navigate to
+  if (currentFilter === 'dine-in') {
+    // Navigate to dine-in page for table reservations
+    window.location.href = `dine-in.html?restaurant_id=${restaurantId}`;
+  } else if (currentFilter === 'pickup') {
+    // Navigate to pickup page
+    window.location.href = `pickup.html?restaurant_id=${restaurantId}`;
+  } else {
+    // Navigate to menu page for delivery
+    window.location.href = `menu.html?restaurant_id=${restaurantId}`;
+  }
+};
 
   //<!-- Load Nearby Restaurants -->
   document.addEventListener('DOMContentLoaded', async () => {
@@ -143,11 +212,6 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
 
     // Store the current map instance globally so we can remove it when refreshing
     let currentRestaurantsMap = null;
-    
-    // 🔥 Store all restaurants globally for filtering and sorting
-    let allRestaurants = [];
-    let currentFilter = 'all'; // Track current filter: 'all', 'delivery', 'pickup', 'dine-in'
-    let currentSort = 'relevance'; // Track current sort: 'relevance', 'rating', 'distance', 'fastest'
 
     // 🔹 Wait for location to be loaded from database before proceeding
     console.log('⏳ Waiting for location to be loaded from database...');
@@ -720,23 +784,6 @@ document.querySelectorAll(".restaurant-card").forEach((card) => {
         `;
       }).join('');
     }
-
-    // Function to view restaurant details
-    window.viewRestaurant = function(restaurantId) {
-      console.log('Opening restaurant:', restaurantId);
-      
-      // Check current filter to determine which page to navigate to
-      if (currentFilter === 'dine-in') {
-        // Navigate to dine-in page for table reservations
-        window.location.href = `dine-in.html?restaurant_id=${restaurantId}`;
-      } else if (currentFilter === 'pickup') {
-        // Navigate to pickup page
-        window.location.href = `pickup.html?restaurant_id=${restaurantId}`;
-      } else {
-        // Navigate to menu page for delivery
-        window.location.href = `menu.html?restaurant_id=${restaurantId}`;
-      }
-    };
 
     // Make loadNearbyRestaurants globally accessible
     window.loadNearbyRestaurants = loadNearbyRestaurants;

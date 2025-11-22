@@ -61,6 +61,8 @@ const restaurantRoutes = require('./routes/restaurantRoutes');
 app.use('/api/restaurant', restaurantRoutes);
 const locationRoutes = require('./routes/locationRoute');
 app.use('/api/location',locationRoutes);
+const cartRoutes = require('./routes/cartRoutes');
+app.use('/api/cart', cartRoutes);
 
 
 // Serve static files

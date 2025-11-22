@@ -16,6 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let cart = [];
   let stakeholderId = null;
   let restaurantName = "";
+  let consumerId = localStorage.getItem('consumer_id');
+  let orderType = 'delivery'; // default to delivery
+
+  // Get restaurant data from localStorage
+  let restaurantDistance = parseFloat(localStorage.getItem('selectedRestaurantDistance')) || 0;
+  let restaurantDistanceMeters = parseFloat(localStorage.getItem('selectedRestaurantDistanceMeters')) || 0;
+  let restaurantEstimatedTime = parseFloat(localStorage.getItem('selectedRestaurantEstimatedTime')) || 0;
 
   // Get stakeholder_id from URL parameter
   const urlParams = new URLSearchParams(window.location.search);
@@ -27,6 +34,47 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // Calculate delivery fee based on distance
+  function calculateDeliveryFee() {
+    if (orderType !== 'delivery') return 0;
+
+    // Use distance in km
+    const distanceKm = restaurantDistance;
+    
+    // Distance-based pricing:
+    // < 0.5 km = 20 Tk
+    // < 1 km = 25 Tk
+    // >= 1 km = 25 Tk + (5 Tk per 500 meters above 1 km)
+    
+    if (distanceKm < 0.5) {
+      return 20;
+    } else if (distanceKm < 1) {
+      return 25;
+    } else {
+      // For distances >= 1 km
+      // Base fee: 25 Tk
+      // Additional: 5 Tk per 500 meters (0.5 km) above 1 km
+      const extraDistance = distanceKm - 1; // Distance above 1 km
+      const extra500mSegments = Math.ceil(extraDistance / 0.5); // Number of 500m segments
+      return 25 + (extra500mSegments * 5);
+    }
+  }
+
+  // Get estimated delivery time based on order type
+  function getEstimatedTime() {
+    if (orderType === 'pickup') {
+      return '20-25 mins';
+    } else {
+      // Use stored estimated time from dashboard
+      if (restaurantEstimatedTime > 0) {
+        const minTime = Math.max(1, Math.round(restaurantEstimatedTime));
+        const maxTime = minTime + 10; // Add 10 minutes range
+        return `${minTime}-${maxTime} mins`;
+      }
+      return '20-35 mins'; // fallback if no time stored
+    }
+  }
+
   // Initialize
   init();
 
@@ -34,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     await fetchRestaurantInfo();
     categories = await fetchCategories();
     allItems = await fetchMenuItems();
+    await loadCartFromDatabase(); // Load cart from database
     renderTabs(categories);
     renderSections(categories, allItems);
     setupScrollButtons();
@@ -117,6 +166,37 @@ document.addEventListener("DOMContentLoaded", () => {
   // Render sections
   function renderSections(cats, items) {
     sectionsContainer.innerHTML = "";
+    
+    // Check if there are no menu items at all
+    if (!items || items.length === 0) {
+      sectionsContainer.innerHTML = `
+        <div style="
+          text-align: center;
+          padding: 4rem 2rem;
+          background: white;
+          border-radius: 12px;
+          margin-top: 2rem;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        ">
+          <i class="fas fa-utensils" style="font-size: 4rem; color: #ddd; margin-bottom: 1rem;"></i>
+          <h2 style="color: #666; font-size: 1.5rem; margin-bottom: 0.5rem;">No Menu Items Available</h2>
+          <p style="color: #999; font-size: 1rem;">This restaurant doesn't have any menu items yet.</p>
+        </div>
+      `;
+      
+      // Hide tabs, search, and sort controls when no items
+      if (tabsContainer) tabsContainer.style.display = 'none';
+      document.querySelector('.controls')?.style.setProperty('display', 'none');
+      document.querySelector('.tabs-container')?.style.setProperty('display', 'none');
+      
+      return;
+    }
+    
+    // Show controls if items exist
+    if (tabsContainer) tabsContainer.style.display = '';
+    document.querySelector('.controls')?.style.removeProperty('display');
+    document.querySelector('.tabs-container')?.style.removeProperty('display');
+    
     cats.forEach(name => {
       const section = document.createElement("section");
       section.id = `section-${name.toLowerCase()}`;
@@ -247,17 +327,47 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Load cart from database
+  async function loadCartFromDatabase() {
+    if (!consumerId) return;
+    
+    try {
+      const res = await fetch(`/api/cart/${consumerId}`);
+      const data = await res.json();
+      
+      if (data.cartItems && data.cartItems.length > 0) {
+        cart = data.cartItems.map(item => ({
+          cart_id: item.cart_id,
+          id: item.menu_id,
+          name: item.item_name,
+          price: parseFloat(item.item_price),
+          quantity: item.quatity,
+          picture: item.item_picture
+        }));
+      } else {
+        // ✅ Clear cart if empty from database
+        cart = [];
+      }
+      updateCartUI();
+    } catch (error) {
+      console.error("Failed to load cart:", error);
+      cart = [];
+      updateCartUI();
+    }
+  }
+
   // Setup cart functionality
   function setupCart() {
     // Add to cart button clicks
-    document.body.addEventListener("click", (e) => {
+    document.body.addEventListener("click", async (e) => {
       const addBtn = e.target.closest(".add-to-cart-btn");
       if (addBtn) {
         const itemId = addBtn.dataset.id;
         const itemName = addBtn.dataset.name;
         const itemPrice = parseFloat(addBtn.dataset.price);
+        const itemPicture = addBtn.closest('.menu-card').querySelector('img').src;
 
-        addToCart({ id: itemId, name: itemName, price: itemPrice });
+        await addToCart({ id: itemId, name: itemName, price: itemPrice, picture: itemPicture });
       }
     });
 
@@ -273,89 +383,181 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Checkout button for delivery only
-    document.getElementById("checkout-delivery-btn").addEventListener("click", () => {
+    // Order type toggle buttons
+    document.getElementById("delivery-tab").addEventListener("click", () => {
+      orderType = 'delivery';
+      document.getElementById("delivery-tab").classList.add("active");
+      document.getElementById("pickup-tab").classList.remove("active");
+      updateCartUI(); // Recalculate fees when switching
+    });
+
+    document.getElementById("pickup-tab").addEventListener("click", () => {
+      orderType = 'pickup';
+      document.getElementById("pickup-tab").classList.add("active");
+      document.getElementById("delivery-tab").classList.remove("active");
+      updateCartUI(); // Recalculate fees when switching
+    });
+
+    // Checkout button
+    document.getElementById("checkout-btn").addEventListener("click", async () => {
       if (cart.length === 0) {
         alert("Your cart is empty!");
         return;
       }
-      alert("Delivery checkout - Feature coming soon!");
-      // TODO: Implement delivery checkout
+      alert(`${orderType === 'delivery' ? 'Delivery' : 'Pickup'} checkout - Feature coming soon!`);
+      // TODO: Implement checkout
     });
   }
 
-  // Add item to cart
-  function addToCart(item) {
-    const existingItem = cart.find(i => i.id === item.id);
-    
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      cart.push({ ...item, quantity: 1 });
-    }
+  // Add item to cart (with database save)
+  async function addToCart(item) {
+    try {
+      const res = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consumer_id: consumerId,
+          menu_id: item.id,
+          quantity: 1,
+          stakeholder_id: stakeholderId,
+          item_name: item.name,
+          item_price: item.price,
+          item_picture: item.picture
+        })
+      });
 
-    updateCartUI();
-    
-    // Show brief feedback
-    const feedback = document.createElement("div");
-    feedback.style.cssText = `
-      position: fixed;
-      bottom: 100px;
-      right: 30px;
-      background: #00b894;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      z-index: 10000;
-      animation: slideIn 0.3s ease;
-    `;
-    feedback.textContent = "Added to cart!";
-    document.body.appendChild(feedback);
-    
-    setTimeout(() => {
-      feedback.style.animation = "slideOut 0.3s ease";
-      setTimeout(() => feedback.remove(), 300);
-    }, 2000);
+      if (res.ok) {
+        // Reload cart from database to get updated cart_id
+        await loadCartFromDatabase();
+        
+        // Show brief feedback
+        const feedback = document.createElement("div");
+        feedback.style.cssText = `
+          position: fixed;
+          bottom: 100px;
+          right: 30px;
+          background: #00b894;
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          z-index: 10000;
+          animation: slideIn 0.3s ease;
+        `;
+        feedback.textContent = "Added to cart!";
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+          feedback.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => feedback.remove(), 300);
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      alert("Failed to add item to cart");
+    }
   }
 
   // Update cart UI
   function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
     cartCount.textContent = totalItems;
 
-    if (totalItems === 0) {
-      cartItems.innerHTML = '<li style="text-align: center; color: #999;">Your cart is empty</li>';
-    } else {
-      cartItems.innerHTML = cart.map(item => `
-        <li>
-          <div>
-            <strong>${item.name}</strong><br>
-            <small>Tk ${item.price} × ${item.quantity}</small>
-          </div>
-          <div>
-            <strong>Tk ${(item.price * item.quantity).toFixed(2)}</strong>
-            <button class="remove-btn" data-id="${item.id}" style="
-              margin-left: 10px;
-              background: #ff6b6b;
-              color: white;
-              border: none;
-              border-radius: 4px;
-              padding: 4px 8px;
-              cursor: pointer;
-            ">×</button>
-          </div>
-        </li>
-      `).join("");
+    // ✅ Show empty cart state without fees
+    if (cart.length === 0) {
+      cartItems.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">Your cart is empty</div>';
+      document.getElementById('cart-summary').style.display = 'none';
+      return; // ✅ Exit early - don't show fees
+    }
 
-      // Add remove button listeners
-      document.querySelectorAll(".remove-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const itemId = btn.dataset.id;
-          cart = cart.filter(i => i.id !== itemId);
-          updateCartUI();
-        });
+    // ✅ Only calculate fees when cart has items
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryFee = calculateDeliveryFee();
+    const serviceFee = 5; // Fixed 5 Tk service charge
+    const total = subtotal + deliveryFee + serviceFee;
+
+    // ✅ Show cart summary
+    document.getElementById('cart-summary').style.display = 'block';
+    
+    cartItems.innerHTML = cart.map(item => `
+      <div class="cart-item">
+        <img src="${item.picture}" alt="${item.name}" class="cart-item-image" />
+        <div class="cart-item-details">
+          <h4>${item.name}</h4>
+          <p class="cart-item-price">Tk ${item.price}</p>
+        </div>
+        <div class="cart-item-controls">
+          <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="decrease">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span class="quantity">${item.quantity}</span>
+          <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="increase">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </div>
+    `).join("");
+
+    // Update summary
+    document.getElementById('subtotal-amount').textContent = `Tk ${subtotal}`;
+    document.getElementById('delivery-fee-amount').textContent = `Tk ${deliveryFee}`;
+    document.getElementById('service-fee-amount').textContent = `Tk ${serviceFee}`;
+    document.getElementById('total-amount').textContent = `Tk ${total}`;
+
+    // Add quantity button listeners
+    document.querySelectorAll(".quantity-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const cartId = btn.dataset.cartId;
+        const action = btn.dataset.action;
+        const cartItem = cart.find(i => i.cart_id == cartId);
+
+        if (!cartItem) return;
+
+        if (action === "increase") {
+          await updateCartQuantity(cartId, cartItem.quantity + 1);
+        } else if (action === "decrease") {
+          if (cartItem.quantity > 1) {
+            await updateCartQuantity(cartId, cartItem.quantity - 1);
+          } else {
+            // ✅ Remove item when quantity is 1 and user clicks minus
+            await removeFromCart(cartId);
+          }
+        }
       });
+    });
+  }
+
+  // Update cart quantity in database
+  async function updateCartQuantity(cartId, newQuantity) {
+    try {
+      const res = await fetch(`/api/cart/update/${cartId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: newQuantity })
+      });
+
+      if (res.ok) {
+        await loadCartFromDatabase();
+      }
+    } catch (error) {
+      console.error("Failed to update cart:", error);
+    }
+  }
+
+  // Remove item from cart
+  async function removeFromCart(cartId) {
+    try {
+      const res = await fetch(`/api/cart/remove/${cartId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        await loadCartFromDatabase();
+      }
+    } catch (error) {
+      console.error("Failed to remove from cart:", error);
     }
   }
 });

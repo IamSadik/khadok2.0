@@ -117,7 +117,35 @@ const getNearbyRestaurants = async (req, res) => {
   }
 };
 
+// Controller: Get single restaurant by stakeholder_id
+const getRestaurantById = async (req, res) => {
+  try {
+    const { stakeholder_id } = req.params;
+
+    if (!stakeholder_id) {
+      return res.status(400).json({ error: "Stakeholder ID is required" });
+    }
+
+    console.log(`🔍 Fetching restaurant with ID: ${stakeholder_id}`);
+
+    const restaurant = await restaurantModel.getRestaurantById(stakeholder_id);
+
+    if (!restaurant) {
+      return res.status(404).json({ error: "Restaurant not found" });
+    }
+
+    console.log(`✅ Found restaurant: ${restaurant.restaurant_name}`);
+
+    return res.status(200).json(restaurant);
+
+  } catch (error) {
+    console.error("❌ Error in getRestaurantById controller:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 // Export all controller functions here
 module.exports = {
   getNearbyRestaurants,
+  getRestaurantById,
 };
