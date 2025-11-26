@@ -13,9 +13,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let allItems = [];
   let categories = [];
-  let cart = [];
+  let consumerId = localStorage.getItem('consumer_id');
   let stakeholderId = null;
   let restaurantName = "";
+  let orderType = 'pickup'; // default to pickup for pickup page
+  let restaurantTypes = []; // Will store restaurant delivery/pickup capabilities
 
   // Get stakeholder_id from URL parameter
   const urlParams = new URLSearchParams(window.location.search);
@@ -27,6 +29,25 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // Get restaurant types from localStorage
+  try {
+    const typesStr = localStorage.getItem('selectedRestaurantType');
+    if (typesStr) {
+      restaurantTypes = JSON.parse(typesStr);
+      // Normalize to lowercase for consistent comparison
+      restaurantTypes = restaurantTypes.map(type => type.toLowerCase());
+    } else {
+      restaurantTypes = [];
+    }
+  } catch (e) {
+    console.error('Failed to parse selectedRestaurantType:', e);
+    restaurantTypes = [];
+  }
+
+  // Check if restaurant supports both delivery and pickup
+  const supportsDelivery = restaurantTypes.includes('delivery');
+  const supportsPickup = restaurantTypes.includes('pickup') || restaurantTypes.includes('pick-up');
+
   // Initialize
   init();
 
@@ -34,12 +55,14 @@ document.addEventListener("DOMContentLoaded", () => {
     await fetchRestaurantInfo();
     categories = await fetchCategories();
     allItems = await fetchMenuItems();
+    await loadCartFromDatabase(); // Load cart from database filtered by type='pickup'
     renderTabs(categories);
     renderSections(categories, allItems);
     setupScrollButtons();
     setupSearch();
     setupSort();
     setupCart();
+    updateCartUI();
   }
 
   // Fetch restaurant info
@@ -87,6 +110,22 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Failed to fetch menu items:", error);
       return [];
+    }
+  }
+
+  // Load cart from database filtered by type
+  async function loadCartFromDatabase() {
+    if (!consumerId) return;
+    
+    try {
+      // Remove stakeholder_id filter - show all items for this type across all restaurants
+      const res = await fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=${orderType}`);
+      const data = await res.json();
+      
+      // Cart is already loaded via updateCartUI which will fetch again, but we can use this for initial state
+      updateCartUI();
+    } catch (error) {
+      console.error("Failed to load cart from database:", error);
     }
   }
 
@@ -190,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h3>${item.item_name}</h3>
           <p class="desc">${item.description}</p>
           <div class="price">Tk ${item.item_price}</div>
-          <button class="add-to-cart-btn" data-id="${item.menu_id}" data-name="${item.item_name}" data-price="${item.item_price}">
+          <button class="add-to-cart-btn" data-id="${item.menu_id}" data-name="${item.item_name}" data-price="${item.item_price}" data-picture="${item.item_picture}">
             <i class="fas fa-cart-plus"></i> Add to Cart
           </button>
         </div>
@@ -281,14 +320,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // Setup cart functionality
   function setupCart() {
     // Add to cart button clicks
-    document.body.addEventListener("click", (e) => {
+    document.body.addEventListener("click", async (e) => {
       const addBtn = e.target.closest(".add-to-cart-btn");
       if (addBtn) {
         const itemId = addBtn.dataset.id;
         const itemName = addBtn.dataset.name;
         const itemPrice = parseFloat(addBtn.dataset.price);
+        const itemPicture = addBtn.dataset.picture;
 
-        addToCart({ id: itemId, name: itemName, price: itemPrice });
+        await addToCart({ id: itemId, name: itemName, price: itemPrice, picture: itemPicture });
       }
     });
 
@@ -304,89 +344,295 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Checkout button for pickup only
-    document.getElementById("checkout-pickup-btn").addEventListener("click", () => {
-      if (cart.length === 0) {
+    // Order type toggle buttons with validation
+    const deliveryTab = document.getElementById("delivery-tab");
+    const pickupTab = document.getElementById("pickup-tab");
+
+    if (supportsDelivery && supportsPickup) {
+      // Both tabs enabled with validation
+      deliveryTab.addEventListener("click", async () => {
+        // Validate if we can switch to delivery
+        const canSwitch = await validateCartSwitch(stakeholderId, 'delivery');
+        
+        if (!canSwitch) {
+          const confirmSwitch = confirm(
+            "You have pickup items in your cart from a different restaurant. Switching to delivery will clear your current cart. Continue?"
+          );
+          
+          if (confirmSwitch) {
+            await clearCartByType('pickup');
+          } else {
+            return; // User cancelled
+          }
+        }
+        
+        orderType = 'delivery';
+        deliveryTab.classList.add("active");
+        pickupTab.classList.remove("active");
+        await loadCartFromDatabase();
+      });
+
+      pickupTab.addEventListener("click", async () => {
+        // Already on pickup tab, but validate anyway
+        const canSwitch = await validateCartSwitch(stakeholderId, 'pickup');
+        
+        if (!canSwitch) {
+          const confirmSwitch = confirm(
+            "You have delivery items in your cart from a different restaurant. Switching to pickup will clear your current cart. Continue?"
+          );
+          
+          if (confirmSwitch) {
+            await clearCartByType('delivery');
+          } else {
+            return;
+          }
+        }
+        
+        orderType = 'pickup';
+        pickupTab.classList.add("active");
+        deliveryTab.classList.remove("active");
+        await loadCartFromDatabase();
+      });
+    } else {
+      // Disable tabs not supported
+      if (!supportsDelivery) {
+        deliveryTab.style.opacity = '0.5';
+        deliveryTab.style.cursor = 'not-allowed';
+        deliveryTab.disabled = true;
+      }
+      if (!supportsPickup) {
+        pickupTab.style.opacity = '0.5';
+        pickupTab.style.cursor = 'not-allowed';
+        pickupTab.disabled = true;
+      }
+    }
+
+    // Checkout button
+    document.getElementById("checkout-btn").addEventListener("click", () => {
+      // Cart count from UI
+      const totalItems = parseInt(cartCount.textContent) || 0;
+      if (totalItems === 0) {
         alert("Your cart is empty!");
         return;
       }
-      alert("Pickup checkout - Feature coming soon!");
-      // TODO: Implement pickup checkout
+      alert(`${orderType === 'delivery' ? 'Delivery' : 'Pickup'} checkout - Feature coming soon!`);
+      // TODO: Implement checkout
     });
   }
 
-  // Add item to cart
-  function addToCart(item) {
-    const existingItem = cart.find(i => i.id === item.id);
-    
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      cart.push({ ...item, quantity: 1 });
+  // Add item to cart (database version)
+  async function addToCart(item) {
+    if (!consumerId) {
+      alert("Please log in to add items to cart");
+      return;
     }
 
-    updateCartUI();
-    
-    // Show brief feedback
-    const feedback = document.createElement("div");
-    feedback.style.cssText = `
-      position: fixed;
-      bottom: 100px;
-      right: 30px;
-      background: #00b894;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      z-index: 10000;
-      animation: slideIn 0.3s ease;
-    `;
-    feedback.textContent = "Added to cart!";
-    document.body.appendChild(feedback);
-    
-    setTimeout(() => {
-      feedback.style.animation = "slideOut 0.3s ease";
-      setTimeout(() => feedback.remove(), 300);
-    }, 2000);
+    try {
+      const res = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consumer_id: consumerId,
+          stakeholder_id: stakeholderId,
+          menu_id: item.id,
+          quantity: 1,
+          item_name: item.name,
+          item_price: item.price,
+          item_picture: item.picture,
+          type: orderType // 'pickup' for this page
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        await updateCartUI();
+        
+        // Show brief feedback
+        const feedback = document.createElement("div");
+        feedback.style.cssText = `
+          position: fixed;
+          bottom: 100px;
+          right: 30px;
+          background: #00b894;
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+          z-index: 10000;
+          animation: slideIn 0.3s ease;
+        `;
+        feedback.textContent = `Added to ${orderType} cart!`;
+        document.body.appendChild(feedback);
+        
+        setTimeout(() => {
+          feedback.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => feedback.remove(), 300);
+        }, 2000);
+      } else {
+        alert(data.message || "Failed to add item to cart");
+      }
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      alert("Failed to add item to cart");
+    }
   }
 
-  // Update cart UI
-  function updateCartUI() {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = totalItems;
+  // Update cart UI (fetch from database)
+  async function updateCartUI() {
+    if (!consumerId) {
+      cartCount.textContent = '0';
+      cartItems.innerHTML = '';
+      document.getElementById('cart-summary').style.display = 'none';
+      return;
+    }
 
-    if (totalItems === 0) {
-      cartItems.innerHTML = '<li style="text-align: center; color: #999;">Your cart is empty</li>';
-    } else {
+    try {
+      // Remove stakeholder_id filter - show all items for this type across all restaurants
+      const res = await fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=${orderType}`);
+      const data = await res.json();
+      
+      const cart = data.cartItems || [];
+      // Fix: Use 'quatity' instead of 'quantity' to match database column name
+      const totalItems = cart.reduce((sum, item) => sum + (item.quatity || 0), 0);
+      
+      cartCount.textContent = totalItems;
+
+      // Empty cart state
+      if (cart.length === 0) {
+        cartItems.innerHTML = '';
+        document.getElementById('cart-summary').style.display = 'none';
+        return;
+      }
+
+      // Calculate fees
+      // Fix: Use 'quatity' instead of 'quantity' to match database column name
+      const subtotal = cart.reduce((sum, item) => sum + (item.item_price * (item.quatity || 0)), 0);
+      const deliveryFee = orderType === 'delivery' ? 0 : 0; // Update based on your logic
+      const serviceFee = 4;
+      const total = subtotal + deliveryFee + serviceFee;
+
+      // Show cart summary
+      document.getElementById('cart-summary').style.display = 'block';
+      
+      // Render cart items
+      // Fix: Use 'quatity' instead of 'quantity' to match database column name
       cartItems.innerHTML = cart.map(item => `
-        <li>
-          <div>
-            <strong>${item.name}</strong><br>
-            <small>Tk ${item.price} × ${item.quantity}</small>
+        <div class="cart-item">
+          <img src="${item.item_picture}" alt="${item.item_name}" class="cart-item-image" />
+          <div class="cart-item-details">
+            <h4>${item.item_name}</h4>
+            <p class="cart-item-price">Tk ${item.item_price}</p>
           </div>
-          <div>
-            <strong>Tk ${(item.price * item.quantity).toFixed(2)}</strong>
-            <button class="remove-btn" data-id="${item.id}" style="
-              margin-left: 10px;
-              background: #ff6b6b;
-              color: white;
-              border: none;
-              border-radius: 4px;
-              padding: 4px 8px;
-              cursor: pointer;
-            ">×</button>
+          <div class="cart-item-controls">
+            <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="decrease">
+              <i class="fas fa-minus"></i>
+            </button>
+            <span class="quantity">${item.quatity || 0}</span>
+            <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="increase">
+              <i class="fas fa-plus"></i>
+            </button>
           </div>
-        </li>
+        </div>
       `).join("");
 
-      // Add remove button listeners
-      document.querySelectorAll(".remove-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const itemId = btn.dataset.id;
-          cart = cart.filter(i => i.id !== itemId);
-          updateCartUI();
+      // Update summary
+      document.getElementById('subtotal-amount').textContent = `Tk ${subtotal}`;
+      document.getElementById('delivery-fee-amount').textContent = `Tk ${deliveryFee}`;
+      document.getElementById('service-fee-amount').textContent = `Tk ${serviceFee}`;
+      document.getElementById('total-amount').textContent = `Tk ${total}`;
+
+      // Add quantity button listeners
+      document.querySelectorAll(".quantity-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const cartId = btn.dataset.cartId;
+          const action = btn.dataset.action;
+
+          if (action === "increase") {
+            await updateQuantity(cartId, 1);
+          } else if (action === "decrease") {
+            await updateQuantity(cartId, -1);
+          }
         });
       });
+    } catch (error) {
+      console.error("Failed to update cart UI:", error);
+    }
+  }
+
+  // Update quantity in database
+  async function updateQuantity(cartId, change) {
+    try {
+      // First, get current quantity from the UI
+      const cartItemElement = document.querySelector(`[data-cart-id="${cartId}"]`).closest('.cart-item');
+      const currentQuantity = parseInt(cartItemElement.querySelector('.quantity').textContent);
+      const newQuantity = currentQuantity + change;
+
+      // If quantity would be 0 or less, remove the item instead
+      if (newQuantity <= 0) {
+        await removeFromCart(cartId);
+        return;
+      }
+
+      const res = await fetch(`/api/cart/update-quantity/${cartId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quantity: newQuantity
+        })
+      });
+
+      if (res.ok) {
+        await updateCartUI();
+      } else {
+        console.error("Failed to update quantity");
+      }
+    } catch (error) {
+      console.error("Failed to update quantity:", error);
+    }
+  }
+
+  // Remove item from cart
+  async function removeFromCart(cartId) {
+    try {
+      const res = await fetch(`/api/cart/remove/${cartId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        await updateCartUI();
+      }
+    } catch (error) {
+      console.error("Failed to remove from cart:", error);
+    }
+  }
+
+  // Validate if cart can be switched to different type
+  async function validateCartSwitch(restaurantId, newType) {
+    if (!consumerId) return true;
+    
+    try {
+      const res = await fetch(`/api/cart/validate-switch?consumer_id=${consumerId}&stakeholder_id=${restaurantId}&type=${newType}`);
+      const data = await res.json();
+      return data.canSwitch || false;
+    } catch (error) {
+      console.error("Failed to validate cart switch:", error);
+      return false;
+    }
+  }
+
+  // Clear cart items by type
+  async function clearCartByType(type) {
+    if (!consumerId) return;
+    
+    try {
+      await fetch(`/api/cart/clear-by-type?consumer_id=${consumerId}&type=${type}`, {
+        method: 'DELETE'
+      });
+      await updateCartUI();
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
     }
   }
 });
@@ -401,6 +647,67 @@ style.textContent = `
   @keyframes slideOut {
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(400px); opacity: 0; }
+  }
+  
+  .cart-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .cart-item-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+  }
+  
+  .cart-item-details {
+    flex: 1;
+  }
+  
+  .cart-item-details h4 {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .cart-item-price {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .quantity-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .quantity-btn:hover {
+    background: #f0f0f0;
+    border-color: #00b894;
+  }
+  
+  .quantity {
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
   }
 `;
 document.head.appendChild(style);

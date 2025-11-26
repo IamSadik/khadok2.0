@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let restaurantName = "";
   let consumerId = localStorage.getItem('consumer_id');
   let orderType = 'delivery'; // default to delivery
+  let restaurantTypes = []; // Will store restaurant delivery/pickup capabilities
 
   // Get restaurant data from localStorage
   let restaurantDistance = parseFloat(localStorage.getItem('selectedRestaurantDistance')) || 0;
@@ -33,6 +34,25 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "khadok.consumer.dashboard.html";
     return;
   }
+
+  // Get restaurant types from localStorage
+  try {
+    const typesStr = localStorage.getItem('selectedRestaurantType');
+    if (typesStr) {
+      restaurantTypes = JSON.parse(typesStr);
+      // Normalize to lowercase for consistent comparison
+      restaurantTypes = restaurantTypes.map(type => type.toLowerCase());
+    } else {
+      restaurantTypes = [];
+    }
+  } catch (e) {
+    console.error('Failed to parse selectedRestaurantType:', e);
+    restaurantTypes = [];
+  }
+
+  // Check if restaurant supports both delivery and pickup
+  const supportsDelivery = restaurantTypes.includes('delivery');
+  const supportsPickup = restaurantTypes.includes('pickup') || restaurantTypes.includes('pick-up');
 
   // Calculate delivery fee based on distance
   function calculateDeliveryFee() {
@@ -332,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!consumerId) return;
     
     try {
-      const res = await fetch(`/api/cart/${consumerId}`);
+      const res = await fetch(`/api/cart/${consumerId}?type=${orderType}`);
       const data = await res.json();
       
       if (data.cartItems && data.cartItems.length > 0) {
@@ -384,18 +404,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Order type toggle buttons
-    document.getElementById("delivery-tab").addEventListener("click", () => {
+    document.getElementById("delivery-tab").addEventListener("click", async () => {
+      // Check if switching from pickup to delivery
+      if (orderType === 'pickup' && cart.length > 0) {
+        // Check if current restaurant supports delivery
+        if (!supportsDelivery) {
+          alert("This restaurant doesn't support delivery. Please clear your pickup cart first or switch to a restaurant that supports delivery.");
+          return;
+        }
+
+        // Validate if switching is allowed (check if cart has items from different restaurant)
+        const canSwitch = await validateCartSwitch(stakeholderId, 'delivery');
+        if (!canSwitch) {
+          const confirmSwitch = confirm(
+            "Switching to delivery will clear your current pickup cart. Do you want to continue?"
+          );
+          if (!confirmSwitch) return;
+          
+          // Clear pickup cart from database
+          await clearCartByType('pickup');
+        }
+      }
+
       orderType = 'delivery';
       document.getElementById("delivery-tab").classList.add("active");
       document.getElementById("pickup-tab").classList.remove("active");
-      updateCartUI(); // Recalculate fees when switching
+      await loadCartFromDatabase(); // Reload cart for delivery type
     });
 
-    document.getElementById("pickup-tab").addEventListener("click", () => {
+    document.getElementById("pickup-tab").addEventListener("click", async () => {
+      // Check if switching from delivery to pickup
+      if (orderType === 'delivery' && cart.length > 0) {
+        // Check if current restaurant supports pickup
+        if (!supportsPickup) {
+          alert("This restaurant doesn't support pickup. Please clear your delivery cart first or switch to a restaurant that supports pickup.");
+          return;
+        }
+
+        // Validate if switching is allowed
+        const canSwitch = await validateCartSwitch(stakeholderId, 'pickup');
+        if (!canSwitch) {
+          const confirmSwitch = confirm(
+            "Switching to pickup will clear your current delivery cart. Do you want to continue?"
+          );
+          if (!confirmSwitch) return;
+          
+          // Clear delivery cart from database
+          await clearCartByType('delivery');
+        }
+      }
+
       orderType = 'pickup';
       document.getElementById("pickup-tab").classList.add("active");
       document.getElementById("delivery-tab").classList.remove("active");
-      updateCartUI(); // Recalculate fees when switching
+      await loadCartFromDatabase(); // Reload cart for pickup type
     });
 
     // Checkout button
@@ -422,7 +484,8 @@ document.addEventListener("DOMContentLoaded", () => {
           stakeholder_id: stakeholderId,
           item_name: item.name,
           item_price: item.price,
-          item_picture: item.picture
+          item_picture: item.picture,
+          type: orderType // Add type parameter
         })
       });
 
@@ -558,6 +621,33 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (error) {
       console.error("Failed to remove from cart:", error);
+    }
+  }
+
+  // Validate if cart can be switched to different type
+  async function validateCartSwitch(restaurantId, newType) {
+    if (!consumerId) return true;
+    
+    try {
+      const res = await fetch(`/api/cart/validate-switch?consumer_id=${consumerId}&stakeholder_id=${restaurantId}&type=${newType}`);
+      const data = await res.json();
+      return data.canSwitch || false;
+    } catch (error) {
+      console.error("Failed to validate cart switch:", error);
+      return false;
+    }
+  }
+
+  // Clear cart items by type
+  async function clearCartByType(type) {
+    if (!consumerId) return;
+    
+    try {
+      await fetch(`/api/cart/clear-by-type?consumer_id=${consumerId}&type=${type}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
     }
   }
 });
