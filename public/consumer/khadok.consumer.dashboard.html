@@ -135,8 +135,10 @@
 
           <div class="search-bar">
             <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search for restaurants or cuisines" id="search" />
+            <input type="text" placeholder="Search for restaurants in your area" id="search" autocomplete="off" />
             <button class="search-btn">Search</button>
+            <!-- Autocomplete suggestions dropdown -->
+            <ul id="search-suggestions" class="search-suggestions hidden"></ul>
           </div>
         </div>
       </section>

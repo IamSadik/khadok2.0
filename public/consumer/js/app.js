@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let allRestaurants = [];
 let currentFilter = 'delivery'; // Track current filter: 'all', 'delivery', 'pickup', 'dine-in'
 let currentSort = 'relevance'; // Track current sort: 'relevance', 'rating', 'distance', 'fastest'
+let searchQuery = ''; // Track current search query
 
 // 🔥 GLOBAL FUNCTION - View restaurant details (must be global for onclick to work)
 window.viewRestaurant = function(restaurantId) {
@@ -357,9 +358,21 @@ window.viewRestaurant = function(restaurantId) {
     function applyFilterAndSort() {
       let filteredRestaurants = allRestaurants;
       
-      // Step 1: Apply service type filter
+      // Step 1: Apply search query filter
+      if (searchQuery.trim() !== '') {
+        const query = searchQuery.toLowerCase().trim();
+        filteredRestaurants = filteredRestaurants.filter(restaurant => {
+          const name = restaurant.restaurant_name ? restaurant.restaurant_name.toLowerCase() : '';
+          const address = restaurant.address ? restaurant.address.toLowerCase() : '';
+          return name.includes(query) || address.includes(query);
+        });
+        
+        console.log(`🔍 Search filtered to ${filteredRestaurants.length} restaurants matching "${searchQuery}"`);
+      }
+      
+      // Step 2: Apply service type filter
       if (currentFilter !== 'all') {
-        filteredRestaurants = allRestaurants.filter(restaurant => {
+        filteredRestaurants = filteredRestaurants.filter(restaurant => {
           const types = parseRestaurantTypes(restaurant.type);
           return types.includes(currentFilter);
         });
@@ -367,13 +380,13 @@ window.viewRestaurant = function(restaurantId) {
         console.log(`✅ Filtered ${filteredRestaurants.length} restaurants with ${currentFilter} service`);
       }
       
-      // Step 2: Apply sorting
+      // Step 3: Apply sorting
       const sortedRestaurants = sortRestaurants(filteredRestaurants);
       
-      // Step 3: Display filtered and sorted restaurants
+      // Step 4: Display filtered and sorted restaurants
       displayRestaurants(sortedRestaurants);
       
-      // Step 4: Update map with filtered restaurants
+      // Step 5: Update map with filtered restaurants
       const lat = parseFloat(localStorage.getItem('current_user_lat'));
       const lng = parseFloat(localStorage.getItem('current_user_lng'));
       initializeRestaurantsMap(sortedRestaurants, lat, lng);
@@ -793,6 +806,179 @@ window.viewRestaurant = function(restaurantId) {
     
     // 🔥 Setup sort buttons
     setupSortButtons();
+
+    // 🔥 Setup search functionality
+    function setupSearchBar() {
+      const searchInput = document.getElementById('search');
+      const searchButton = document.querySelector('.search-btn');
+      const searchSuggestions = document.getElementById('search-suggestions');
+      
+      if (!searchInput) {
+        console.warn('Search input not found');
+        return;
+      }
+
+      // Debounce function to avoid excessive filtering
+      let searchTimeout = null;
+      
+      // Function to show autocomplete suggestions
+      function showSuggestions(query) {
+        if (!query || query.trim() === '') {
+          searchSuggestions.classList.add('hidden');
+          return;
+        }
+
+        const normalizedQuery = query.toLowerCase().trim();
+        
+        // 🔥 Filter restaurants that match the search query AND current filter
+        let matchingRestaurants = allRestaurants.filter(restaurant => {
+          const name = restaurant.restaurant_name ? restaurant.restaurant_name.toLowerCase() : '';
+          const address = restaurant.address ? restaurant.address.toLowerCase() : '';
+          const matchesSearch = name.includes(normalizedQuery) || address.includes(normalizedQuery);
+          
+          // 🔥 Also apply current filter (delivery, pickup, dine-in)
+          if (currentFilter !== 'all') {
+            const types = parseRestaurantTypes(restaurant.type);
+            const matchesFilter = types.includes(currentFilter);
+            return matchesSearch && matchesFilter;
+          }
+          
+          return matchesSearch;
+        });
+
+        // Limit to top 8 suggestions
+        const topSuggestions = matchingRestaurants.slice(0, 8);
+
+        if (topSuggestions.length === 0) {
+          searchSuggestions.innerHTML = `<div class="no-results"><i class="fas fa-search"></i> No restaurants found matching "${query}" for ${currentFilter} service</div>`;
+          searchSuggestions.classList.remove('hidden');
+          return;
+        }
+
+        // Build suggestions HTML
+        const suggestionsHTML = topSuggestions.map(restaurant => {
+          // Calculate distance display
+          let distance = 'N/A';
+          if (restaurant.road_distance !== null && restaurant.road_distance !== undefined) {
+            if (restaurant.road_distance < 1 && restaurant.road_distance_meters !== null) {
+              distance = `${restaurant.road_distance_meters} m`;
+            } else {
+              distance = `${restaurant.road_distance.toFixed(1)} km`;
+            }
+          }
+
+          const rating = restaurant.ratings !== null && restaurant.ratings !== undefined
+            ? restaurant.ratings 
+            : 'N/A';
+          
+          const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
+            ? `${Math.max(1, Math.round(restaurant.estimated_time))} min` 
+            : 'N/A';
+
+          const address = restaurant.address || 'Address not available';
+
+          return `
+            <li data-restaurant-id="${restaurant.stakeholder_id}" class="suggestion-item">
+              <span class="suggestion-icon"><i class="fas fa-utensils"></i></span>
+              <div class="suggestion-text">
+                <div class="suggestion-name">${restaurant.restaurant_name}</div>
+                <div class="suggestion-address">${address}</div>
+                <div class="suggestion-meta">
+                  <span><i class="fas fa-star" style="color: #ffc107;"></i> ${rating}</span>
+                  <span><i class="fas fa-map-marker-alt" style="color: #e91e63;"></i> ${distance}</span>
+                  <span><i class="fas fa-clock" style="color: #4CAF50;"></i> ${deliveryTime}</span>
+                </div>
+              </div>
+            </li>
+          `;
+        }).join('');
+
+        searchSuggestions.innerHTML = suggestionsHTML;
+        searchSuggestions.classList.remove('hidden');
+
+        // Add click event to each suggestion
+        const suggestionItems = searchSuggestions.querySelectorAll('.suggestion-item');
+        suggestionItems.forEach(item => {
+          item.addEventListener('click', () => {
+            const restaurantId = item.getAttribute('data-restaurant-id');
+            const restaurantName = item.querySelector('.suggestion-name').textContent;
+            
+            // Update search input with selected restaurant name
+            searchInput.value = restaurantName;
+            
+            // Hide suggestions
+            searchSuggestions.classList.add('hidden');
+            
+            // Navigate to restaurant details
+            viewRestaurant(restaurantId);
+          });
+        });
+      }
+
+      // Handle input event (real-time search as user types)
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        
+        const query = e.target.value;
+        
+        // Show suggestions immediately for autocomplete
+        searchTimeout = setTimeout(() => {
+          showSuggestions(query);
+        }, 150); // Faster response for autocomplete (150ms)
+        
+        // Also apply filter after a longer delay
+        setTimeout(() => {
+          searchQuery = query;
+          console.log('🔍 Searching for:', searchQuery);
+          applyFilterAndSort();
+        }, 300);
+      });
+
+      // Handle search button click
+      if (searchButton) {
+        searchButton.addEventListener('click', () => {
+          searchQuery = searchInput.value;
+          console.log('🔍 Search button clicked:', searchQuery);
+          searchSuggestions.classList.add('hidden');
+          applyFilterAndSort();
+        });
+      }
+
+      // Handle Enter key press
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          searchQuery = searchInput.value;
+          console.log('🔍 Enter key pressed:', searchQuery);
+          searchSuggestions.classList.add('hidden');
+          applyFilterAndSort();
+        }
+      });
+
+      // Handle Escape key to close suggestions
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          searchSuggestions.classList.add('hidden');
+        }
+      });
+
+      // Close suggestions when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+          searchSuggestions.classList.add('hidden');
+        }
+      });
+
+      // Focus event - show suggestions if there's a value
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim() !== '') {
+          showSuggestions(searchInput.value);
+        }
+      });
+    }
+
+    // 🔥 Setup search bar
+    setupSearchBar();
 
     // 🔹 Load restaurants (localStorage is now guaranteed to be set)
     await loadNearbyRestaurants();
