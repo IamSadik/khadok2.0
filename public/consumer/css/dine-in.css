@@ -240,6 +240,147 @@ body {
   background: #e0e0e0;
 }
 
+.btn-secondary {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ============================================================================
+   3D VIEW & TABLE AVAILABILITY SECTIONS (View-Only)
+   ============================================================================ */
+.section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section h2 {
+  color: #333;
+  font-size: 1.5rem;
+  margin: 0 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section h2 i {
+  color: #00b894;
+}
+
+.threeD-container {
+  background: #f8f9fa;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.text-muted {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Table Availability Styles */
+#table-availability {
+  margin-top: 2rem;
+}
+
+.availability-info {
+  background: linear-gradient(135deg, #00b894 0%, #00d2a0 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.total-tables-display {
+  margin: 0;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.total-tables-display i {
+  font-size: 1.5rem;
+}
+
+.total-tables-display strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.table-category {
+  background: #f8f9fa;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.table-category:hover {
+  border-color: #00b894;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.15);
+  transform: translateY(-3px);
+}
+
+.table-category h3 {
+  font-size: 1rem;
+  color: #334155;
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.table-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.table-count {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.table-count strong {
+  color: #00b894;
+  font-size: 1.75rem;
+  font-weight: 700;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* 360 View Section */
+#panolens-container {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mb-5 {
+  margin-bottom: 2rem;
+}
+
+.mt-2 {
+  margin-top: 0.75rem;
+}
+
 /* ============================================================================
    RESPONSIVE
    ============================================================================ */
@@ -265,6 +406,77 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+  /* Adjust main content for smaller screens */
+  .main-content {
+    margin-left: 70px !important;
+    padding: 1rem !important;
+    padding-left: 90px !important;
+    width: calc(100% - 70px) !important;
+  }
+  
+  /* Fix canvas containers to stay within bounds */
+  .threeD-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 350px !important;
+    overflow: hidden !important;
+  }
+  
+  #threeDPreview {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 350px !important;
+    overflow: hidden !important;
+  }
+  
+  #threeDPreview canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+  
+  /* Fix Panolens container */
+  #panolens-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 350px !important;
+    overflow: hidden !important;
+  }
+  
+  #panolens-container canvas,
+  canvas.panolens-canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+  
+  .table-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  #threeDPreview,
+  #panolens-container {
+    height: 350px !important;
+  }
+  
+  .section {
+    padding: 1.5rem;
+  }
+  
+  .table-category {
+    padding: 1rem;
+  }
+  
+  .table-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
 @media (max-width: 600px) {
   .page-header h1 {
     font-size: 1.5rem;
@@ -282,5 +494,40 @@ body {
   .btn-secondary {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screens */
+  .main-content {
+    padding: 15px !important;
+    padding-left: 85px !important;
+    width: calc(100% - 70px) !important;
+  }
+  
+  .threeD-container,
+  #threeDPreview,
+  #panolens-container {
+    height: 300px !important;
+  }
+  
+  .section h2 {
+    font-size: 1.1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 1.3rem;
+  }
+  
+  .table-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .availability-info {
+    padding: 1rem;
+  }
+  
+  .total-tables-display {
+    font-size: 1rem;
   }
 }

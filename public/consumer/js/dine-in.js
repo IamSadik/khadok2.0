@@ -9,12 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const restaurantPhone = document.getElementById("restaurant-phone");
   const reservationForm = document.getElementById("reservation-form");
 
-  let stakeholderId = null;
+  let stakeholderId = localStorage.getItem('selectedRestaurantId');
   let restaurantData = null;
 
-  // Get stakeholder_id from URL parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  stakeholderId = urlParams.get('restaurant_id');
+
 
   if (!stakeholderId) {
     alert("No restaurant selected");
@@ -29,6 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
     await fetchRestaurantInfo();
     setupReservationForm();
     setMinimumDate();
+    
+    // Load view-only 3D features
+    await load3DLayout();
+    await loadTableAvailability();
+    await load360View();
   }
 
   // Fetch restaurant info
@@ -175,5 +178,565 @@ document.addEventListener("DOMContentLoaded", () => {
         alert('Failed to submit reservation. Please try again.');
       }
     });
+  }
+
+  // ============================================================================
+  // VIEW-ONLY 3D LAYOUT (No Editing Tools)
+  // ============================================================================
+  async function load3DLayout() {
+    try {
+      // Get stakeholder ID from the selectedRestaurantId in localStorage
+      const restaurantStakeholderId = localStorage.getItem('selectedRestaurantId');
+      
+      if (!restaurantStakeholderId) {
+        console.warn('No selectedRestaurantId found in localStorage');
+        showPlaceholder3D();
+        return;
+      }
+
+      const response = await fetch(`/api/interior/${encodeURIComponent(restaurantStakeholderId)}`);
+      
+      if (!response.ok) {
+        console.warn('Failed to fetch interior layout:', response.status);
+        showPlaceholder3D();
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        initialize3DView(data.data);
+      } else {
+        showPlaceholder3D();
+      }
+    } catch (error) {
+      console.error('Error loading 3D layout:', error);
+      showPlaceholder3D();
+    }
+  }
+
+  // Initialize view-only 3D scene with auto-rotation
+  function initialize3DView(layoutData) {
+    const container = document.getElementById('threeDPreview');
+    if (!container) return;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf5f5f5);
+    
+    const camera = new THREE.PerspectiveCamera(
+      75, 
+      container.offsetWidth / container.offsetHeight, 
+      0.1, 
+      1000
+    );
+    
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.offsetWidth, container.offsetHeight);
+    container.innerHTML = ''; // This clears the container
+    container.appendChild(renderer.domElement);
+    
+    // Add the legend AFTER the renderer is appended
+    const legend = document.createElement('div');
+    legend.style.cssText = 'position: absolute; top: 12px; left: 12px; z-index: 20; background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius: 8px; font-family: "Poppins", sans-serif; font-size: 11px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); backdrop-filter: blur(4px);';
+    legend.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 8px; color: #333; font-size: 12px;">Table Legend</div>
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #007bff; border-radius: 3px;"></div>
+          <span style="color: #555;">2-Person</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #28a745; border-radius: 3px;"></div>
+          <span style="color: #555;">4-Person</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #0dcaf0; border-radius: 3px;"></div>
+          <span style="color: #555;">5-Person</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #ff7f50; border-radius: 3px;"></div>
+          <span style="color: #555;">6-Person</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #ffc13c; border-radius: 3px;"></div>
+          <span style="color: #555;">8-Person</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #6f42c1; border-radius: 3px;"></div>
+          <span style="color: #555;">12-Person</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 16px; height: 16px; background: #c82333; border-radius: 3px;"></div>
+          <span style="color: #555;">16-Person</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(legend);
+    
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 20, 10);
+    scene.add(directionalLight);
+    
+    // Parse and render layout data
+    let layout = null;
+    if (layoutData.layout) {
+      try {
+        layout = typeof layoutData.layout === 'string' 
+          ? JSON.parse(layoutData.layout) 
+          : layoutData.layout;
+      } catch (e) {
+        console.error('Error parsing layout:', e);
+      }
+    }
+
+    const floorLength = layoutData.floor_length || 100;
+    const floorWidth = layoutData.floor_width || 100;
+    
+    // Create floor
+    createFloor(scene, floorLength, floorWidth);
+    
+    // Render objects from layout
+    if (layout && Array.isArray(layout.objects)) {
+      layout.objects.forEach(obj => {
+        if (obj.kind === 'table') {
+          createTableObject(scene, obj);
+        } else if (obj.kind === 'pillar') {
+          createPillarObject(scene, obj);
+        } else if (obj.kind === 'chair') {
+          createChairObject(scene, obj);
+        }
+      });
+    }
+    
+    // Set camera position
+    const maxDim = Math.max(floorLength, floorWidth);
+    const dist = maxDim * 1.2;
+    camera.position.set(dist, dist * 0.9, dist);
+    camera.lookAt(0, 0, 0);
+    
+    // === Interactive Controls ===
+    let autoRotate = true;
+    const rotationSpeed = 0.0002;
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    
+    // Mouse down event
+    renderer.domElement.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      autoRotate = false; // Stop auto-rotation when user interacts
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      renderer.domElement.style.cursor = 'grabbing';
+    });
+    
+    // Mouse move event - Manual rotation (Y-axis horizontal rotation)
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      
+      const deltaX = (e.clientX - lastMouseX) * 0.005;
+      const deltaY = (e.clientY - lastMouseY) * 0.005;
+      
+      // Horizontal rotation (around Y-axis)
+      const radius = Math.sqrt(camera.position.x ** 2 + camera.position.z ** 2);
+      const currentAngle = Math.atan2(camera.position.z, camera.position.x);
+      const newAngle = currentAngle + deltaX;
+      
+      camera.position.x = radius * Math.cos(newAngle);
+      camera.position.z = radius * Math.sin(newAngle);
+      
+      // Vertical movement (camera height adjustment)
+      camera.position.y = Math.max(10, Math.min(dist * 1.5, camera.position.y - deltaY * 50));
+      
+      camera.lookAt(0, 0, 0);
+      
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+    
+    // Mouse up event
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        renderer.domElement.style.cursor = 'grab';
+      }
+    });
+    
+    // Set initial cursor
+    renderer.domElement.style.cursor = 'grab';
+    
+    // Mouse wheel event - Zoom in/out
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      
+      autoRotate = false; // Stop auto-rotation when user interacts
+      
+      const zoomSpeed = 0.1;
+      const direction = e.deltaY > 0 ? 1 : -1;
+      
+      const zoomVector = new THREE.Vector3()
+        .subVectors(camera.position, new THREE.Vector3(0, 0, 0))
+        .normalize()
+        .multiplyScalar(direction * zoomSpeed * camera.position.length());
+      
+      camera.position.add(zoomVector);
+      
+      // Constrain zoom limits
+      const minDistance = Math.max(20, maxDim * 0.3);
+      const maxDistance = maxDim * 3;
+      const currentDistance = camera.position.length();
+      
+      if (currentDistance < minDistance) {
+        camera.position.normalize().multiplyScalar(minDistance);
+      } else if (currentDistance > maxDistance) {
+        camera.position.normalize().multiplyScalar(maxDistance);
+      }
+      
+      camera.lookAt(0, 0, 0);
+    }, { passive: false });
+    
+    // Touch support for mobile devices
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouching = false;
+    
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isTouching = true;
+        autoRotate = false;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    });
+    
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (!isTouching || e.touches.length !== 1) return;
+      e.preventDefault();
+      
+      const touchX = e.touches[0].clientX;
+      const touchY = e.touches[0].clientY;
+      const deltaX = (touchX - touchStartX) * 0.005;
+      const deltaY = (touchY - touchStartY) * 0.005;
+      
+      // Horizontal rotation
+      const radius = Math.sqrt(camera.position.x ** 2 + camera.position.z ** 2);
+      const currentAngle = Math.atan2(camera.position.z, camera.position.x);
+      const newAngle = currentAngle + deltaX;
+      
+      camera.position.x = radius * Math.cos(newAngle);
+      camera.position.z = radius * Math.sin(newAngle);
+      
+      // Vertical movement
+      camera.position.y = Math.max(10, Math.min(dist * 1.5, camera.position.y - deltaY * 50));
+      
+      camera.lookAt(0, 0, 0);
+      
+      touchStartX = touchX;
+      touchStartY = touchY;
+    }, { passive: false });
+    
+    renderer.domElement.addEventListener('touchend', () => {
+      isTouching = false;
+    });
+    
+    // Pinch-to-zoom for mobile
+    let lastTouchDistance = 0;
+    
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+        autoRotate = false;
+      }
+    });
+    
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        const delta = distance - lastTouchDistance;
+        const zoomFactor = delta * 0.01;
+        
+        const zoomVector = new THREE.Vector3()
+          .subVectors(camera.position, new THREE.Vector3(0, 0, 0))
+          .normalize()
+          .multiplyScalar(-zoomFactor * camera.position.length());
+        
+        camera.position.add(zoomVector);
+        
+        // Constrain zoom
+        const minDistance = Math.max(20, maxDim * 0.3);
+        const maxDistance = maxDim * 3;
+        const currentDistance = camera.position.length();
+        
+        if (currentDistance < minDistance) {
+          camera.position.normalize().multiplyScalar(minDistance);
+        } else if (currentDistance > maxDistance) {
+          camera.position.normalize().multiplyScalar(maxDistance);
+        }
+        
+        camera.lookAt(0, 0, 0);
+        lastTouchDistance = distance;
+      }
+    }, { passive: false });
+    
+    // Auto-rotate animation (only when not interacting)
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      if (autoRotate && !isDragging && !isTouching) {
+        const time = Date.now();
+        camera.position.x = Math.sin(time * rotationSpeed) * dist;
+        camera.position.z = Math.cos(time * rotationSpeed) * dist;
+        camera.lookAt(0, 0, 0);
+      }
+      
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (container.offsetWidth > 0) {
+        camera.aspect = container.offsetWidth / container.offsetHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.offsetWidth, container.offsetHeight);
+      }
+    });
+  }
+
+  // Create floor with grid
+  function createFloor(scene, length, width) {
+    const floorY = 5;
+    
+    // Create floor plane
+    const floorGeometry = new THREE.PlaneGeometry(length, width);
+    const floorMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0xffffff,
+      opacity: 0.001,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = floorY;
+    floor.receiveShadow = true;
+    scene.add(floor);
+    
+    // Add grid helper
+    const gridSize = Math.max(length, width);
+    const divisions = Math.floor(gridSize / 5);
+    const gridHelper = new THREE.GridHelper(gridSize, divisions);
+    gridHelper.position.y = floorY + 0.001;
+    gridHelper.scale.set(length / gridSize, 1, width / gridSize);
+    scene.add(gridHelper);
+  }
+
+  // Create table object from saved data
+  function createTableObject(scene, objData) {
+    const type = String(objData.tableType || objData.type || '4');
+    const x = objData.x || 0;
+    const z = objData.z || 0;
+    const floorY = objData.y || 5;
+    
+    let geometry, sizeX, sizeZ;
+    
+    if (type === '5') {
+      geometry = new THREE.CylinderGeometry(6, 6, 1.2, 75);
+      sizeX = sizeZ = 12;
+    } else {
+      const sizes = {
+        '2': [10, 5],
+        '4': [14, 7],
+        '6': [18, 9],
+        '8': [22, 11],
+        '12': [26, 13],
+        '16': [34, 17]
+      };
+      const [w, d] = sizes[type] || [6, 3];
+      geometry = new THREE.BoxGeometry(w, 1.2, d);
+      sizeX = w;
+      sizeZ = d;
+    }
+    
+    const colors = {
+      '2': 0x007bff,
+      '4': 0x28a745,
+      '5': 0x0dcaf0,
+      '6': 0xff7f50,
+      '8': 0xffc13c,
+      '12': 0x6f42c1,
+      '16': 0xc82333
+    };
+    
+    const material = new THREE.MeshStandardMaterial({ color: colors[type] || 0x222222 });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, floorY + 0.8, z);
+    mesh.castShadow = true;
+    scene.add(mesh);
+  }
+
+  // Create pillar object from saved data
+  function createPillarObject(scene, objData) {
+    const x = objData.x || 0;
+    const z = objData.z || 0;
+    const height = objData.height || 20;
+    const floorY = 5;
+    
+    const geometry = new THREE.CylinderGeometry(2.5, 2.5, height, 30);
+    const material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, floorY + height / 2, z);
+    mesh.castShadow = true;
+    scene.add(mesh);
+  }
+
+  // Create chair object from saved data
+  function createChairObject(scene, objData) {
+    const x = objData.x || 0;
+    const z = objData.z || 0;
+    const floorY = 5;
+    
+    const geometry = new THREE.CylinderGeometry(1, 1, 1, 20);
+    const material = new THREE.MeshStandardMaterial({ color: 0x444444 });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(x, floorY + 0.5, z);
+    scene.add(mesh);
+  }
+
+  // Show placeholder when no 3D data available
+  function showPlaceholder3D() {
+    const container = document.getElementById('threeDPreview');
+    if (container) {
+      container.innerHTML = `
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #888;">
+          <i class="fas fa-cube" style="font-size: 48px; margin-bottom: 10px;"></i>
+          <p>No 3D layout available for this restaurant</p>
+        </div>
+      `;
+    }
+  }
+
+  // ============================================================================
+  // VIEW-ONLY TABLE AVAILABILITY (No Add/Remove Controls)
+  // ============================================================================
+  async function loadTableAvailability() {
+    try {
+      const response = await fetch(`/api/interior/get-tables?stakeholder_id=${stakeholderId}`);
+      const data = await response.json();
+      
+      if (data.success && data.tables) {
+        updateTableCounts(data.tables);
+      } else {
+        showNoTablesAvailable();
+      }
+    } catch (error) {
+      console.error('Error loading table availability:', error);
+      showNoTablesAvailable();
+    }
+  }
+
+  // Update table count display (view-only)
+  function updateTableCounts(tables) {
+    let total = 0;
+    const counts = { 2: 0, 4: 0, 5: 0, 6: 0, 8: 0, 12: 0, 16: 0 };
+    
+    tables.forEach(table => {
+      const capacity = parseInt(table.table_type);
+      const quantity = parseInt(table.quantity) || 0;
+      counts[capacity] = quantity;
+      total += quantity;
+    });
+    
+    // Update total count
+    const totalEl = document.getElementById('totalTablesCount');
+    if (totalEl) {
+      totalEl.textContent = total;
+    }
+    
+    // Update individual counts
+    Object.keys(counts).forEach(capacity => {
+      const countEl = document.getElementById(`table-${capacity}-count`);
+      if (countEl) {
+        countEl.textContent = counts[capacity];
+      }
+    });
+  }
+
+  // Show message when no tables are available
+  function showNoTablesAvailable() {
+    const totalEl = document.getElementById('totalTablesCount');
+    if (totalEl) {
+      totalEl.textContent = '0';
+    }
+    
+    // Set all counts to 0
+    [2, 4, 5, 6, 8, 12, 16].forEach(capacity => {
+      const countEl = document.getElementById(`table-${capacity}-count`);
+      if (countEl) {
+        countEl.textContent = '0';
+      }
+    });
+  }
+
+  // ============================================================================
+  // VIEW-ONLY 360° VIEW (No Upload/Delete Controls)
+  // ============================================================================
+  async function load360View() {
+    try {
+      const response = await fetch(`/api/interior/get-interior-image?stakeholder_id=${stakeholderId}`);
+      const data = await response.json();
+      
+      if (data.success && data.imageUrl) {
+        initialize360View(data.imageUrl);
+      } else {
+        show360Placeholder();
+      }
+    } catch (error) {
+      console.error('Error loading 360 view:', error);
+      show360Placeholder();
+    }
+  }
+
+  // Initialize 360° panoramic view
+  function initialize360View(imageUrl) {
+    const container = document.getElementById('panolens-container');
+    if (!container) return;
+    
+    try {
+      const panorama = new PANOLENS.ImagePanorama(imageUrl);
+      const viewer = new PANOLENS.Viewer({ 
+        container: container,
+        autoRotate: true,
+        autoRotateSpeed: 0.3,
+        controlBar: true
+      });
+      viewer.add(panorama);
+    } catch (error) {
+      console.error('Error initializing 360 view:', error);
+      show360Placeholder();
+    }
+  }
+
+  // Show placeholder when no 360 image available
+  function show360Placeholder() {
+    const container = document.getElementById('panolens-container');
+    if (container) {
+      container.innerHTML = `
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #fff;">
+          <i class="fas fa-street-view" style="font-size: 48px; margin-bottom: 10px;"></i>
+          <p>No 360° view available for this restaurant</p>
+        </div>
+      `;
+    }
   }
 });

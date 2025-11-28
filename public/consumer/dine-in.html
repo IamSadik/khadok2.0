@@ -13,6 +13,10 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
     <link rel="stylesheet" href="css/dine-in.css" />
+    
+    <!-- Three.js and Panolens for 3D/360 views -->
+    <script src="https://pchen66.github.io/js/three/three.min.js"></script>
+    <script src="https://pchen66.github.io/js/panolens/panolens.min.js"></script>
 </head>
 
 <body>
@@ -105,6 +109,108 @@
                 <p id="restaurant-rating"><i class="fas fa-star"></i> <span>Loading rating...</span></p>
                 <p id="restaurant-phone"><i class="fas fa-phone"></i> <span>Loading contact...</span></p>
             </div>
+        </div>
+
+        <!-- 3D Interior View Section (View-Only) -->
+        <div class="section">
+            <h2><i class="fas fa-cube"></i> 3D Restaurant Layout</h2>
+            <div class="threeD-container">
+                <div id="threeDPreview" style="position: relative; width: 100%; height: 500px; overflow: hidden; background: #f5f5f5; border-radius: 8px;">
+                    <!-- Color Legend -->
+                    <div style="position: absolute; top: 12px; left: 12px; z-index: 20; background: rgba(255, 255, 255, 0.95); padding: 10px; border-radius: 8px; font-family: 'Poppins', sans-serif; font-size: 11px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); backdrop-filter: blur(4px);">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #333; font-size: 12px;">Table Legend</div>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #007bff; border-radius: 3px;"></div>
+                                <span style="color: #555;">2-Person</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #28a745; border-radius: 3px;"></div>
+                                <span style="color: #555;">4-Person</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #0dcaf0; border-radius: 3px;"></div>
+                                <span style="color: #555;">5-Person</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #ff7f50; border-radius: 3px;"></div>
+                                <span style="color: #555;">6-Person</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #ffc13c; border-radius: 3px;"></div>
+                                <span style="color: #555;">8-Person</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #6f42c1; border-radius: 3px;"></div>
+                                <span style="color: #555;">12-Person</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 16px; height: 16px; background: #c82333; border-radius: 3px;"></div>
+                                <span style="color: #555;">16-Person</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- View-only 3D floor preview -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #888;">
+                        <i class="fas fa-cube" style="font-size: 48px; margin-bottom: 10px;"></i>
+                        <p>Loading 3D layout...</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-muted mt-2" style="font-size: 14px; color: #666; margin-top: 10px;">
+                <i class="fas fa-info-circle"></i> The 3D layout will rotate automatically. Drag to explore different angles.
+            </p>
+        </div>
+
+        <!-- Table Availability Section (View-Only) -->
+        <div class="section" id="table-availability">
+            <h2><i class="fas fa-chair"></i> Table Availability</h2>
+            <div class="availability-info">
+                <p class="total-tables-display">
+                    <i class="fas fa-table"></i> Total Tables: <strong id="totalTablesCount">Loading...</strong>
+                </p>
+            </div>
+            
+            <div class="table-grid">
+                <div class="table-category">
+                    <h3><img src="../images/2PersonTable.png" alt="2 Person" class="table-icon"> 2-Person Tables</h3>
+                    <p class="table-count"><strong id="table-2-count">0</strong> available</p>
+                </div>
+                <div class="table-category">
+                    <h3><img src="../images/4PersonTable.png" alt="4 Person" class="table-icon"> 4-Person Tables</h3>
+                    <p class="table-count"><strong id="table-4-count">0</strong> available</p>
+                </div>
+                <div class="table-category">
+                    <h3><img src="../images/5PersonTable.png" alt="5 Person" class="table-icon"> 5-Person Tables</h3>
+                    <p class="table-count"><strong id="table-5-count">0</strong> available</p>
+                </div>
+                <div class="table-category">
+                    <h3><img src="../images/6PersonTable.png" alt="6 Person" class="table-icon"> 6-Person Tables</h3>
+                    <p class="table-count"><strong id="table-6-count">0</strong> available</p>
+                </div>
+                <div class="table-category">
+                    <h3><img src="../images/8PersonTable.png" alt="8 Person" class="table-icon"> 8-Person Tables</h3>
+                    <p class="table-count"><strong id="table-8-count">0</strong> available</p>
+                </div>
+                <div class="table-category">
+                    <h3><img src="../images/12PersonTable.png" alt="12 Person" class="table-icon"> 12-Person Tables</h3>
+                    <p class="table-count"><strong id="table-12-count">0</strong> available</p>
+                </div>
+                <div class="table-category">
+                    <h3><img src="../images/16PersonTable.png" alt="16 Person" class="table-icon"> 16-Person Tables</h3>
+                    <p class="table-count"><strong id="table-16-count">0</strong> available</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 360 Interior View Section (View-Only) -->
+        <div class="section mb-5">
+            <h2><i class="fas fa-street-view"></i> 360° Interior View</h2>
+            <div id="panolens-container" style="width: 100%; height: 500px; background: #000; border-radius: 8px;"></div>
+            <p class="text-muted mt-2" style="font-size: 14px; color: #666; margin-top: 10px;">
+                <i class="fas fa-info-circle"></i> Drag to look around the restaurant interior
+            </p>
         </div>
 
         <!-- Reservation Form -->
