@@ -30,7 +30,7 @@ body{
     padding: 6px 14px;
     transition: all 0.5s ease;
     overflow: visible; /* Ensure no clipping occurs */
-   
+    z-index: 1000; /* Add z-index to sidebar */
 }
 
 .sidebar.active{
@@ -98,7 +98,7 @@ body{
     width: 100%;
     position: relative;
     margin: 0 5px;
-    
+    z-index: 1001; /* Add z-index to list items */
 }
 
 .sidebar ul li a{
@@ -127,7 +127,7 @@ body{
     opacity: 0;
     pointer-events: none;
     display: block;
-    z-index: 9999; /* Ensure it appears above all other elements */
+    z-index: 10000; /* Increased z-index for tooltip */
 }
 
 .sidebar.active ul li .tooltip{
@@ -138,7 +138,7 @@ body{
     transition: 0.5s ease;
     top: 50%;
     opacity: 1;
-    z-index: 9999; /* Brings the tooltip above other elements */
+    z-index: 10000; /* Ensure tooltip stays on top when visible */
 }
 .sidebar ul li input{
     position: absolute;

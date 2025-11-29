@@ -232,11 +232,34 @@ window.viewRestaurant = function(restaurantId) {
 
     console.log('✅ Location ready, proceeding to load restaurants...');
 
+    // 🔥 Check for URL parameter BEFORE loading restaurants
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get('filter');
+    
+    if (filterParam === 'dine-in') {
+      currentFilter = 'dine-in';
+      console.log('✅ Setting dine-in filter from URL parameter');
+      // Clear URL parameter immediately
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // 🔥 Setup service filter buttons (Delivery, Pickup, Dine-in)
     function setupFilterButtons() {
       const filterButtons = document.querySelectorAll('.service-buttons button');
       
-      filterButtons.forEach((button, index) => {
+      // 🔥 Set initial active state based on currentFilter
+      filterButtons.forEach((button) => {
+        const buttonText = button.textContent.trim().toLowerCase();
+        
+        if ((buttonText.includes('delivery') && currentFilter === 'delivery') ||
+            (buttonText.includes('pickup') && currentFilter === 'pickup') ||
+            (buttonText.includes('dine-in') && currentFilter === 'dine-in')) {
+          button.classList.add('active');
+        } else {
+          button.classList.remove('active');
+        }
+        
+        // Add click event
         button.addEventListener('click', () => {
           // Remove active class from all buttons
           filterButtons.forEach(btn => btn.classList.remove('active'));
@@ -244,7 +267,7 @@ window.viewRestaurant = function(restaurantId) {
           // Add active class to clicked button
           button.classList.add('active');
           
-          // Determine filter type based on button index or text
+          // Determine filter type based on button text
           const buttonText = button.textContent.trim().toLowerCase();
           if (buttonText.includes('delivery')) {
             currentFilter = 'delivery';
@@ -484,13 +507,10 @@ window.viewRestaurant = function(restaurantId) {
         // 🔥 Store all restaurants globally for filtering and sorting
         allRestaurants = data.restaurants;
         
-        // Reset filter to 'delivery' (first button is active by default)
-        currentFilter = 'delivery';
-        
         // Reset sort to 'relevance' (first sort button is active by default)
         currentSort = 'relevance';
         
-        // Apply initial filter and sort
+        // Apply initial filter and sort (currentFilter is already set from URL param check)
         applyFilterAndSort();
 
       } catch (error) {

@@ -58,7 +58,7 @@ const getConsumerReservations = (consumer_id, callback) => {
       d.*,
       s.restaurant_name,
       s.address,
-      s.phone_number,
+      s.number as phone_number,
       s.picture as restaurant_picture
     FROM dine_in d
     LEFT JOIN stakeholder s ON d.stakeholder_id = s.stakeholder_id
@@ -75,7 +75,7 @@ const getRestaurantReservations = (stakeholder_id, callback) => {
     SELECT 
       d.*,
       c.name as consumer_name,
-      c.phone_number as consumer_phone,
+      c.number as consumer_phone,
       c.email as consumer_email
     FROM dine_in d
     LEFT JOIN consumer c ON d.consumer_id = c.consumer_id
@@ -121,7 +121,7 @@ const getUpcomingReservations = (consumer_id, callback) => {
       d.*,
       s.restaurant_name,
       s.address,
-      s.phone_number,
+      s.number as phone_number,
       s.picture as restaurant_picture
     FROM dine_in d
     LEFT JOIN stakeholder s ON d.stakeholder_id = s.stakeholder_id
@@ -141,7 +141,7 @@ const getReservationHistory = (consumer_id, callback) => {
       d.*,
       s.restaurant_name,
       s.address,
-      s.phone_number,
+      s.number as phone_number,
       s.picture as restaurant_picture
     FROM dine_in d
     LEFT JOIN stakeholder s ON d.stakeholder_id = s.stakeholder_id
@@ -159,7 +159,7 @@ const getReservationsByDateRange = (stakeholder_id, start_date, end_date, callba
     SELECT 
       d.*,
       c.name as consumer_name,
-      c.phone_number as consumer_phone,
+      c.number as consumer_phone,
       c.email as consumer_email
     FROM dine_in d
     LEFT JOIN consumer c ON d.consumer_id = c.consumer_id
