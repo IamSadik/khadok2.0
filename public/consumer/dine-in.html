@@ -215,62 +215,60 @@
 
         <!-- Reservation Form -->
         <div class="reservation-section">
-            <h2><i class="fas fa-calendar-check"></i> Make a Reservation</h2>
+            <h2><i class="fas fa-calendar-check"></i> Make a Table Reservation</h2>
             
             <form id="reservation-form">
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="guest-name"><i class="fas fa-user"></i> Your Name</label>
-                        <input type="text" id="guest-name" placeholder="Enter your full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="guest-phone"><i class="fas fa-phone"></i> Phone Number</label>
-                        <input type="tel" id="guest-phone" placeholder="Enter your phone number" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="reservation-date"><i class="fas fa-calendar"></i> Date</label>
+                        <label for="reservation-date"><i class="fas fa-calendar"></i> Reservation Date</label>
                         <input type="date" id="reservation-date" required>
                     </div>
                     <div class="form-group">
-                        <label for="reservation-time"><i class="fas fa-clock"></i> Time</label>
+                        <label for="reservation-time"><i class="fas fa-clock"></i> Reservation Time</label>
                         <input type="time" id="reservation-time" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="num-guests"><i class="fas fa-users"></i> Number of Guests</label>
-                        <select id="num-guests" required>
-                            <option value="">Select guests</option>
-                            <option value="1">1 Guest</option>
-                            <option value="2">2 Guests</option>
-                            <option value="3">3 Guests</option>
-                            <option value="4">4 Guests</option>
-                            <option value="5">5 Guests</option>
-                            <option value="6">6 Guests</option>
-                            <option value="7">7 Guests</option>
-                            <option value="8">8 Guests</option>
-                            <option value="9">9+ Guests</option>
+                        <label for="table-size"><i class="fas fa-chair"></i> Table Type (Seats)</label>
+                        <select id="table-size" required>
+                            <option value="">Select table type</option>
+                            <option value="2">2-Person Table</option>
+                            <option value="4">4-Person Table</option>
+                            <option value="5">5-Person Table</option>
+                            <option value="6">6-Person Table</option>
+                            <option value="8">8-Person Table</option>
+                            <option value="12">12-Person Table</option>
+                            <option value="16">16-Person Table</option>
                         </select>
+                        <small class="availability-hint" id="table-availability-hint" style="display: none; margin-top: 5px; color: #666;">
+                            <i class="fas fa-info-circle"></i> <span id="availability-text"></span>
+                        </small>
                     </div>
                     <div class="form-group">
-                        <label for="table-preference"><i class="fas fa-chair"></i> Table Preference</label>
-                        <select id="table-preference">
-                            <option value="">No preference</option>
-                            <option value="window">Window Seat</option>
-                            <option value="outdoor">Outdoor</option>
-                            <option value="private">Private Room</option>
-                            <option value="booth">Booth</option>
-                        </select>
+                        <label for="table-quantity"><i class="fas fa-hashtag"></i> Number of Tables</label>
+                        <input type="number" id="table-quantity" min="1" value="1" required>
+                        <small style="display: block; margin-top: 5px; color: #666; font-size: 13px;">
+                            How many tables of this type do you need?
+                        </small>
                     </div>
                 </div>
 
                 <div class="form-group full-width">
-                    <label for="special-requests"><i class="fas fa-comment"></i> Special Requests (Optional)</label>
-                    <textarea id="special-requests" rows="4" placeholder="Any special requests or dietary requirements?"></textarea>
+                    <label for="special-message"><i class="fas fa-comment"></i> Special Message (Optional)</label>
+                    <textarea id="special-message" rows="4" maxlength="100" placeholder="Any special requests? (Max 100 characters)"></textarea>
+                    <small style="display: block; margin-top: 5px; color: #666; font-size: 13px;">
+                        <span id="char-count">0</span>/100 characters
+                    </small>
+                </div>
+
+                <div class="booking-summary" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;" id="booking-summary">
+                    <h4 style="margin-bottom: 10px; color: #333;"><i class="fas fa-receipt"></i> Booking Summary</h4>
+                    <p style="margin: 5px 0;"><strong>Table Type:</strong> <span id="summary-table-type">-</span></p>
+                    <p style="margin: 5px 0;"><strong>Quantity:</strong> <span id="summary-quantity">-</span> table(s)</p>
+                    <p style="margin: 5px 0;"><strong>Date & Time:</strong> <span id="summary-datetime">-</span></p>
+                    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: #ffc107;">Pending Confirmation</span></p>
                 </div>
 
                 <div class="form-actions">

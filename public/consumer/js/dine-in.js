@@ -11,8 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let stakeholderId = localStorage.getItem('selectedRestaurantId');
   let restaurantData = null;
-
-
+  let availableTables = {}; // Store available tables data
 
   if (!stakeholderId) {
     alert("No restaurant selected");
@@ -109,73 +108,191 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup reservation form
   function setupReservationForm() {
+    const tableSizeSelect = document.getElementById('table-size');
+    const tableQuantityInput = document.getElementById('table-quantity');
+    const specialMessage = document.getElementById('special-message');
+    const charCount = document.getElementById('char-count');
+    const availabilityHint = document.getElementById('table-availability-hint');
+    const availabilityText = document.getElementById('availability-text');
+    const bookingSummary = document.getElementById('booking-summary');
+    const reservationDate = document.getElementById('reservation-date');
+    const reservationTime = document.getElementById('reservation-time');
+
+    // Character counter for special message
+    if (specialMessage && charCount) {
+      specialMessage.addEventListener('input', () => {
+        charCount.textContent = specialMessage.value.length;
+      });
+    }
+
+    // Show availability when table size is selected
+    tableSizeSelect.addEventListener('change', () => {
+      const selectedSize = tableSizeSelect.value;
+      
+      if (selectedSize && availableTables[selectedSize]) {
+        const available = availableTables[selectedSize];
+        availabilityHint.style.display = 'block';
+        
+        if (available > 0) {
+          availabilityText.textContent = `${available} table(s) available`;
+          availabilityText.style.color = '#28a745';
+          tableQuantityInput.max = available;
+          tableQuantityInput.disabled = false;
+        } else {
+          availabilityText.textContent = 'No tables available for this type';
+          availabilityText.style.color = '#dc3545';
+          tableQuantityInput.disabled = true;
+          tableQuantityInput.value = 0;
+        }
+      } else {
+        availabilityHint.style.display = 'none';
+        tableQuantityInput.max = 1;
+        tableQuantityInput.disabled = false;
+      }
+      
+      updateBookingSummary();
+    });
+
+    // Update summary when quantity changes
+    tableQuantityInput.addEventListener('input', () => {
+      updateBookingSummary();
+    });
+
+    // Update summary when date/time changes
+    reservationDate.addEventListener('change', () => {
+      updateBookingSummary();
+    });
+
+    reservationTime.addEventListener('change', () => {
+      updateBookingSummary();
+    });
+
+    // Update booking summary
+    function updateBookingSummary() {
+      const tableSize = tableSizeSelect.value;
+      const quantity = tableQuantityInput.value;
+      const date = reservationDate.value;
+      const time = reservationTime.value;
+
+      if (tableSize && quantity && date && time) {
+        bookingSummary.style.display = 'block';
+        document.getElementById('summary-table-type').textContent = `${tableSize}-Person Table`;
+        document.getElementById('summary-quantity').textContent = quantity;
+        
+        const dateObj = new Date(date + 'T' + time);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+        const formattedTime = dateObj.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        document.getElementById('summary-datetime').textContent = `${formattedDate} at ${formattedTime}`;
+      } else {
+        bookingSummary.style.display = 'none';
+      }
+    }
+
     reservationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const consumerId = localStorage.getItem('consumer_id');
       if (!consumerId) {
         alert('Please log in to make a reservation');
+        window.location.href = '../login.html';
         return;
       }
 
       // Get form values
-      const guestName = document.getElementById('guest-name').value.trim();
-      const guestPhone = document.getElementById('guest-phone').value.trim();
-      const reservationDate = document.getElementById('reservation-date').value;
-      const reservationTime = document.getElementById('reservation-time').value;
-      const numGuests = document.getElementById('num-guests').value;
-      const tablePreference = document.getElementById('table-preference').value;
-      const specialRequests = document.getElementById('special-requests').value.trim();
+      const tableSize = tableSizeSelect.value;
+      const quantity = parseInt(tableQuantityInput.value);
+      const date = reservationDate.value;
+      const time = reservationTime.value;
+      const message = specialMessage.value.trim();
+
+      // Validate availability
+      if (!availableTables[tableSize] || availableTables[tableSize] < quantity) {
+        alert(`Sorry, only ${availableTables[tableSize] || 0} table(s) of this type are available.`);
+        return;
+      }
 
       // Validate date is not in the past
-      const selectedDate = new Date(`${reservationDate}T${reservationTime}`);
+      const selectedDateTime = new Date(`${date}T${time}`);
       const now = new Date();
-      if (selectedDate < now) {
+      if (selectedDateTime < now) {
         alert('Please select a future date and time');
         return;
       }
 
+      // Validate restaurant hours
+      if (restaurantData && restaurantData.opens_at && restaurantData.closes_at) {
+        const selectedTime = time;
+        const opensAt = restaurantData.opens_at;
+        const closesAt = restaurantData.closes_at;
+
+        if (selectedTime < opensAt || selectedTime > closesAt) {
+          alert(`Please select a time between ${convertTo12Hour(opensAt)} and ${convertTo12Hour(closesAt)}`);
+          return;
+        }
+      }
+
+      // Create booking datetime (combine date and time)
+      const bookingTime = `${date} ${time}:00`;
+
       // Create reservation object
       const reservationData = {
-        consumer_id: consumerId,
-        stakeholder_id: stakeholderId,
-        restaurant_name: restaurantData?.restaurant_name || 'Restaurant',
-        guest_name: guestName,
-        guest_phone: guestPhone,
-        reservation_date: reservationDate,
-        reservation_time: reservationTime,
-        num_guests: numGuests,
-        table_preference: tablePreference || 'No preference',
-        special_requests: specialRequests || 'None'
+        consumer_id: parseInt(consumerId),
+        stakeholder_id: parseInt(stakeholderId),
+        table_size: parseInt(tableSize),
+        quantity: quantity,
+        booking_time: bookingTime,
+        message: message || null
       };
 
       try {
-        // TODO: Replace with actual API endpoint when backend is ready
-        console.log('Reservation data:', reservationData);
-        
-        // For now, show success message
-        alert(`
-          ✅ Reservation Request Submitted!
-          
-          Restaurant: ${reservationData.restaurant_name}
-          Date: ${reservationDate}
-          Time: ${reservationTime}
-          Guests: ${numGuests}
-          
-          The restaurant will contact you shortly to confirm your reservation.
-        `);
+        const response = await fetch('/api/dine-in/reserve', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(reservationData)
+        });
 
-        // Reset form
-        reservationForm.reset();
-        
-        // Redirect to dashboard
-        setTimeout(() => {
-          window.location.href = 'khadok.consumer.dashboard.html';
-        }, 2000);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          alert(`✅ Reservation Request Submitted!
+          
+Restaurant: ${restaurantData?.restaurant_name || 'Restaurant'}
+Date: ${new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+Time: ${convertTo12Hour(time)}
+Table: ${tableSize}-Person (${quantity} table${quantity > 1 ? 's' : ''})
+
+The restaurant will review your request and contact you shortly.`);
+
+          // Reset form
+          reservationForm.reset();
+          bookingSummary.style.display = 'none';
+          availabilityHint.style.display = 'none';
+          
+          // Reload table availability
+          await loadTableAvailability();
+          
+          // Redirect to dashboard
+          setTimeout(() => {
+            window.location.href = 'khadok.consumer.dashboard.html';
+          }, 2000);
+
+        } else {
+          alert(data.message || 'Failed to submit reservation. Please try again.');
+        }
 
       } catch (error) {
         console.error('Reservation error:', error);
-        alert('Failed to submit reservation. Please try again.');
+        alert('Failed to submit reservation. Please check your connection and try again.');
       }
     });
   }
@@ -652,10 +769,13 @@ document.addEventListener("DOMContentLoaded", () => {
     
     tables.forEach(table => {
       const capacity = parseInt(table.table_type);
-      const quantity = parseInt(table.quantity) || 0;
+      const quantity = parseInt(table.bookable) || 0;
       counts[capacity] = quantity;
       total += quantity;
     });
+    
+    // Store available tables for validation
+    availableTables = counts;
     
     // Update total count
     const totalEl = document.getElementById('totalTablesCount');

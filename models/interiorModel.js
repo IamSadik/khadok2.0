@@ -61,7 +61,7 @@ const removeTableFromDB = (stakeholderId, tableType, tableCount, callback) => {
 
 const fetchTableSummary = (stakeholderId, callback) => {
   const query = `
-    SELECT table_type, quantity
+    SELECT table_type, quantity, bookable
     FROM interior
     WHERE stakeholder_id = ?
   `;

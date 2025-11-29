@@ -63,7 +63,8 @@ const locationRoutes = require('./routes/locationRoute');
 app.use('/api/location',locationRoutes);
 const cartRoutes = require('./routes/cartRoutes');
 app.use('/api/cart', cartRoutes);
-
+const dineInRoutes = require('./routes/dineInRoutes');
+app.use('/api/dine-in', dineInRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
