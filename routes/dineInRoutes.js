@@ -21,6 +21,12 @@ router.get('/restaurant/:stakeholder_id', dineInController.getRestaurantReservat
 // Get pending reservations count for a restaurant
 router.get('/restaurant/:stakeholder_id/pending-count', dineInController.getPendingCount);
 
+// Get reservations by date range for analytics
+router.get('/restaurant/:stakeholder_id/date-range', dineInController.getReservationsByDateRange);
+
+// Get reservation statistics for dashboard
+router.get('/restaurant/:stakeholder_id/statistics', dineInController.getReservationStatistics);
+
 // Update reservation status (approve/reject by restaurant)
 router.put('/status/:dine_in_id', dineInController.updateReservationStatus);
 

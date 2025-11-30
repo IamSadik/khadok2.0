@@ -30,7 +30,7 @@
                 <li data-title="Orders"><i class="fas fa-box"></i> <span>Orders</span></li>
             </a>
             <a href="reservation.html">
-                <li data-title="Reservations"><i class="fas fa-calendar-check"></i> <span>Reservations</span></li>
+                <li data-title="Reservations" class="active"><i class="fas fa-calendar-check"></i> <span>Reservations</span></li>
             </a>
             <li data-title="Reviews & Feedback"><i class="fas fa-comment-alt"></i> <span>Reviews & Feedback</span></li>
             <li data-title="Analytics"><i class="fas fa-chart-line"></i> <span>Analytics</span></li>
@@ -45,35 +45,145 @@
 
     <!-- Main Content -->
     <div class="main-content">
-        <h1>Reservations</h1>
-
-        <div class="reservation-container">
-            <!-- Reservation Sidebar -->
-            <div class="reservation-sidebar">
-                <div class="reservation-sidebar-header">
-                    <h3>Your Reservations</h3>
-                    <div class="reservation-filter">
-                        <button id="all-reservation-filter" class="reservation-filter-btn active">All</button>
-                        <button id="upcoming-reservation-filter" class="reservation-filter-btn">Upcoming</button>
-                        <button id="past-reservation-filter" class="reservation-filter-btn">Past</button>
-                    </div>
+        <div class="reservation-wrapper">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="header-left">
+                    <h1><i class="fas fa-calendar-check"></i> Table Reservations Management</h1>
+                    <p>Manage and track all restaurant table bookings</p>
                 </div>
-                <div class="reservation-list" id="reservation-list">
-                    <!-- Reservations will be dynamically loaded here -->
+                <div class="header-right">
+                    <button class="btn-refresh" onclick="loadReservations()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
                 </div>
             </div>
 
-            <!-- Reservation Details Area -->
-            <div class="reservation-details">
-                <div class="reservation-header">
-                    <h4>Reservation Details</h4>
-                </div>
-                <div class="reservation-info" id="reservation-info">
-                    <div class="placeholder">
-                        <i class="fas fa-calendar-alt"></i>
-                        <p>Select a reservation to view details</p>
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card pending">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="pending-count">0</h3>
+                        <p>Pending Approval</p>
                     </div>
                 </div>
+                <div class="stat-card approved">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="approved-count">0</h3>
+                        <p>Approved Today</p>
+                    </div>
+                </div>
+                <div class="stat-card upcoming">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="upcoming-count">0</h3>
+                        <p>Upcoming</p>
+                    </div>
+                </div>
+                <div class="stat-card total">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="total-count">0</h3>
+                        <p>Total Reservations</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="tabs-section">
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-tab="all" onclick="filterReservations('all')">
+                        <i class="fas fa-list"></i>
+                        <span>All</span>
+                        <span class="badge" id="all-count">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="pending" onclick="filterReservations('pending')">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span>Pending</span>
+                        <span class="badge" id="pending-tab-count">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="approved" onclick="filterReservations('approved')">
+                        <i class="fas fa-check"></i>
+                        <span>Approved</span>
+                        <span class="badge" id="approved-tab-count">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="completed" onclick="filterReservations('completed')">
+                        <i class="fas fa-check-double"></i>
+                        <span>Completed</span>
+                        <span class="badge" id="completed-tab-count">0</span>
+                    </button>
+                    <button class="tab-btn" data-tab="cancelled" onclick="filterReservations('cancelled')">
+                        <i class="fas fa-times-circle"></i>
+                        <span>Cancelled</span>
+                        <span class="badge" id="cancelled-tab-count">0</span>
+                    </button>
+                </div>
+                
+                <!-- Search and Sort -->
+                <div class="filter-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Search by customer name..." onkeyup="searchReservations()">
+                    </div>
+                    <select id="sort-select" onchange="sortReservations()">
+                        <option value="date-desc">Latest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="booking-time">Booking Time</option>
+                        <option value="table-size">Table Size</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Reservations Grid -->
+            <div class="reservations-grid" id="reservations-grid">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading reservations...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservation Detail Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> Reservation Details</h3>
+                <button class="close-modal" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Details will be dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Update Confirmation Modal -->
+    <div class="modal-overlay" id="status-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Status Update</h3>
+                <button class="close-modal" onclick="closeStatusModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="status-message">Are you sure you want to update this reservation?</p>
+                <div class="modal-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="status-note">This action will notify the customer.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeStatusModal()">Cancel</button>
+                <button class="btn-confirm" id="confirm-status-btn" onclick="confirmStatusUpdate()">Confirm</button>
             </div>
         </div>
     </div>
@@ -93,24 +203,24 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ sessionId }),
-                    credentials: "include", // Include the session cookie in the request
+                    credentials: "include",
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
-                    localStorage.removeItem("sessionId");   // Remove session ID
-                    localStorage.removeItem("stakeholder_id"); // Remove consumer ID
-                    alert(data.message); // Show success message
+                    localStorage.removeItem("sessionId");
+                    localStorage.removeItem("stakeholder_id");
+                    alert(data.message);
                     window.location.href = '../login.html';
                 } else {
                     alert(data.message || "Logout failed.");
-                    window.location.href = '../login.html'; // Redirect to login page on error
+                    window.location.href = '../login.html';
                 }
             } catch (err) {
                 console.error("Logout error:", err);
                 alert("Something went wrong.");
-                window.location.href = '../login.html'; // Redirect to login page on error
+                window.location.href = '../login.html';
             }
         }
     </script>
@@ -118,7 +228,7 @@
         // JavaScript for Sidebar Toggle
         const toggleBtn = document.getElementById('toggle-btn');
         const sidebar = document.getElementById('sidebar');
-        const mainContent = document.querySelector('.main-content'); // Fix to target the main content correctly
+        const mainContent = document.querySelector('.main-content');
 
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('expanded');
