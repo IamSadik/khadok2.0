@@ -115,6 +115,53 @@
                 <p id="restaurant-hours"><i class="fas fa-clock"></i> <span>Loading hours...</span></p>
                 <p id="restaurant-rating"><i class="fas fa-star"></i> <span>Loading rating...</span></p>
                 <p id="restaurant-phone"><i class="fas fa-phone"></i> <span>Loading contact...</span></p>
+                <button class="btn-view-menu" id="viewMenuBtn">
+                    <i class="fas fa-utensils"></i> View Menu
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu Modal Popup -->
+        <div id="menuModal" class="menu-modal" style="display: none;">
+            <div class="menu-modal-content">
+                <div class="menu-modal-header">
+                    <h2><i class="fas fa-utensils"></i> <span id="modal-restaurant-name">Restaurant Menu</span></h2>
+                    <button class="close-modal" id="closeMenuModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Search & Sort Controls -->
+                <div class="menu-controls">
+                    <div class="menu-search-wrapper">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="menuSearchInput" placeholder="Search menu items..." />
+                        <!-- Live search results -->
+                        <div id="menuSearchResults" class="menu-search-results" style="display: none;"></div>
+                    </div>
+                    <div class="menu-sort-wrapper">
+                        <i class="fas fa-sort-amount-down-alt"></i>
+                        <select id="menuSortSelect">
+                            <option value="default">Sort By</option>
+                            <option value="priceLow">Price: Low to High</option>
+                            <option value="priceHigh">Price: High to Low</option>
+                            <option value="alphaAZ">Alphabetical (A–Z)</option>
+                            <option value="alphaZA">Alphabetical (Z–A)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Category Tabs -->
+                <div class="menu-tabs-wrapper">
+                    <div class="menu-tabs" id="menuCategoryTabs">
+                        <!-- Tabs will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Menu Sections -->
+                <div class="menu-sections-container" id="menuSectionsContainer">
+                    <!-- Menu items will be injected here -->
+                </div>
             </div>
         </div>
 

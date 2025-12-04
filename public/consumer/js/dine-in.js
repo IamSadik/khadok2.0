@@ -859,4 +859,292 @@ The restaurant will review your request and contact you shortly.`);
       `;
     }
   }
+
+  // ============================================================================
+  // VIEW MENU MODAL
+  // ============================================================================
+  const viewMenuBtn = document.getElementById('viewMenuBtn');
+  const menuModal = document.getElementById('menuModal');
+  const closeMenuModal = document.getElementById('closeMenuModal');
+  const menuSearchInput = document.getElementById('menuSearchInput');
+  const menuSortSelect = document.getElementById('menuSortSelect');
+  const menuCategoryTabs = document.getElementById('menuCategoryTabs');
+  const menuSectionsContainer = document.getElementById('menuSectionsContainer');
+
+  let allMenuItems = [];
+  let menuCategories = [];
+
+  // Open menu modal
+  viewMenuBtn.addEventListener('click', async () => {
+    menuModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    document.getElementById('modal-restaurant-name').textContent = `${restaurantData?.restaurant_name || 'Restaurant'} Menu`;
+    await loadRestaurantMenu();
+  });
+
+  // Close menu modal
+  closeMenuModal.addEventListener('click', () => {
+    menuModal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scroll
+  });
+
+  // Close modal when clicking outside
+  menuModal.addEventListener('click', (e) => {
+    if (e.target === menuModal) {
+      menuModal.style.display = 'none';
+      document.body.style.overflow = ''; // Restore scroll
+    }
+  });
+
+  // Load restaurant menu
+  async function loadRestaurantMenu() {
+    try {
+      // Fetch menu categories
+      const categoriesRes = await fetch(`/api/menu/get-menu-categories/${stakeholderId}`);
+      const categoriesData = await categoriesRes.json();
+      
+      // Fetch menu items
+      const itemsRes = await fetch(`/api/menu/get-menu-items/${stakeholderId}`);
+      const itemsData = await itemsRes.json();
+
+      if (categoriesData.cuisines && Array.isArray(categoriesData.cuisines)) {
+        menuCategories = categoriesData.cuisines.map(c => c.cuisine_name);
+        
+        // Apply saved order if exists
+        if (Array.isArray(categoriesData.savedOrder)) {
+          const ordered = categoriesData.savedOrder.filter(n => menuCategories.includes(n));
+          const leftovers = menuCategories.filter(n => !ordered.includes(n));
+          menuCategories = [...ordered, ...leftovers];
+        }
+      }
+
+      allMenuItems = Array.isArray(itemsData.menuItems) ? itemsData.menuItems : [];
+
+      if (menuCategories.length === 0 || allMenuItems.length === 0) {
+        showNoMenuMessage();
+      } else {
+        renderMenuTabs();
+        renderMenuSections();
+      }
+    } catch (error) {
+      console.error('Error loading menu:', error);
+      showNoMenuMessage();
+    }
+  }
+
+  // Show no menu message
+  function showNoMenuMessage() {
+    menuCategoryTabs.innerHTML = '';
+    menuSectionsContainer.innerHTML = `
+      <div class="no-menu-message">
+        <i class="fas fa-utensils"></i>
+        <h3>No Menu Available</h3>
+        <p>This restaurant hasn't added their menu yet.</p>
+      </div>
+    `;
+  }
+
+  // Render menu tabs
+  function renderMenuTabs() {
+    menuCategoryTabs.innerHTML = '';
+    menuCategories.forEach((category, index) => {
+      const btn = document.createElement('button');
+      btn.className = `menu-tab-btn ${index === 0 ? 'active' : ''}`;
+      btn.textContent = category;
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.menu-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Scroll within the modal container, not the page
+        const section = document.getElementById(`menu-section-${category.toLowerCase()}`);
+        if (section) {
+          const container = document.getElementById('menuSectionsContainer');
+          if (container) {
+            // Calculate position relative to container
+            const sectionTop = section.offsetTop - container.offsetTop;
+            container.scrollTo({ 
+              top: sectionTop, 
+              behavior: 'smooth' 
+            });
+          }
+        }
+      });
+      menuCategoryTabs.appendChild(btn);
+    });
+  }
+
+  // Render menu sections
+  function renderMenuSections() {
+    menuSectionsContainer.innerHTML = '';
+    
+    menuCategories.forEach(category => {
+      const section = document.createElement('div');
+      section.className = 'menu-section';
+      section.id = `menu-section-${category.toLowerCase()}`;
+      
+      const heading = document.createElement('h3');
+      heading.textContent = category;
+      section.appendChild(heading);
+      
+      const grid = document.createElement('div');
+      grid.className = 'menu-items-grid';
+      
+      updateMenuSection(category, grid);
+      
+      section.appendChild(grid);
+      menuSectionsContainer.appendChild(section);
+    });
+
+    // Setup search and sort
+    setupMenuSearch();
+    menuSortSelect.addEventListener('change', filterAndSortMenu);
+  }
+
+  // Setup live search functionality
+  function setupMenuSearch() {
+    const searchResultsContainer = document.getElementById('menuSearchResults');
+    
+    menuSearchInput.addEventListener('input', () => {
+      const keyword = menuSearchInput.value.trim().toLowerCase();
+      
+      if (!keyword) {
+        searchResultsContainer.style.display = 'none';
+        return;
+      }
+
+      // Find matches by name or description
+      const matches = allMenuItems.filter(item =>
+        item.item_name.toLowerCase().includes(keyword) ||
+        item.description.toLowerCase().includes(keyword)
+      );
+
+      if (!matches.length) {
+        searchResultsContainer.innerHTML = `
+          <div class="search-result-item">No results for "${keyword}"</div>`;
+      } else {
+        searchResultsContainer.innerHTML = matches.map(item => `
+          <div class="search-result-item" data-id="${item.menu_id}">
+            <span class="item-name">${item.item_name}</span>
+            <span class="category-label">${item.cuisine_name}</span>
+          </div>
+        `).join('');
+      }
+
+      searchResultsContainer.style.display = 'block';
+
+      // Attach click handlers to search results
+      searchResultsContainer.querySelectorAll('.search-result-item[data-id]')
+        .forEach(el => {
+          el.addEventListener('click', () => {
+            const id = el.dataset.id;
+            
+            // Find the menu card in the modal
+            const card = document.querySelector(`#menuSectionsContainer .menu-item-card[data-id="${id}"]`);
+            if (card) {
+              // Scroll to the section first
+              const section = card.closest('.menu-section');
+              if (section) {
+                menuSectionsContainer.scrollTo({
+                  top: section.offsetTop - menuSectionsContainer.offsetTop,
+                  behavior: 'smooth'
+                });
+              }
+              
+              // Then scroll to the specific card
+              setTimeout(() => {
+                const cardTop = card.offsetTop - menuSectionsContainer.offsetTop - 100;
+                menuSectionsContainer.scrollTo({
+                  top: cardTop,
+                  behavior: 'smooth'
+                });
+                
+                // Flash highlight the card
+                card.classList.add('flash-highlight');
+                setTimeout(() => card.classList.remove('flash-highlight'), 5000);
+              }, 300);
+
+              // Update active tab
+              const categoryName = card.closest('.menu-section').id.replace('menu-section-', '');
+              document.querySelectorAll('.menu-tab-btn').forEach(btn => {
+                if (btn.textContent.toLowerCase() === categoryName) {
+                  document.querySelectorAll('.menu-tab-btn').forEach(b => b.classList.remove('active'));
+                  btn.classList.add('active');
+                }
+              });
+            }
+
+            // Clear search
+            menuSearchInput.value = '';
+            searchResultsContainer.style.display = 'none';
+          });
+        });
+    });
+
+    // Close search results when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!menuSearchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+        searchResultsContainer.style.display = 'none';
+      }
+    });
+  }
+
+  // Update menu section with items
+  function updateMenuSection(category, grid) {
+    let items = allMenuItems.filter(item => 
+      item.cuisine_name.toLowerCase() === category.toLowerCase()
+    );
+
+    // Apply sorting
+    const sortValue = menuSortSelect.value;
+    if (sortValue === 'priceLow') {
+      items.sort((a, b) => a.item_price - b.item_price);
+    } else if (sortValue === 'priceHigh') {
+      items.sort((a, b) => b.item_price - a.item_price);
+    } else if (sortValue === 'alphaAZ') {
+      items.sort((a, b) => a.item_name.localeCompare(b.item_name));
+    } else if (sortValue === 'alphaZA') {
+      items.sort((a, b) => b.item_name.localeCompare(a.item_name));
+    }
+
+    // Apply search filter
+    const searchTerm = menuSearchInput.value.trim().toLowerCase();
+    if (searchTerm) {
+      items = items.filter(item =>
+        item.item_name.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    grid.innerHTML = '';
+
+    if (items.length === 0) {
+      grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">No items found</p>';
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'menu-item-card';
+      card.dataset.id = item.menu_id; // Add data-id for search functionality
+      card.innerHTML = `
+        <img src="${item.item_picture}" alt="${item.item_name}" class="menu-item-image" />
+        <div class="menu-item-info">
+          <div class="menu-item-name">${item.item_name}</div>
+          <div class="menu-item-desc">${item.description || 'No description available'}</div>
+          <div class="menu-item-price">Tk ${item.item_price}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Filter and sort menu
+  function filterAndSortMenu() {
+    menuCategories.forEach(category => {
+      const grid = document.querySelector(`#menu-section-${category.toLowerCase()} .menu-items-grid`);
+      if (grid) {
+        updateMenuSection(category, grid);
+      }
+    });
+  }
 });
