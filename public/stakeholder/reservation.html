@@ -188,6 +188,41 @@
         </div>
     </div>
 
+    <!-- Report No-Show Modal -->
+    <div class="modal-overlay" id="report-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Report No-Show Customer</h3>
+                <button class="close-modal" onclick="closeReportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Report <strong id="report-consumer-name"></strong> for not showing up to their reservation.</p>
+                <div class="form-group">
+                    <label for="report-message">Reason for Reporting:</label>
+                    <textarea 
+                        id="report-message" 
+                        rows="4" 
+                        placeholder="e.g., Customer did not arrive at the scheduled time and did not notify us..."
+                        maxlength="200"
+                    ></textarea>
+                    <div class="char-count">
+                        <span id="char-count">0</span>/200 characters
+                    </div>
+                </div>
+                <div class="modal-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>This report will be sent to the admin for review. The consumer may receive a warning or penalty.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeReportModal()">Cancel</button>
+                <button class="btn-confirm btn-report-submit" onclick="submitReport()">
+                    <i class="fas fa-paper-plane"></i> Submit Report
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="./js/reservation.js"></script>
     <script>
         async function logout() {
@@ -222,6 +257,16 @@
                 alert("Something went wrong.");
                 window.location.href = '../login.html';
             }
+        }
+
+        // Character counter for report message
+        const reportMessage = document.getElementById('report-message');
+        const charCount = document.getElementById('char-count');
+        
+        if (reportMessage) {
+            reportMessage.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
         }
     </script>
     <script>

@@ -14,8 +14,13 @@ const createReservation = async (req, res) => {
       });
     }
 
+    // Keep table_size as string to match ENUM column in database
+    const tableSizeStr = table_size.toString();
+    
+    console.log('Checking availability for:', { stakeholder_id, table_size: tableSizeStr, quantity });
+
     // Check if enough tables are available
-    dineInModel.checkTableAvailability(stakeholder_id, table_size, (err, results) => {
+    dineInModel.checkTableAvailability(stakeholder_id, tableSizeStr, (err, results) => {
       if (err) {
         console.error("Error checking table availability:", err);
         return res.status(500).json({ 
@@ -24,10 +29,12 @@ const createReservation = async (req, res) => {
         });
       }
 
+      console.log('Availability check results:', results);
+
       if (results.length === 0) {
         return res.status(404).json({ 
           success: false, 
-          message: "Table type not found for this restaurant" 
+          message: `No ${tableSizeStr}-person tables found for this restaurant or all tables are currently booked` 
         });
       }
 
@@ -41,7 +48,7 @@ const createReservation = async (req, res) => {
       }
 
       // Insert reservation
-      const reservationData = { consumer_id, stakeholder_id, table_size, quantity, booking_time, message };
+      const reservationData = { consumer_id, stakeholder_id, table_size: tableSizeStr, quantity, booking_time, message };
       
       dineInModel.insertReservation(reservationData, (err, result) => {
         if (err) {
@@ -53,7 +60,7 @@ const createReservation = async (req, res) => {
         }
 
         // Update bookable count (decrement)
-        dineInModel.decrementBookableTables(stakeholder_id, table_size, quantity, (err) => {
+        dineInModel.decrementBookableTables(stakeholder_id, tableSizeStr, quantity, (err) => {
           if (err) {
             console.error("Error updating bookable tables:", err);
             return res.status(500).json({ 
@@ -155,6 +162,11 @@ const updateReservationStatus = async (req, res) => {
     const { dine_in_id } = req.params;
     const { status } = req.body;
 
+    console.log('=== UPDATE RESERVATION STATUS DEBUG ===');
+    console.log('Reservation ID:', dine_in_id);
+    console.log('New Status:', status);
+    console.log('Request body:', req.body);
+
     if (!dine_in_id || !status) {
       return res.status(400).json({ 
         success: false, 
@@ -191,6 +203,15 @@ const updateReservationStatus = async (req, res) => {
       const reservation = results[0];
       const oldStatus = reservation.status;
 
+      console.log('Current reservation details:', {
+        id: reservation.dine_in_id,
+        oldStatus: oldStatus,
+        newStatus: status,
+        stakeholder_id: reservation.stakeholder_id,
+        table_size: reservation.table_size,
+        quantity: reservation.quantity
+      });
+
       // Update reservation status
       dineInModel.updateReservationStatus(dine_in_id, status, (err) => {
         if (err) {
@@ -201,24 +222,55 @@ const updateReservationStatus = async (req, res) => {
           });
         }
 
-        // If rejected or cancelled, restore the bookable tables
-        if ((status === 'rejected' || status === 'cancelled') && oldStatus === 'pending') {
+        console.log('Status updated successfully in database');
+
+        // Logic for restoring bookable tables:
+        // 1. REJECTED: Restore tables (consumer won't come)
+        // 2. COMPLETED: Restore tables (consumer left, tables available again)
+        // 3. APPROVED: No change (tables already reserved when booking was created)
+        // 4. CANCELLED: Already handled in cancelReservation function
+        
+        const shouldRestoreTables = (status === 'rejected' || status === 'completed') && 
+                                   (oldStatus === 'pending' || oldStatus === 'approved');
+
+        console.log('Should restore tables?', shouldRestoreTables);
+        console.log('Condition breakdown:', {
+          'status is rejected or completed': (status === 'rejected' || status === 'completed'),
+          'oldStatus is pending or approved': (oldStatus === 'pending' || oldStatus === 'approved'),
+          'status': status,
+          'oldStatus': oldStatus
+        });
+
+        if (shouldRestoreTables) {
+          console.log(`>>> RESTORING ${reservation.quantity} table(s) of size ${reservation.table_size} for stakeholder ${reservation.stakeholder_id}`);
+          
           dineInModel.incrementBookableTables(
             reservation.stakeholder_id, 
             reservation.table_size, 
             reservation.quantity, 
             (err) => {
               if (err) {
-                console.error("Error restoring bookable tables:", err);
+                console.error("!!! ERROR restoring bookable tables:", err);
+                return res.status(500).json({ 
+                  success: false, 
+                  message: "Status updated but failed to restore table availability" 
+                });
               }
+
+              console.log('>>> Tables restored successfully!');
+              return res.status(200).json({ 
+                success: true, 
+                message: "Reservation status updated successfully and tables restored" 
+              });
             }
           );
+        } else {
+          console.log('>>> NO tables to restore (condition not met)');
+          return res.status(200).json({ 
+            success: true, 
+            message: "Reservation status updated successfully" 
+          });
         }
-
-        return res.status(200).json({ 
-          success: true, 
-          message: "Reservation status updated successfully" 
-        });
       });
     });
   } catch (error) {
@@ -561,6 +613,301 @@ const getReservationStatistics = async (req, res) => {
   }
 };
 
+// Report no-show consumer to admin
+const reportNoShow = async (req, res) => {
+  try {
+    const { dine_in_id } = req.params;
+    const { stakeholder_id, message } = req.body;
+
+    if (!dine_in_id || !stakeholder_id || !message) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields" 
+      });
+    }
+
+    // Get reservation details
+    dineInModel.getReservationById(dine_in_id, (err, results) => {
+      if (err) {
+        console.error("Error fetching reservation:", err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Database error" 
+        });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "Reservation not found" 
+        });
+      }
+
+      const reservation = results[0];
+
+      // Verify the stakeholder owns this reservation
+      if (reservation.stakeholder_id != stakeholder_id) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "Unauthorized to report this reservation" 
+        });
+      }
+
+      // Check if already reported
+      dineInModel.checkReportExists(dine_in_id, (err, existingReports) => {
+        if (err) {
+          console.error("Error checking existing reports:", err);
+          return res.status(500).json({ 
+            success: false, 
+            message: "Database error" 
+          });
+        }
+
+        if (existingReports.length > 0) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "This reservation has already been reported" 
+          });
+        }
+
+        // Insert the report
+        const reportData = {
+          consumer_id: reservation.consumer_id,
+          stakeholder_id: stakeholder_id,
+          dine_id_id: dine_in_id,
+          message: message
+        };
+
+        dineInModel.insertDineInReport(reportData, (err, result) => {
+          if (err) {
+            console.error("Error submitting report:", err);
+            return res.status(500).json({ 
+              success: false, 
+              message: "Failed to submit report" 
+            });
+          }
+
+          const oldStatus = reservation.status;
+
+          // Update reservation status to completed
+          dineInModel.updateReservationStatus(dine_in_id, 'completed', (err) => {
+            if (err) {
+              console.error("Error updating reservation status:", err);
+              return res.status(500).json({ 
+                success: false, 
+                message: "Report submitted but failed to update status" 
+              });
+            }
+
+            // Restore bookable tables if the reservation was pending or approved
+            const shouldRestoreTables = (oldStatus === 'pending' || oldStatus === 'approved');
+
+            if (shouldRestoreTables) {
+              console.log(`Restoring ${reservation.quantity} table(s) of size ${reservation.table_size} after no-show report`);
+              
+              dineInModel.incrementBookableTables(
+                reservation.stakeholder_id, 
+                reservation.table_size, 
+                reservation.quantity, 
+                (err) => {
+                  if (err) {
+                    console.error("Error restoring bookable tables:", err);
+                    return res.status(500).json({ 
+                      success: false, 
+                      message: "Report submitted and status updated but failed to restore table availability" 
+                    });
+                  }
+
+                  return res.status(201).json({ 
+                    success: true, 
+                    message: "No-show report submitted successfully to admin, reservation marked as completed, and tables restored",
+                    reportId: result.insertId
+                  });
+                }
+              );
+            } else {
+              return res.status(201).json({ 
+                success: true, 
+                message: "No-show report submitted successfully to admin and reservation marked as completed",
+                reportId: result.insertId
+              });
+            }
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.error("Error in reportNoShow:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
+// Get reservations by created_at date range (when reservation was made)
+const getReservationsByCreatedDate = async (req, res) => {
+  try {
+    const { stakeholder_id } = req.params;
+    const { start_date, end_date } = req.query;
+
+    if (!stakeholder_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Stakeholder ID is required" 
+      });
+    }
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Start date and end date are required" 
+      });
+    }
+
+    dineInModel.getReservationsByCreatedDateRange(stakeholder_id, start_date, end_date, (err, results) => {
+      if (err) {
+        console.error("Error fetching reservations by created date:", err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Database error" 
+        });
+      }
+
+      return res.status(200).json({ 
+        success: true, 
+        reservations: results,
+        count: results.length 
+      });
+    });
+  } catch (error) {
+    console.error("Error in getReservationsByCreatedDate:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
+// Get recent reservations (made in last N days)
+const getRecentReservations = async (req, res) => {
+  try {
+    const { stakeholder_id } = req.params;
+    const { days } = req.query;
+
+    if (!stakeholder_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Stakeholder ID is required" 
+      });
+    }
+
+    const daysToFetch = days ? parseInt(days) : 7; // Default to 7 days
+
+    dineInModel.getRecentReservations(stakeholder_id, daysToFetch, (err, results) => {
+      if (err) {
+        console.error("Error fetching recent reservations:", err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Database error" 
+        });
+      }
+
+      return res.status(200).json({ 
+        success: true, 
+        reservations: results,
+        days: daysToFetch,
+        count: results.length 
+      });
+    });
+  } catch (error) {
+    console.error("Error in getRecentReservations:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
+// Get consumer reservations by created date range
+const getConsumerReservationsByCreatedDate = async (req, res) => {
+  try {
+    const { consumer_id } = req.params;
+    const { start_date, end_date } = req.query;
+
+    if (!consumer_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Consumer ID is required" 
+      });
+    }
+
+    if (!start_date || !end_date) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Start date and end date are required" 
+      });
+    }
+
+    dineInModel.getConsumerReservationsByCreatedDate(consumer_id, start_date, end_date, (err, results) => {
+      if (err) {
+        console.error("Error fetching consumer reservations by created date:", err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Database error" 
+        });
+      }
+
+      return res.status(200).json({ 
+        success: true, 
+        reservations: results,
+        count: results.length 
+      });
+    });
+  } catch (error) {
+    console.error("Error in getConsumerReservationsByCreatedDate:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
+// Get reservations ordered by creation time (newest first)
+const getReservationsOrderedByCreation = async (req, res) => {
+  try {
+    const { stakeholder_id } = req.params;
+
+    if (!stakeholder_id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Stakeholder ID is required" 
+      });
+    }
+
+    dineInModel.getReservationsOrderedByCreation(stakeholder_id, (err, results) => {
+      if (err) {
+        console.error("Error fetching reservations ordered by creation:", err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Database error" 
+        });
+      }
+
+      return res.status(200).json({ 
+        success: true, 
+        reservations: results 
+      });
+    });
+  } catch (error) {
+    console.error("Error in getReservationsOrderedByCreation:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
+  }
+};
+
 module.exports = {
   createReservation,
   getConsumerReservations,
@@ -571,5 +918,10 @@ module.exports = {
   getReservationHistory,
   getPendingCount,
   getReservationsByDateRange,
-  getReservationStatistics
+  getReservationStatistics,
+  reportNoShow,
+  getReservationsByCreatedDate,
+  getRecentReservations,
+  getConsumerReservationsByCreatedDate,
+  getReservationsOrderedByCreation
 };

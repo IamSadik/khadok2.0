@@ -183,16 +183,47 @@ function searchReservations() {
 // Sort reservations
 function sortReservations() {
     const sortBy = document.getElementById('sort-select').value;
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
     
+    // Start with current filter
+    if (currentFilter === 'all') {
+        filteredReservations = [...allReservations];
+    } else {
+        filteredReservations = allReservations.filter(r => r.status === currentFilter);
+    }
+    
+    // Apply search if any
+    if (searchTerm) {
+        filteredReservations = filteredReservations.filter(r => 
+            r.consumer_name.toLowerCase().includes(searchTerm) ||
+            r.consumer_email.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // Now apply sorting - FIX: Properly parse dates for comparison
     switch(sortBy) {
         case 'date-desc':
-            filteredReservations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            // Latest First - newest created_at first
+            filteredReservations.sort((a, b) => {
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return dateB - dateA;
+            });
             break;
         case 'date-asc':
-            filteredReservations.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            // Oldest First - oldest created_at first
+            filteredReservations.sort((a, b) => {
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return dateA - dateB;
+            });
             break;
         case 'booking-time':
-            filteredReservations.sort((a, b) => new Date(a.booking_time) - new Date(b.booking_time));
+            filteredReservations.sort((a, b) => {
+                const dateA = new Date(a.booking_time).getTime();
+                const dateB = new Date(b.booking_time).getTime();
+                return dateA - dateB;
+            });
             break;
         case 'table-size':
             filteredReservations.sort((a, b) => a.table_size - b.table_size);
@@ -224,6 +255,7 @@ function renderReservations() {
 function createReservationCard(reservation) {
     const bookingDate = new Date(reservation.booking_time);
     const createdDate = new Date(reservation.created_at);
+    const now = new Date();
     
     const formattedBookingDate = bookingDate.toLocaleDateString('en-US', {
         month: 'short',
@@ -242,6 +274,17 @@ function createReservationCard(reservation) {
         year: 'numeric'
     });
     
+    // Check if report button should be visible
+    // Show if booking time has passed and within 1 hour after booking time
+    const oneHourAfterBooking = new Date(bookingDate.getTime() + 60 * 60 * 1000);
+    const showReportButton = now >= bookingDate && now <= oneHourAfterBooking && reservation.status === 'approved' && !reservation.is_reported;
+    
+    // Check if booking time has passed (for enabling complete button)
+    const bookingTimePassed = now >= bookingDate;
+    
+    // Check if reservation was reported
+    const isReported = reservation.is_reported == 1;
+    
     // Determine which action buttons to show
     let actionButtons = '';
     if (reservation.status === 'pending') {
@@ -254,8 +297,11 @@ function createReservationCard(reservation) {
             </button>
         `;
     } else if (reservation.status === 'approved') {
+        // Complete button is disabled until booking time passes
+        const completeDisabled = !bookingTimePassed ? 'disabled' : '';
+        const completeTitle = !bookingTimePassed ? 'Available after booking time' : 'Mark as completed';
         actionButtons = `
-            <button class="btn btn-complete" onclick="updateStatus(${reservation.dine_in_id}, 'completed')">
+            <button class="btn btn-complete" ${completeDisabled} title="${completeTitle}" onclick="updateStatus(${reservation.dine_in_id}, 'completed')">
                 <i class="fas fa-check-double"></i> Complete
             </button>
         `;
@@ -267,15 +313,37 @@ function createReservationCard(reservation) {
         </button>
     `;
     
+    // Add report button or "Reported" button based on status
+    if (isReported) {
+        actionButtons += `
+            <button class="btn btn-reported" disabled title="Already reported to admin">
+                <i class="fas fa-flag-checkered"></i> Reported
+            </button>
+        `;
+    } else if (showReportButton) {
+        actionButtons += `
+            <button class="btn btn-report" onclick="showReportModal(${reservation.dine_in_id}, '${reservation.consumer_name}')">
+                <i class="fas fa-exclamation-triangle"></i> Report to Admin
+            </button>
+        `;
+    }
+    
+    // Show info icon after ID if reported
+    const reportedIcon = isReported ? '<i class="fas fa-info-circle reported-icon" title="This reservation was reported to admin"></i>' : '';
+    
     return `
         <div class="reservation-card">
             <div class="card-header">
-                <div class="reservation-id">ID: #${reservation.dine_in_id}</div>
+                <div class="reservation-id">ID: #${reservation.dine_in_id} ${reportedIcon}</div>
                 <div class="customer-info">
                     <h3><i class="fas fa-user"></i> ${reservation.consumer_name || 'Guest'}</h3>
                     <div class="customer-email">
                         <i class="fas fa-envelope"></i>
                         ${reservation.consumer_email || 'No email'}
+                    </div>
+                    <div class="customer-phone">
+                        <i class="fas fa-phone"></i>
+                        ${reservation.consumer_phone || 'No phone'}
                     </div>
                 </div>
                 <span class="status-badge status-${reservation.status}">${reservation.status}</span>
@@ -341,7 +409,11 @@ function viewDetails(reservationId) {
     }
     
     const bookingDate = new Date(reservation.booking_time);
-    const createdDate = new Date(reservation.created_at);
+    const createdDate = reservation.created_at ? new Date(reservation.created_at) : null;
+    const now = new Date();
+    
+    // Check if booking time has passed (for enabling complete button)
+    const bookingTimePassed = now >= bookingDate;
     
     const modalBody = document.getElementById('modal-body');
     modalBody.innerHTML = `
@@ -354,7 +426,7 @@ function viewDetails(reservationId) {
             <div class="detail-box">
                 <div class="label">Status</div>
                 <div class="value">
-                    <span class="status-badge status-${reservation.status}">${reservation.status}</span>
+                    <span class="status-badge status-${reservation.status}">${reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}</span>
                 </div>
             </div>
             
@@ -366,6 +438,16 @@ function viewDetails(reservationId) {
             <div class="detail-box">
                 <div class="label">Customer Email</div>
                 <div class="value">${reservation.consumer_email || 'No email'}</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="label">Customer Phone</div>
+                <div class="value">${reservation.consumer_phone || 'No phone'}</div>
+            </div>
+            
+            <div class="detail-box">
+                <div class="label">Consumer ID</div>
+                <div class="value">#${reservation.consumer_id}</div>
             </div>
             
             <div class="detail-box">
@@ -398,19 +480,17 @@ function viewDetails(reservationId) {
             
             <div class="detail-box">
                 <div class="label">Created At</div>
-                <div class="value">${createdDate.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'short', 
-                    day: 'numeric' 
-                })} ${createdDate.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                })}</div>
-            </div>
-            
-            <div class="detail-box">
-                <div class="label">Consumer ID</div>
-                <div class="value">#${reservation.consumer_id}</div>
+                <div class="value">${createdDate ? 
+                    createdDate.toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                    }) + ' ' + createdDate.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })
+                    : 'N/A'
+                }</div>
             </div>
             
             ${reservation.message ? `
@@ -434,7 +514,11 @@ function viewDetails(reservationId) {
         
         ${reservation.status === 'approved' ? `
             <div style="margin-top: 20px;">
-                <button class="btn btn-complete" onclick="updateStatus(${reservation.dine_in_id}, 'completed'); closeDetailModal();" style="width: 100%;">
+                <button class="btn btn-complete" 
+                    ${!bookingTimePassed ? 'disabled' : ''} 
+                    title="${!bookingTimePassed ? 'Available after booking time' : 'Mark as completed'}"
+                    onclick="updateStatus(${reservation.dine_in_id}, 'completed'); closeDetailModal();" 
+                    style="width: 100%;">
                     <i class="fas fa-check-double"></i> Mark as Completed
                 </button>
             </div>
@@ -444,9 +528,60 @@ function viewDetails(reservationId) {
     document.getElementById('detail-modal').classList.add('active');
 }
 
-// Close detail modal
-function closeDetailModal() {
-    document.getElementById('detail-modal').classList.remove('active');
+// Show report modal
+function showReportModal(reservationId, consumerName) {
+    const reportModal = document.getElementById('report-modal');
+    const reportConsumerName = document.getElementById('report-consumer-name');
+    const reportMessage = document.getElementById('report-message');
+    
+    reportConsumerName.textContent = consumerName;
+    reportMessage.value = '';
+    reportModal.dataset.reservationId = reservationId;
+    reportModal.classList.add('active');
+}
+
+// Close report modal
+function closeReportModal() {
+    document.getElementById('report-modal').classList.remove('active');
+}
+
+// Submit report to admin
+async function submitReport() {
+    const reportModal = document.getElementById('report-modal');
+    const reservationId = reportModal.dataset.reservationId;
+    const message = document.getElementById('report-message').value.trim();
+    
+    if (!message) {
+        alert('Please enter a reason for reporting');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/dine-in/report/${reservationId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                stakeholder_id: stakeholderId,
+                message: message
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Report submitted successfully to admin');
+            closeReportModal();
+            // Reload reservations to update UI
+            loadReservations();
+        } else {
+            alert(data.message || 'Failed to submit report');
+        }
+    } catch (error) {
+        console.error('Error submitting report:', error);
+        alert('Error submitting report. Please try again.');
+    }
 }
 
 // Update reservation status
@@ -540,6 +675,11 @@ function closeStatusModal() {
     document.getElementById('status-modal').classList.remove('active');
 }
 
+// Close detail modal
+function closeDetailModal() {
+    document.getElementById('detail-modal').classList.remove('active');
+}
+
 // Show success message
 function showSuccess(message) {
     // You can implement a toast notification here
@@ -563,5 +703,6 @@ window.addEventListener('click', (e) => {
     if (e.target.classList.contains('modal-overlay')) {
         closeDetailModal();
         closeStatusModal();
+        closeReportModal();
     }
 });

@@ -496,6 +496,19 @@ body {
     font-size: 12px;
 }
 
+.customer-phone {
+    font-size: 13px;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.customer-phone i {
+    font-size: 12px;
+}
+
 .status-badge {
     position: absolute;
     top: 20px;
@@ -668,6 +681,18 @@ body {
     box-shadow: 0 4px 12px rgba(93, 173, 226, 0.3);
 }
 
+.btn-complete:disabled {
+    background: #bdc3c7;
+    border-color: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-complete:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 .btn-view-details {
     background: white;
     color: #2a3d66;
@@ -679,6 +704,44 @@ body {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(42, 61, 102, 0.3);
+}
+
+.btn-report {
+    background: white;
+    color: #e67e22;
+    border: 2px solid #e67e22;
+}
+
+.btn-report:hover {
+    background: #e67e22;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+}
+
+.btn-report-submit {
+    background: #e67e22;
+    border-color: #e67e22;
+}
+
+.btn-report-submit:hover {
+    background: #d35400;
+    border-color: #d35400;
+}
+
+.btn-reported {
+    background: #95a5a6;
+    color: white;
+    border: 2px solid #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.reported-icon {
+    color: #e67e22;
+    margin-left: 8px;
+    font-size: 14px;
+    cursor: help;
 }
 
 /* Loading & Empty States */
@@ -724,7 +787,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(42, 61, 102, 0.75);
+    
     backdrop-filter: blur(4px);
     z-index: 10000;
     align-items: center;
@@ -842,6 +905,42 @@ body {
     font-size: 16px;
 }
 
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2a3d66;
+    margin-bottom: 8px;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e1e4e8;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+    resize: vertical;
+    transition: all 0.3s ease;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2a3d66;
+    box-shadow: 0 0 0 3px rgba(42, 61, 102, 0.1);
+}
+
+.char-count {
+    text-align: right;
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+}
+
 .modal-footer {
     padding: 20px 30px;
     border-top: 2px solid #e8eaed;
@@ -913,6 +1012,13 @@ body {
     font-size: 15px;
     color: #2a3d66;
     font-weight: 700;
+}
+
+/* Fix status badge positioning inside modal detail boxes */
+.detail-box .status-badge {
+    position: static;
+    display: inline-block;
+    margin: 0;
 }
 
 .full-width {
