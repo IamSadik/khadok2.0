@@ -102,4 +102,34 @@ Khadok streamlines every step of the ordering journey:
 
 ---
 
+## 📦 Installation & Setup
+1. **Clone the repository**  
+   ```bash
+   git clone https://github.com/IamSadik/khadok-2.0.git
+    ```
+2. **Navigate to the project directory**  
+   ```bash
+   cd khadok-2.0
+    ```
+3. **Install dependencies**
+    ```bash     
+   npm install
+    ```
+4. **Set up environment variables**  
+   Create a `.env` file in the root directory and add the following variables:
+    ```env
+    PORT=3000
+    DB_HOST=your_database_host
+    DB_USER=your_database_user
+    DB_PASSWORD=your_database_password
+    DB_NAME=your_database_name
+    SESSION_SECRET=your_session_secret
+    BKASH_API_KEY=your_bkash_api_key
+    SENDGRID_API_KEY=your_sendgrid_api_key
+    MAPTILER_API_KEY=your_maptiler_api_key
+    ```
+5. **Start the development server** 
+   ```bash  
+   npm start
+   ```
 
