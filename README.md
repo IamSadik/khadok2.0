@@ -57,8 +57,6 @@ Khadok streamlines every step of the ordering journey:
 - **Full-Text Search (MySQL InnoDB + Hit-Highlighting)**  
   - Fast search across restaurant names, menu items, and reviews.  
   - Autocomplete suggestions as you type.
-- **Collaborative Filtering (pgvector via Supabase)**  
-  - Recommends dishes based on similar users’ ordering histories.
 - **Cache Layer (Redis)**  
   - Caches popular search queries and top-selling menus to minimize DB load.
 
@@ -119,11 +117,14 @@ Khadok streamlines every step of the ordering journey:
    Create a `.env` file in the root directory and add the following variables:
     ```env
     PORT=3000
-    DB_HOST=your_database_host
-    DB_USER=your_database_user
-    DB_PASSWORD=your_database_password
-    DB_NAME=your_database_name
+    HOST=your_database_host
+    USER=your_database_user
+    PASSWORD=your_database_password
+    DB_PORT=your_database_port
+    DATABASE=your_database_name
     SESSION_SECRET=your_session_secret
+    SESSION_NAME=your_session_name
+    SESSION_LIFETIME=your_session_lifetime_in_ms
     BKASH_API_KEY=your_bkash_api_key
     SENDGRID_API_KEY=your_sendgrid_api_key
     MAPTILER_API_KEY=your_maptiler_api_key
