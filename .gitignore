@@ -2,3 +2,6 @@
 .env
 *.sql
 *.zip
+
+
+/migrations 

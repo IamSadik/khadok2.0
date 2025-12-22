@@ -466,10 +466,261 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Your cart is empty!");
         return;
       }
-      alert(`${orderType === 'delivery' ? 'Delivery' : 'Pickup'} checkout - Feature coming soon!`);
-      // TODO: Implement checkout
+      
+      // Open payment modal
+      openPaymentModal();
     });
   }
+
+  // ============================================================================
+  // PAYMENT MODAL FUNCTIONALITY
+  // ============================================================================
+  
+  function openPaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    const orderItemsList = document.getElementById("order-items-list");
+    
+    // Calculate totals
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryFee = calculateDeliveryFee();
+    const serviceFee = 5;
+    const total = subtotal + deliveryFee + serviceFee;
+    
+    // Populate order items
+    orderItemsList.innerHTML = cart.map(item => `
+      <div class="order-item-row">
+        <div>
+          <div class="order-item-name">${item.name}</div>
+          <div class="order-item-quantity">Qty: ${item.quantity}</div>
+        </div>
+        <div class="order-item-price">Tk ${(item.price * item.quantity).toFixed(2)}</div>
+      </div>
+    `).join("");
+    
+    // Update totals in modal
+    document.getElementById("modal-subtotal").textContent = `Tk ${subtotal.toFixed(2)}`;
+    document.getElementById("modal-delivery-fee").textContent = `Tk ${deliveryFee.toFixed(2)}`;
+    document.getElementById("modal-service-fee").textContent = `Tk ${serviceFee.toFixed(2)}`;
+    document.getElementById("modal-total").textContent = `Tk ${total.toFixed(2)}`;
+    
+    // Show/hide sections based on order type
+    const deliverySection = document.getElementById("delivery-address-section");
+    const pickupSection = document.getElementById("pickup-time-section");
+    const cashOption = document.getElementById("cash-option");
+    const deliveryRow = document.getElementById("modal-delivery-row");
+    
+    if (orderType === 'delivery') {
+      deliverySection.style.display = 'block';
+      pickupSection.style.display = 'none';
+      cashOption.style.display = 'flex';
+      deliveryRow.style.display = 'flex';
+      
+      // Pre-fill address from consumer profile if available
+      const consumerAddress = localStorage.getItem('consumer_address');
+      if (consumerAddress) {
+        document.getElementById("delivery-address").value = consumerAddress;
+      }
+    } else {
+      deliverySection.style.display = 'none';
+      pickupSection.style.display = 'block';
+      cashOption.style.display = 'none';
+      deliveryRow.style.display = 'none';
+      
+      // Set default pickup time (30 minutes from now)
+      const now = new Date();
+      now.setMinutes(now.getMinutes() + 30);
+      const formatted = now.toISOString().slice(0, 16);
+      document.getElementById("pickup-time").value = formatted;
+      
+      // Force bKash selection for pickup
+      document.getElementById("payment-bkash").checked = true;
+    }
+    
+    // Show modal
+    modal.style.display = 'flex';
+    
+    // Close modal handlers
+    document.getElementById("close-payment-modal").onclick = closePaymentModal;
+    document.getElementById("cancel-payment").onclick = closePaymentModal;
+    
+    // Confirm payment handler
+    document.getElementById("confirm-payment").onclick = handlePaymentConfirmation;
+  }
+  
+  function closePaymentModal() {
+    document.getElementById("payment-modal").style.display = 'none';
+  }
+  
+  async function handlePaymentConfirmation() {
+    const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+    const confirmBtn = document.getElementById("confirm-payment");
+    
+    // Validate inputs
+    if (orderType === 'delivery') {
+      const address = document.getElementById("delivery-address").value.trim();
+      if (!address) {
+        alert("Please enter your delivery address!");
+        return;
+      }
+    } else {
+      const pickupTime = document.getElementById("pickup-time").value;
+      if (!pickupTime) {
+        alert("Please select a pickup time!");
+        return;
+      }
+    }
+    
+    // Disable button during processing
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    try {
+      if (paymentMethod === 'bkash') {
+        await handleBkashPayment();
+      } else {
+        await handleCashPayment();
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Payment failed. Please try again.");
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+    }
+  }
+  
+  async function handleBkashPayment() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryFee = calculateDeliveryFee();
+    const serviceFee = 5;
+    const total = subtotal + deliveryFee + serviceFee;
+    
+    try {
+      // Create bKash payment
+      const response = await fetch('/api/payment/bkash/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: total,
+          consumer_id: consumerId,
+          stakeholder_id: stakeholderId,
+          order_type: orderType
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.data.bkashURL) {
+        // Store order details in localStorage for after payment
+        const orderDetails = {
+          cart: cart,
+          orderType: orderType,
+          subtotal: subtotal,
+          deliveryFee: deliveryFee,
+          serviceFee: serviceFee,
+          totalAmount: total,
+          deliveryAddress: orderType === 'delivery' ? document.getElementById("delivery-address").value : null,
+          pickupTime: orderType === 'pickup' ? document.getElementById("pickup-time").value : null,
+          notes: document.getElementById("order-notes").value,
+          stakeholderId: stakeholderId,
+          consumerId: consumerId,
+          paymentId: data.data.paymentID,
+          paymentRecordId: data.data.paymentRecordId
+        };
+        
+        localStorage.setItem('pendingOrder', JSON.stringify(orderDetails));
+        
+        // Redirect to bKash payment page
+        window.location.href = data.data.bkashURL;
+      } else {
+        throw new Error(data.message || 'Failed to create payment');
+      }
+    } catch (error) {
+      console.error("bKash payment error:", error);
+      alert("Failed to initiate bKash payment. Please try again.");
+      throw error;
+    }
+  }
+  
+  async function handleCashPayment() {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryFee = calculateDeliveryFee();
+    const serviceFee = 5;
+    const total = subtotal + deliveryFee + serviceFee;
+    
+    try {
+      // Create order with cash payment
+      const orderData = {
+        consumer_id: consumerId,
+        stakeholder_id: stakeholderId,
+        order_type: orderType,
+        payment_method: 'cash',
+        subtotal: subtotal,
+        delivery_fee: deliveryFee,
+        service_fee: serviceFee,
+        total_amount: total,
+        delivery_address: document.getElementById("delivery-address").value,
+        notes: document.getElementById("order-notes").value,
+        items: cart.map(item => ({
+          menu_id: item.id,
+          item_name: item.name,
+          item_price: item.price,
+          quantity: item.quantity,
+          subtotal: item.price * item.quantity
+        }))
+      };
+      
+      const response = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Clear cart
+        await clearCart();
+        
+        // Show success message
+        alert(`Order placed successfully! Order ID: ${data.orderId}\n\nYou can pay cash when your order arrives.`);
+        
+        // Close modal and redirect
+        closePaymentModal();
+        window.location.href = 'khadok.consumer.order.html';
+      } else {
+        throw new Error(data.message || 'Failed to create order');
+      }
+    } catch (error) {
+      console.error("Cash order error:", error);
+      alert("Failed to place order. Please try again.");
+      throw error;
+    }
+  }
+  
+  async function clearCart() {
+    try {
+      await fetch(`/api/cart/clear?consumer_id=${consumerId}&type=${orderType}`, {
+        method: 'DELETE'
+      });
+      cart = [];
+      updateCartUI();
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
+    }
+  }
+
+  // Add to cart button clicks
+  document.body.addEventListener("click", async (e) => {
+    const addBtn = e.target.closest(".add-to-cart-btn");
+    if (addBtn) {
+      const itemId = addBtn.dataset.id;
+      const itemName = addBtn.dataset.name;
+      const itemPrice = parseFloat(addBtn.dataset.price);
+      const itemPicture = addBtn.closest('.menu-card').querySelector('img').src;
+
+      await addToCart({ id: itemId, name: itemName, price: itemPrice, picture: itemPicture });
+    }
+  });
 
   // Add item to cart (with database save)
   async function addToCart(item) {

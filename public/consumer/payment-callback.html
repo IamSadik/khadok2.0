@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Payment | Khadok</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #00b894;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: #00b894;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            animation: scaleIn 0.5s ease;
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 2rem;
+            background: #ff6b6b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: #00b894;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #019874;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+        }
+
+        .btn-secondary {
+            background: #667eea;
+            margin-left: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: #5568d3;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .order-details h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #00b894;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn-secondary {
+                margin-left: 0;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="spinner" id="spinner"></div>
+        <h1>Processing Payment...</h1>
+        <p>Please wait while we confirm your payment and create your order.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Get payment info from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const paymentID = urlParams.get('paymentID');
+            const status = urlParams.get('status');
+
+            // Check if we have pending order in localStorage
+            const pendingOrder = localStorage.getItem('pendingOrder');
+
+            if (status === 'cancel' || status === 'failure') {
+                showError('Payment was cancelled or failed. Please try again.');
+                return;
+            }
+
+            if (!paymentID) {
+                showError('Invalid payment information. Please try again.');
+                return;
+            }
+
+            if (!pendingOrder) {
+                showError('Order information not found. Please try again.');
+                return;
+            }
+
+            try {
+                const orderDetails = JSON.parse(pendingOrder);
+
+                // Execute bKash payment
+                const executeResponse = await fetch('/api/payment/bkash/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentID })
+                });
+
+                const executeData = await executeResponse.json();
+
+                if (!executeData.success) {
+                    throw new Error(executeData.message || 'Payment execution failed');
+                }
+
+                // Create order
+                const orderData = {
+                    consumer_id: orderDetails.consumerId,
+                    stakeholder_id: orderDetails.stakeholderId,
+                    order_type: orderDetails.orderType,
+                    payment_method: 'bkash',
+                    subtotal: orderDetails.subtotal,
+                    delivery_fee: orderDetails.deliveryFee,
+                    service_fee: orderDetails.serviceFee,
+                    total_amount: orderDetails.totalAmount,
+                    delivery_address: orderDetails.deliveryAddress,
+                    pickup_time: orderDetails.pickupTime,
+                    notes: orderDetails.notes,
+                    items: orderDetails.cart.map(item => ({
+                        menu_id: item.id,
+                        item_name: item.name,
+                        item_price: item.price,
+                        quantity: item.quantity,
+                        subtotal: item.price * item.quantity
+                    }))
+                };
+
+                const orderResponse = await fetch('/api/orders/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const orderResult = await orderResponse.json();
+
+                if (!orderResult.success) {
+                    throw new Error(orderResult.message || 'Failed to create order');
+                }
+
+                // Link payment to order
+                await fetch('/api/orders/link-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        order_id: orderResult.orderId,
+                        payment_id: orderDetails.paymentRecordId,
+                        transaction_id: executeData.data.trxID
+                    })
+                });
+
+                // Clear cart
+                const consumerId = orderDetails.consumerId;
+                const orderType = orderDetails.orderType;
+                await fetch(`/api/cart/clear?consumer_id=${consumerId}&type=${orderType}`, {
+                    method: 'DELETE'
+                });
+
+                // Clear pending order from localStorage
+                localStorage.removeItem('pendingOrder');
+
+                // Show success
+                showSuccess(orderResult.orderId, orderDetails.totalAmount);
+
+            } catch (error) {
+                console.error('Payment processing error:', error);
+                showError(error.message || 'Failed to process payment. Please contact support.');
+            }
+        });
+
+        function showSuccess(orderId, totalAmount) {
+            const container = document.getElementById('container');
+            container.innerHTML = `
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h1>Payment Successful!</h1>
+                <p>Your order has been placed successfully.</p>
+                
+                <div class="order-details">
+                    <h3>Order Details</h3>
+                    <div class="detail-row">
+                        <span>Order ID:</span>
+                        <span>#${orderId}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Total Paid:</span>
+                        <span>Tk ${totalAmount.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <a href="khadok.consumer.order.html" class="btn">
+                    <i class="fas fa-receipt"></i> View My Orders
+                </a>
+                <a href="khadok.consumer.dashboard.html" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                </a>
+            `;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('container');
+            container.innerHTML = `
+                <div class="error-icon">
+                    <i class="fas fa-times"></i>
+                </div>
+                <h1>Payment Failed</h1>
+                <p>${message}</p>
+                
+                <a href="khadok.consumer.dashboard.html" class="btn">
+                    <i class="fas fa-home"></i> Back to Dashboard
+                </a>
+            `;
+        }
+    </script>
+</body>
+</html>

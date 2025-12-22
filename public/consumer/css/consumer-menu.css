@@ -715,6 +715,315 @@ body {
 }
 
 /* ============================================================================
+   PAYMENT MODAL STYLES
+   ============================================================================ */
+.payment-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+.payment-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+.payment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+}
+
+.payment-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #999;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.close-modal:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.payment-modal-body {
+  padding: 1.5rem;
+}
+
+.order-summary-section,
+.delivery-address-section,
+.pickup-time-section,
+.payment-method-section,
+.order-notes-section {
+  margin-bottom: 1.5rem;
+}
+
+.order-summary-section h3,
+.delivery-address-section h3,
+.pickup-time-section h3,
+.payment-method-section h3,
+.order-notes-section h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+#order-items-list {
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.order-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.order-item-row:last-child {
+  border-bottom: none;
+}
+
+.order-item-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.order-item-quantity {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.order-item-price {
+  font-weight: 600;
+  color: #00b894;
+}
+
+.order-totals {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #eee;
+}
+
+.order-totals .total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.order-totals .total-amount-row {
+  border-top: 2px solid #ddd;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+#delivery-address,
+#order-notes {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border 0.3s;
+}
+
+#delivery-address:focus,
+#order-notes:focus {
+  outline: none;
+  border-color: #00b894;
+}
+
+#pickup-time {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border 0.3s;
+}
+
+#pickup-time:focus {
+  outline: none;
+  border-color: #00b894;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.payment-option:hover {
+  border-color: #00b894;
+  background: #f9f9f9;
+}
+
+.payment-option input[type="radio"] {
+  margin-right: 1rem;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.payment-option label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+.payment-option i {
+  font-size: 1.5rem;
+  color: #00b894;
+}
+
+.payment-option input[type="radio"]:checked + label {
+  color: #00b894;
+  font-weight: 600;
+}
+
+.payment-modal-footer {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #eee;
+  position: sticky;
+  bottom: 0;
+  background: white;
+}
+
+.btn-cancel,
+.btn-confirm {
+  flex: 1;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.btn-cancel:hover {
+  background: #e5e5e5;
+  color: #333;
+}
+
+.btn-confirm {
+  background: #00b894;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-confirm:hover {
+  background: #019874;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 184, 148, 0.3);
+}
+
+/* Loading state for confirm button */
+.btn-confirm:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-confirm:disabled:hover {
+  box-shadow: none;
+}
+
+/* Responsive for payment modal */
+@media (max-width: 600px) {
+  .payment-modal-content {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .payment-modal-header,
+  .payment-modal-body,
+  .payment-modal-footer {
+    padding: 1rem;
+  }
+
+  .payment-modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .payment-modal-footer {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
    RESPONSIVE
    ============================================================================ */
 @media (max-width: 1200px) {
