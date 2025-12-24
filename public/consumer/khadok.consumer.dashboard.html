@@ -213,33 +213,7 @@
           <div id="restaurants-map-container" style="height: 500px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);"></div>
         </section>
 
-        <!-- Shopping Cart Widget Section -->
-        <section class="cart-widget-section">
-          <h2><i class="fas fa-shopping-cart"></i> Your Shopping Cart</h2>
-          <div class="cart-widget-container">
-            <div class="cart-widget-header">
-              <h3>Cart Items</h3>
-              <span id="dashboard-cart-count" class="cart-badge">0</span>
-            </div>
-            <ul id="dashboard-cart-items" class="cart-items-list">
-              <li class="empty-cart-message">Your cart is empty</li>
-            </ul>
-            <div class="cart-widget-footer">
-              <div class="cart-subtotal">
-                <strong>Subtotal:</strong>
-                <span id="dashboard-cart-subtotal">৳0.00</span>
-              </div>
-              <div class="cart-actions">
-                <button class="btn-checkout" id="dashboard-checkout-btn" disabled>
-                  <i class="fas fa-credit-card"></i> Checkout
-                </button>
-                <button class="btn-view-cart" onclick="window.location.href='khadok.consumer.cart.html'">
-                  <i class="fas fa-shopping-bag"></i> View Full Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+        
 
         
       </main>
@@ -688,6 +662,139 @@
     </div>
   </div>
 
+  <!-- Floating Cart Icon and Popup (from menu page) -->
+  <div class="cart-icon" id="cart-icon">
+    <i class="fas fa-shopping-cart"></i>
+    <span id="cart-count">0</span>
+  </div>
+  
+  <div class="cart-popup" id="cart-popup">
+    <!-- Order Type Toggle -->
+    <div class="order-type-tabs">
+      <button id="delivery-tab" class="order-type-tab active">
+        Delivery
+      </button>
+      <button id="pickup-tab" class="order-type-tab">Pick-up</button>
+    </div>
+
+    <h3>Your items</h3>
+    
+    <!-- Cart Items -->
+    <div id="cart-items"></div>
+
+    <!-- Cart Summary -->
+    <div id="cart-summary" class="cart-summary">
+      <div class="summary-row" id="delivery-time-row">
+       
+        
+      </div>
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="subtotal-amount">Tk 0</span>
+      </div>
+      <div class="summary-row" id="delivery-fee-row">
+        <span>Standard delivery</span>
+        <span id="delivery-fee-amount">Tk 0</span>
+      </div>
+      <div class="summary-row">
+        <span>Service fee <i class="fas fa-info-circle"></i></span>
+        <span id="service-fee-amount">Tk 5</span>
+      </div>
+      <div class="summary-row total-row">
+        <span>Total (incl. fees and tax)</span>
+        <span id="total-amount">Tk 0</span>
+      </div>
+    </div>
+
+    <!-- Checkout Button -->
+    <div class="cart-footer">
+      <button id="checkout-btn" class="checkout-btn">Review payment and address</button>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="payment-modal" id="payment-modal" style="display: none;">
+    <div class="payment-modal-content">
+      <div class="payment-modal-header">
+        <h2>Complete Your Order</h2>
+        <button class="close-modal" id="close-payment-modal">&times;</button>
+      </div>
+
+      <div class="payment-modal-body">
+        <!-- Order Summary -->
+        <div class="order-summary-section">
+          <h3>Order Summary</h3>
+          <div id="order-items-list"></div>
+          <div class="order-totals">
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span id="modal-subtotal">Tk 0</span>
+            </div>
+            <div class="total-row" id="modal-delivery-row">
+              <span>Delivery Fee</span>
+              <span id="modal-delivery-fee">Tk 0</span>
+            </div>
+            <div class="total-row">
+              <span>Service Fee</span>
+              <span id="modal-service-fee">Tk 5</span>
+            </div>
+            <div class="total-row total-amount-row">
+              <span><strong>Total Amount</strong></span>
+              <span id="modal-total"><strong>Tk 0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Address (only for delivery) -->
+        <div class="delivery-address-section" id="delivery-address-section" style="display: none;">
+          <h3>Delivery Address</h3>
+          <textarea id="delivery-address" placeholder="Enter your delivery address..." rows="3"></textarea>
+        </div>
+
+        <!-- Pickup Time (only for pickup) -->
+        <div class="pickup-time-section" id="pickup-time-section" style="display: none;">
+          <h3>Pickup Time</h3>
+          <input type="datetime-local" id="pickup-time" />
+        </div>
+
+        <!-- Payment Method Selection -->
+        <div class="payment-method-section">
+          <h3>Payment Method</h3>
+          
+          <!-- Cash on Delivery (only for delivery) -->
+          <div class="payment-option" id="cash-option" style="display: none;">
+            <input type="radio" id="payment-cash" name="payment-method" value="cash" />
+            <label for="payment-cash">
+              <i class="fas fa-money-bill-wave"></i>
+              <span>Cash on Delivery</span>
+            </label>
+          </div>
+
+          <!-- bKash Payment -->
+          <div class="payment-option">
+            <input type="radio" id="payment-bkash" name="payment-method" value="bkash" checked />
+            <label for="payment-bkash">
+              <i class="fas fa-mobile-alt"></i>
+              <span>bKash Payment</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Order Notes -->
+        <div class="order-notes-section">
+          <h3>Special Instructions (Optional)</h3>
+          <textarea id="order-notes" placeholder="Add any special requests..." rows="2"></textarea>
+        </div>
+      </div>
+
+      <div class="payment-modal-footer">
+        <button class="btn-cancel" id="cancel-payment">Cancel</button>
+        <button class="btn-confirm" id="confirm-payment">
+          <i class="fas fa-lock"></i> Place Order
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     let btn = document.querySelector("#btn");

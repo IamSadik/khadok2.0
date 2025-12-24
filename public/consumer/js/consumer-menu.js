@@ -352,7 +352,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!consumerId) return;
     
     try {
-      const res = await fetch(`/api/cart/${consumerId}?type=${orderType}`);
+      // ✅ Use correct API endpoint (matches working pickup-menu.js)
+      const res = await fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=${orderType}`);
       const data = await res.json();
       
       if (data.cartItems && data.cartItems.length > 0) {
@@ -361,11 +362,10 @@ document.addEventListener("DOMContentLoaded", () => {
           id: item.menu_id,
           name: item.item_name,
           price: parseFloat(item.item_price),
-          quantity: item.quatity,
+          quantity: item.quatity, // ✅ Use 'quatity' (database column name)
           picture: item.item_picture
         }));
       } else {
-        // ✅ Clear cart if empty from database
         cart = [];
       }
       updateCartUI();
@@ -773,90 +773,127 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Update cart UI
-  function updateCartUI() {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    
-    cartCount.textContent = totalItems;
-
-    // ✅ Show empty cart state without fees
-    if (cart.length === 0) {
-      cartItems.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">Your cart is empty</div>';
+  async function updateCartUI() {
+    if (!consumerId) {
+      cartCount.textContent = '0';
+      cartItems.innerHTML = '';
       document.getElementById('cart-summary').style.display = 'none';
-      return; // ✅ Exit early - don't show fees
+      return;
     }
 
-    // ✅ Only calculate fees when cart has items
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const deliveryFee = calculateDeliveryFee();
-    const serviceFee = 5; // Fixed 5 Tk service charge
-    const total = subtotal + deliveryFee + serviceFee;
+    try {
+      // ✅ Fetch cart from database
+      const res = await fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=${orderType}`);
+      const data = await res.json();
+      
+      // ✅ Reset cart array and map from database response
+      if (data.cartItems && data.cartItems.length > 0) {
+        cart = data.cartItems.map(item => ({
+          cart_id: item.cart_id,
+          id: item.menu_id,
+          name: item.item_name,
+          price: parseFloat(item.item_price),
+          quantity: item.quatity, // ✅ Use 'quatity' (database column name)
+          picture: item.item_picture
+        }));
+      } else {
+        cart = [];
+      }
 
-    // ✅ Show cart summary
-    document.getElementById('cart-summary').style.display = 'block';
-    
-    cartItems.innerHTML = cart.map(item => `
-      <div class="cart-item">
-        <img src="${item.picture}" alt="${item.name}" class="cart-item-image" />
-        <div class="cart-item-details">
-          <h4>${item.name}</h4>
-          <p class="cart-item-price">Tk ${item.price}</p>
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      
+      cartCount.textContent = totalItems;
+
+      // ✅ Show empty cart state without fees
+      if (cart.length === 0) {
+        cartItems.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">Your cart is empty</div>';
+        document.getElementById('cart-summary').style.display = 'none';
+        return; // ✅ Exit early - don't show fees
+      }
+
+      // ✅ Only calculate fees when cart has items
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const deliveryFee = calculateDeliveryFee();
+      const serviceFee = 5; // Fixed 5 Tk service charge
+      const total = subtotal + deliveryFee + serviceFee;
+
+      // ✅ Show cart summary
+      document.getElementById('cart-summary').style.display = 'block';
+      
+      cartItems.innerHTML = cart.map(item => `
+        <div class="cart-item">
+          <img src="${item.picture}" alt="${item.name}" class="cart-item-image" />
+          <div class="cart-item-details">
+            <h4>${item.name}</h4>
+            <p class="cart-item-price">Tk ${item.price}</p>
+          </div>
+          <div class="cart-item-controls">
+            <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="decrease">
+              <i class="fas fa-minus"></i>
+            </button>
+            <span class="quantity">${item.quantity}</span>
+            <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="increase">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
         </div>
-        <div class="cart-item-controls">
-          <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="decrease">
-            <i class="fas fa-minus"></i>
-          </button>
-          <span class="quantity">${item.quantity}</span>
-          <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="increase">
-            <i class="fas fa-plus"></i>
-          </button>
-        </div>
-      </div>
-    `).join("");
+      `).join("");
 
-    // Update summary
-    document.getElementById('subtotal-amount').textContent = `Tk ${subtotal}`;
-    document.getElementById('delivery-fee-amount').textContent = `Tk ${deliveryFee}`;
-    document.getElementById('service-fee-amount').textContent = `Tk ${serviceFee}`;
-    document.getElementById('total-amount').textContent = `Tk ${total}`;
+      // Update summary
+      document.getElementById('subtotal-amount').textContent = `Tk ${subtotal}`;
+      document.getElementById('delivery-fee-amount').textContent = `Tk ${deliveryFee}`;
+      document.getElementById('service-fee-amount').textContent = `Tk ${serviceFee}`;
+      document.getElementById('total-amount').textContent = `Tk ${total}`;
 
-    // Add quantity button listeners
-    document.querySelectorAll(".quantity-btn").forEach(btn => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const cartId = btn.dataset.cartId;
-        const action = btn.dataset.action;
-        const cartItem = cart.find(i => i.cart_id == cartId);
+      // ✅ Add quantity button listeners AFTER rendering (matches pickup-menu.js)
+      document.querySelectorAll(".quantity-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const cartId = btn.dataset.cartId;
+          const action = btn.dataset.action;
 
-        if (!cartItem) return;
-
-        if (action === "increase") {
-          await updateCartQuantity(cartId, cartItem.quantity + 1);
-        } else if (action === "decrease") {
-          if (cartItem.quantity > 1) {
-            await updateCartQuantity(cartId, cartItem.quantity - 1);
-          } else {
-            // ✅ Remove item when quantity is 1 and user clicks minus
-            await removeFromCart(cartId);
+          if (action === "increase") {
+            await updateQuantity(cartId, 1);
+          } else if (action === "decrease") {
+            await updateQuantity(cartId, -1);
           }
-        }
+        });
       });
-    });
+    } catch (error) {
+      console.error("Failed to update cart UI:", error);
+    }
   }
 
-  // Update cart quantity in database
-  async function updateCartQuantity(cartId, newQuantity) {
+  // ✅ Update quantity in database (matches pickup-menu.js implementation)
+  async function updateQuantity(cartId, change) {
     try {
-      const res = await fetch(`/api/cart/update/${cartId}`, {
+      // First, get current item from cart array
+      const cartItem = cart.find(i => i.cart_id == cartId);
+      if (!cartItem) return;
+
+      const newQuantity = cartItem.quantity + change;
+
+      // If quantity would be 0 or less, remove the item instead
+      if (newQuantity <= 0) {
+        await removeFromCart(cartId);
+        return;
+      }
+
+      const res = await fetch(`/api/cart/update-quantity/${cartId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity: newQuantity })
+        body: JSON.stringify({
+          quantity: newQuantity
+        })
       });
 
       if (res.ok) {
-        await loadCartFromDatabase();
+        await updateCartUI();
+      } else {
+        console.error("Failed to update quantity");
       }
     } catch (error) {
-      console.error("Failed to update cart:", error);
+      console.error("Failed to update quantity:", error);
     }
   }
 
@@ -868,7 +905,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (res.ok) {
-        await loadCartFromDatabase();
+        await updateCartUI();
       }
     } catch (error) {
       console.error("Failed to remove from cart:", error);

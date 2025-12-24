@@ -1,34 +1,27 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart</title>
-    <link rel="stylesheet" href="css/khadok.consumer.dashboard.css">
+    <title>Shopping Cart | Khadok</title>
     <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
     <link rel="stylesheet" href="css/khadok.consumer.cart.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-   
 </head>
 <body>
+    <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo_content">
             <div class="logo">
-                
-                <div class="logo_name">Khadok
-
-                </div>
+                <div class="logo_name">Khadok</div>
             </div>
             <i class='bx bx-menu' id="btn"></i>
         </div>
         <ul class="nav_list">
             <li>
-                
-                    <i class='bx bx-search-alt'></i>
-                    <input type="text" placeholder="Search...">
-                
+                <i class='bx bx-search-alt'></i>
+                <input type="text" placeholder="Search...">
                 <span class="tooltip">Search </span>
             </li>
             <li>
@@ -45,19 +38,12 @@
                 </a>
                 <span class="tooltip">User</span>
             </li>
-             <li>
+            <li>
                 <a href="map.html">
                     <i class='bx bx-navigation'></i>
                     <span class="links_name">Map</span>
                 </a>
                 <span class="tooltip">Map</span>
-            </li>
-            <li>
-                <a href="khadok.consumer.chat.html">
-                    <i class='bx bxs-chat'></i>
-                    <span class="links_name">Messages</span>
-                </a>
-                <span class="tooltip">Messages</span>
             </li>
             <li>
                 <a href="khadok.consumer.order.html">
@@ -67,14 +53,14 @@
                 <span class="tooltip">Orders</span>
             </li>
             <li>
-                <a href="khadok.consumer.reservation.html" class="active">
+                <a href="khadok.consumer.reservation.html">
                     <i class='bx bxs-calendar-check'></i>
                     <span class="links_name">Reservations</span>
                 </a>
                 <span class="tooltip">Reservations</span>
             </li>
             <li>
-                <a href="khadok.consumer.cart.html">
+                <a href="khadok.consumer.cart.html" class="active">
                     <i class='bx bxs-cart'></i>
                     <span class="links_name">Cart</span>
                 </a>
@@ -102,79 +88,235 @@
                 </button>
             </div>
         </div>
-
     </div>
 
+    <!-- Main Content -->
+    <div class="home_content">
+        <div class="cart-page-container">
+            <!-- Page Header -->
+            <div class="cart-header">
+                <div class="header-left">
+                    <h1><i class="fas fa-shopping-cart"></i> Shopping Cart</h1>
+                    <p class="cart-subtitle">Review your items and proceed to checkout</p>
+                </div>
+                <div class="header-right">
+                    <span class="cart-item-count" id="total-items-badge">0 items</span>
+                </div>
+            </div>
 
+            <!-- Order Type Tabs -->
+            <div class="order-type-selector">
+                <button class="order-type-btn active" id="delivery-tab" data-type="delivery">
+                    <i class="fas fa-motorcycle"></i>
+                    <div class="type-info">
+                        <span class="type-name">Delivery</span>
+                        <span class="type-time" id="delivery-time">20-35 mins</span>
+                    </div>
+                </button>
+                <button class="order-type-btn" id="pickup-tab" data-type="pickup">
+                    <i class="fas fa-shopping-bag"></i>
+                    <div class="type-info">
+                        <span class="type-name">Pickup</span>
+                        <span class="type-time">20-25 mins</span>
+                    </div>
+                </button>
+            </div>
 
-<div class="home_content">
-    <h2 class="page-title">Your Shopping Cart</h2>
-    
-       <div class="cart-container">
-        <div class="cart-header">
-            <h3>Your Cart</h3>
-            <span id="cart-count" class="cart-count">0</span>
+            <!-- Main Cart Layout -->
+            <div class="cart-layout">
+                <!-- Cart Items Section -->
+                <div class="cart-items-section">
+                    <div id="cart-items-container">
+                        <!-- Items will be injected here by JS -->
+                    </div>
+                </div>
+
+                <!-- Order Summary Sidebar -->
+                <div class="order-summary-section">
+                    <div class="summary-card">
+                        <h3 class="summary-title">
+                            <i class="fas fa-receipt"></i> Order Summary
+                        </h3>
+                        
+                        <div class="summary-details" id="summary-details">
+                            <div class="summary-row">
+                                <span>Subtotal</span>
+                                <span class="summary-value" id="subtotal-amount">৳0.00</span>
+                            </div>
+                            <div class="summary-row" id="delivery-fee-row">
+                                <span>Delivery Fee <i class="fas fa-info-circle tooltip-icon" title="Based on distance"></i></span>
+                                <span class="summary-value" id="delivery-fee-amount">৳0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Service Fee</span>
+                                <span class="summary-value" id="service-fee-amount">৳5.00</span>
+                            </div>
+                            <div class="summary-divider"></div>
+                            <div class="summary-row total-row">
+                                <span>Total</span>
+                                <span class="summary-value total-value" id="total-amount">৳0.00</span>
+                            </div>
+                        </div>
+
+                        <button class="checkout-button" id="checkout-btn">
+                            <i class="fas fa-lock"></i>
+                            <span>Proceed to Checkout</span>
+                        </button>
+
+                        <div class="secure-checkout-badge">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Secure Checkout</span>
+                        </div>
+                    </div>
+
+                    <!-- Promo Code Section -->
+                    <div class="promo-card">
+                        <h4><i class="fas fa-tag"></i> Have a promo code?</h4>
+                        <div class="promo-input-group">
+                            <input type="text" placeholder="Enter code" id="promo-input">
+                            <button class="apply-promo-btn" id="apply-promo-btn">Apply</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <ul id="cart-items" class="cart-items-list">
-            <!-- Cart items will be dynamically inserted here -->
-        </ul>
-        <div class="cart-footer">
-            <p><strong>Subtotal:</strong> $<span id="cart-subtotal">0.00</span></p>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="payment-modal" style="display: none;">
+        <div class="payment-modal-content">
+            <div class="payment-modal-header">
+                <h2><i class="fas fa-credit-card"></i> Complete Your Order</h2>
+                <button class="close-modal" id="close-payment-modal">&times;</button>
+            </div>
+
+            <div class="payment-modal-body">
+                <!-- Order Summary -->
+                <div class="modal-section">
+                    <h3><i class="fas fa-list-ul"></i> Order Summary</h3>
+                    <div id="order-items-list" class="modal-items-list"></div>
+                    <div class="modal-totals">
+                        <div class="modal-total-row">
+                            <span>Subtotal</span>
+                            <span id="modal-subtotal">৳0</span>
+                        </div>
+                        <div class="modal-total-row" id="modal-delivery-row">
+                            <span>Delivery Fee</span>
+                            <span id="modal-delivery-fee">৳0</span>
+                        </div>
+                        <div class="modal-total-row">
+                            <span>Service Fee</span>
+                            <span id="modal-service-fee">৳5</span>
+                        </div>
+                        <div class="modal-total-divider"></div>
+                        <div class="modal-total-row modal-grand-total">
+                            <span><strong>Total Amount</strong></span>
+                            <span id="modal-total"><strong>৳0</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="modal-section" id="delivery-address-section">
+                    <h3><i class="fas fa-map-marker-alt"></i> Delivery Address</h3>
+                    <textarea id="delivery-address" rows="3" placeholder="Enter your delivery address"></textarea>
+                </div>
+
+                <!-- Pickup Time -->
+                <div class="modal-section" id="pickup-time-section" style="display: none;">
+                    <h3><i class="fas fa-clock"></i> Pickup Time</h3>
+                    <input type="datetime-local" id="pickup-time" class="datetime-input">
+                </div>
+
+                <!-- Payment Method -->
+                <div class="modal-section">
+                    <h3><i class="fas fa-wallet"></i> Payment Method</h3>
+                    <div class="payment-methods">
+                        <label class="payment-method-option">
+                            <input type="radio" name="payment-method" id="payment-bkash" value="bkash" checked>
+                            <div class="payment-method-card">
+                                <i class="fas fa-mobile-alt"></i>
+                                <span>bKash</span>
+                            </div>
+                        </label>
+                        <label class="payment-method-option" id="cash-option">
+                            <input type="radio" name="payment-method" id="payment-cash" value="cash">
+                            <div class="payment-method-card">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Cash on Delivery</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Order Notes -->
+                <div class="modal-section">
+                    <h3><i class="fas fa-comment-alt"></i> Special Instructions (Optional)</h3>
+                    <textarea id="order-notes" rows="2" placeholder="Any special requests?"></textarea>
+                </div>
+            </div>
+
+            <div class="payment-modal-footer">
+                <button class="btn-cancel" id="cancel-payment">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn-confirm" id="confirm-payment">
+                    <i class="fas fa-lock"></i> Place Order
+                </button>
+            </div>
         </div>
-    </div>     
-    
-</div>
- 
+    </div>
 
-<script src="js/khadok.consumer.cart.js"></script>
-<script>
-    let btn = document.querySelector("#btn"); 
-    let sidebar = document.querySelector(".sidebar");
-    let searchBtn = document.querySelector(".bx-search-alt");  
+    <!-- Scripts -->
+    <script src="js/khadok.consumer.cart.js"></script>
+    <script>
+        let btn = document.querySelector("#btn"); 
+        let sidebar = document.querySelector(".sidebar");
+        let searchBtn = document.querySelector(".bx-search-alt");  
 
-    btn.onclick = function(){
-        sidebar.classList.toggle("active");
-    }
-    searchBtn.onclick = function(){
-        sidebar.classList.toggle("active");
-    }
-</script>
-<script>
-    async function logout() {
-        const sessionId = localStorage.getItem("sessionId");
-
-        if (!sessionId) {
-            alert("No session found.");
-            return;
+        btn.onclick = function(){
+            sidebar.classList.toggle("active");
         }
+        searchBtn.onclick = function(){
+            sidebar.classList.toggle("active");
+        }
+    </script>
+    <script>
+        async function logout() {
+            const sessionId = localStorage.getItem("sessionId");
 
-        try {
-            const res = await fetch("/api/auth/logout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId }),
-                credentials: "include", // Include the session cookie in the request
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.removeItem("sessionId"); // Clear sessionId from localStorage after logout
-                alert(data.message); // Show success message
-                window.location.href = '../login.html';
-            } else {
-                alert(data.message || "Logout failed.");
-                window.location.href = '../login.html'; // Redirect to login page on error
+            if (!sessionId) {
+                alert("No session found.");
+                return;
             }
-        } catch (err) {
-            console.error("Logout error:", err);
-            alert("Something went wrong.");
-            window.location.href = '../login.html'; // Redirect to login page on error
-        }
-    }
 
-    const logoutButton = document.getElementById("logoutButton");
-    logoutButton.addEventListener("click", logout);
-</script>
+            try {
+                const res = await fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ sessionId }),
+                    credentials: "include",
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.removeItem("sessionId");
+                    alert(data.message);
+                    window.location.href = '../login.html';
+                } else {
+                    alert(data.message || "Logout failed.");
+                    window.location.href = '../login.html';
+                }
+            } catch (err) {
+                console.error("Logout error:", err);
+                alert("Something went wrong.");
+                window.location.href = '../login.html';
+            }
+        }
+
+        const logoutButton = document.getElementById("logoutButton");
+        logoutButton.addEventListener("click", logout);
+    </script>
 </body>
 </html>
