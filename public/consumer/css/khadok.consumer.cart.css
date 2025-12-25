@@ -439,6 +439,7 @@ h2.page-title {
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     transition: all 0.3s ease;
     animation: slideInLeft 0.5s ease-out;
+    flex-shrink: 0; /* Prevent compression when scrolling */
 }
 
 @keyframes slideInLeft {
@@ -813,11 +814,11 @@ h2.page-title {
     color: #2c3e50;
     padding-top: 15px;
     margin-top: 10px;
-    border-top: 2px solid #667eea;
+    border-top: 2px solid #00B894;
 }
 
 .total-row span:last-child {
-    color: #667eea;
+    color: #00B894;
     font-size: 24px;
 }
 
@@ -1426,6 +1427,35 @@ h2.page-title {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    max-height: calc(100vh - 250px); /* Limit height to viewport minus header/padding */
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding-right: 10px; /* Space for scrollbar */
+}
+
+/* 🎨 Custom Scrollbar for Cart Items */
+.cart-items-section::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cart-items-section::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 10px;
+}
+
+.cart-items-section::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+}
+
+.cart-items-section::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Firefox scrollbar */
+.cart-items-section {
+    scrollbar-width: thin;
+    
 }
 
 /* Empty Cart State */
@@ -1470,7 +1500,7 @@ h2.page-title {
     align-items: center;
     gap: 10px;
     padding: 14px 30px;
-    background: linear-gradient(135deg, #5A8765 0%, #764ba2 100%);
+    background: linear-gradient(13deg, #00B894 0%, #57a595 100%);
     color: white;
     text-decoration: none;
     border-radius: 12px;
@@ -1492,6 +1522,7 @@ h2.page-title {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
     animation: slideInLeft 0.5s ease-out;
+    flex-shrink: 0; /* Prevent compression when scrolling */
 }
 
 .restaurant-group:hover {
@@ -1775,7 +1806,7 @@ h2.page-title {
 }
 
 .summary-title i {
-    color: #667eea;
+    color: #00B894;
 }
 
 .summary-details {
@@ -2214,6 +2245,11 @@ h2.page-title {
         grid-template-columns: 1fr;
     }
 
+    .cart-items-section {
+        max-height: none; /* Remove height limit on mobile */
+        overflow-y: visible; /* Disable scroll on mobile for natural flow */
+    }
+
     .order-summary-section {
         position: static;
     }
@@ -2246,7 +2282,7 @@ h2.page-title {
     .cart-item-card {
         flex-direction: column;
     }
-
+    .cart-items-container
     .item-actions {
         flex-direction: row;
         width: 100%;

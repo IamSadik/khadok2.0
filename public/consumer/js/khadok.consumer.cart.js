@@ -14,10 +14,25 @@ document.addEventListener("DOMContentLoaded", () => {
   let deliveryCart = [];
   let pickupCart = [];
   let restaurantDetails = {};
+  
+  // 🚀 Cache for faster subsequent loads
+  let restaurantDetailsCache = {};
+  let lastFetchTime = 0;
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   // User location
   const userLat = parseFloat(localStorage.getItem('current_user_lat')) || 23.703512;
   const userLng = parseFloat(localStorage.getItem('current_user_lng')) || 90.450709;
+
+  // 🎯 Show loading indicator
+  function showLoading() {
+    cartItemsContainer.innerHTML = `
+      <div style="text-align: center; padding: 3rem; color: #667eea;">
+        <i class="fas fa-spinner fa-spin" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+        <p style="font-size: 1.1rem;">Loading your cart...</p>
+      </div>
+    `;
+  }
 
   // Initialize
   init();
@@ -29,22 +44,22 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    showLoading();
     await loadCartItems();
     setupEventListeners();
     renderCart();
   }
 
-  // ==================== FETCH CART ITEMS ====================
+  // ==================== FETCH CART ITEMS (WITH CACHING) ====================
   async function loadCartItems() {
     try {
-      // Fetch delivery cart
-      const deliveryRes = await fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=delivery`);
-      const deliveryData = await deliveryRes.json();
-      deliveryCart = deliveryData.cartItems || [];
+      // 🚀 Parallel fetch for both carts - much faster!
+      const [deliveryData, pickupData] = await Promise.all([
+        fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=delivery`).then(r => r.json()),
+        fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=pickup`).then(r => r.json())
+      ]);
 
-      // Fetch pickup cart
-      const pickupRes = await fetch(`/api/cart/get-cart?consumer_id=${consumerId}&type=pickup`);
-      const pickupData = await pickupRes.json();
+      deliveryCart = deliveryData.cartItems || [];
       pickupCart = pickupData.cartItems || [];
 
       console.log('📦 Cart items loaded:', { 
@@ -58,65 +73,89 @@ document.addEventListener("DOMContentLoaded", () => {
         ...pickupCart.map(item => item.stakeholder_id)
       ])];
 
-      // Fetch restaurant details for all stakeholders
+      // 🚀 Fetch restaurant details (with caching)
       await fetchRestaurantDetails(allStakeholderIds);
 
     } catch (error) {
       console.error("Failed to load cart:", error);
       deliveryCart = [];
       pickupCart = [];
+      cartItemsContainer.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: #e74c3c;">
+          <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          <p>Failed to load cart. Please refresh the page.</p>
+        </div>
+      `;
     }
   }
 
-  // ==================== FETCH RESTAURANT DETAILS ====================
+  // ==================== FETCH RESTAURANT DETAILS (OPTIMIZED WITH CACHING) ====================
   async function fetchRestaurantDetails(stakeholderIds) {
     if (stakeholderIds.length === 0) return;
 
+    const now = Date.now();
+    
+    // 🚀 Check cache first
+    const cachedIds = stakeholderIds.filter(id => 
+      restaurantDetailsCache[id] && (now - lastFetchTime < CACHE_DURATION)
+    );
+    
+    const uncachedIds = stakeholderIds.filter(id => !cachedIds.includes(id));
+
+    // Use cached data immediately
+    cachedIds.forEach(id => {
+      restaurantDetails[id] = restaurantDetailsCache[id];
+    });
+
+    if (uncachedIds.length === 0) {
+      console.log('✅ Using cached restaurant details');
+      return;
+    }
+
     try {
-      // Fetch nearby restaurants to get distance/time data
-      const nearbyRes = await fetch(
-        `/api/restaurant/nearby?lat=${userLat}&lng=${userLng}&radius=50&useRoadDistance=true`
-      );
-      const nearbyData = await nearbyRes.json();
+      // 🚀 Fetch nearby restaurants and individual details in parallel
+      const [nearbyData, ...restaurantDataArray] = await Promise.all([
+        fetch(`/api/restaurant/nearby?lat=${userLat}&lng=${userLng}&radius=12&useRoadDistance=true`)
+          .then(r => r.json()),
+        ...uncachedIds.map(id => 
+          fetch(`/api/restaurant/${id}`).then(r => r.json()).catch(() => null)
+        )
+      ]);
+
       const nearbyRestaurants = nearbyData.restaurants || [];
 
-      // Fetch each restaurant's details
-      for (const stakeholderId of stakeholderIds) {
-        try {
-          const res = await fetch(`/api/restaurant/${stakeholderId}`);
-          const data = await res.json();
+      // Process restaurant data
+      restaurantDataArray.forEach((data, index) => {
+        if (!data) return;
+        
+        const stakeholderId = uncachedIds[index];
+        const nearbyMatch = nearbyRestaurants.find(r => r.stakeholder_id == stakeholderId);
 
-          if (data) {
-            const nearbyMatch = nearbyRestaurants.find(
-              r => r.stakeholder_id == stakeholderId
-            );
+        let estimatedDeliveryMins = 25;
+        let estimatedPickupMins = 20;
 
-            // Calculate estimated delivery/pickup times
-            let estimatedDeliveryMins = 25;
-            let estimatedPickupMins = 20;
-
-            if (nearbyMatch && nearbyMatch.estimated_time) {
-              const travelTimeMins = Math.ceil(nearbyMatch.estimated_time);
-              estimatedDeliveryMins = travelTimeMins + Math.floor(Math.random() * 6) + 10;
-              estimatedPickupMins = Math.max(15, travelTimeMins - 5);
-            }
-
-            restaurantDetails[stakeholderId] = {
-              ...data,
-              distance: nearbyMatch?.distance || 0,
-              roadDistance: nearbyMatch?.road_distance || 0,
-              estimatedDeliveryTime: `${estimatedDeliveryMins}-${estimatedDeliveryMins + 10} mins`,
-              estimatedPickupTime: `${estimatedPickupMins}-${estimatedPickupMins + 5} mins`,
-              estimatedDeliveryMins,
-              estimatedPickupMins
-            };
-          }
-        } catch (err) {
-          console.error(`Failed to fetch restaurant ${stakeholderId}:`, err);
+        if (nearbyMatch && nearbyMatch.estimated_time) {
+          const travelTimeMins = Math.ceil(nearbyMatch.estimated_time);
+          estimatedDeliveryMins = travelTimeMins + Math.floor(Math.random() * 6) + 10;
+          estimatedPickupMins = Math.max(15, travelTimeMins - 5);
         }
-      }
 
-      console.log('🏪 Restaurant details loaded:', restaurantDetails);
+        const restaurantInfo = {
+          ...data,
+          distance: nearbyMatch?.distance || 0,
+          roadDistance: nearbyMatch?.road_distance || 0,
+          estimatedDeliveryTime: `${estimatedDeliveryMins}-${estimatedDeliveryMins + 10} mins`,
+          estimatedPickupTime: `${estimatedPickupMins}-${estimatedPickupMins + 5} mins`,
+          estimatedDeliveryMins,
+          estimatedPickupMins
+        };
+
+        restaurantDetails[stakeholderId] = restaurantInfo;
+        restaurantDetailsCache[stakeholderId] = restaurantInfo; // 🚀 Cache it
+      });
+
+      lastFetchTime = now;
+      console.log('🏪 Restaurant details loaded and cached');
 
     } catch (error) {
       console.error("Failed to fetch restaurant details:", error);
@@ -126,10 +165,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==================== CALCULATE DELIVERY FEE ====================
   function calculateDeliveryFee(distance) {
     const distanceKm = distance || 0;
-
     if (distanceKm < 0.5) return 20;
     if (distanceKm < 1) return 25;
-
     const extraDistance = distanceKm - 1;
     const extra500mSegments = Math.ceil(extraDistance / 0.5);
     return 25 + (extra500mSegments * 5);
@@ -142,14 +179,14 @@ document.addEventListener("DOMContentLoaded", () => {
       currentOrderType = 'delivery';
       deliveryTab.classList.add("active");
       pickupTab.classList.remove("active");
-      renderCart();
+      renderCart(); // Instant re-render
     });
 
     pickupTab.addEventListener("click", () => {
       currentOrderType = 'pickup';
       pickupTab.classList.add("active");
       deliveryTab.classList.remove("active");
-      renderCart();
+      renderCart(); // Instant re-render
     });
 
     // Checkout button
@@ -163,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ==================== RENDER CART ====================
+  // ==================== RENDER CART (OPTIMIZED) ====================
   function renderCart() {
     const activeCart = currentOrderType === 'delivery' ? deliveryCart : pickupCart;
 
@@ -186,28 +223,24 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       
-      // Hide summary when cart is empty
       document.querySelector('.summary-card').style.display = 'none';
       document.querySelector('.promo-card').style.display = 'none';
       return;
     }
 
-    // Show summary when cart has items
     document.querySelector('.summary-card').style.display = 'block';
     document.querySelector('.promo-card').style.display = 'block';
 
     // Group items by restaurant
     const groupedByRestaurant = activeCart.reduce((acc, item) => {
       const restaurantId = item.stakeholder_id;
-      if (!acc[restaurantId]) {
-        acc[restaurantId] = [];
-      }
+      if (!acc[restaurantId]) acc[restaurantId] = [];
       acc[restaurantId].push(item);
       return acc;
     }, {});
 
-    // Render grouped items
-    let html = '';
+    // 🚀 Build HTML using array join for better performance
+    const restaurantGroups = [];
     let grandSubtotal = 0;
     let totalDeliveryFee = 0;
 
@@ -229,7 +262,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ? restaurant.estimatedDeliveryTime
         : restaurant.estimatedPickupTime;
 
-      html += `
+      // Build restaurant group HTML
+      restaurantGroups.push(`
         <div class="restaurant-group">
           <div class="restaurant-header">
             <div class="restaurant-info">
@@ -243,13 +277,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 </button>
               </div>
               <div class="restaurant-details">
-                <span>
-                  <i class="fas fa-clock"></i> ${estimatedTime || '20-30 mins'}
-                </span>
+                <span><i class="fas fa-clock"></i> ${estimatedTime || '20-30 mins'}</span>
                 ${currentOrderType === 'delivery' ? `
-                  <span>
-                    <i class="fas fa-motorcycle"></i> ৳${deliveryFee} delivery
-                  </span>
+                  <span><i class="fas fa-motorcycle"></i> ৳${deliveryFee} delivery</span>
                 ` : ''}
               </div>
             </div>
@@ -261,11 +291,12 @@ document.addEventListener("DOMContentLoaded", () => {
             Restaurant Subtotal: <span>৳${restaurantSubtotal.toFixed(2)}</span>
           </div>
         </div>
-      `;
+      `);
     });
 
-    cartItemsContainer.innerHTML = html;
-
+    // 🚀 Single DOM update - much faster than multiple updates
+    cartItemsContainer.innerHTML = restaurantGroups.join('');
+    
     // Update order summary
     updateOrderSummary(grandSubtotal, totalDeliveryFee);
   }
@@ -275,11 +306,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemSubtotal = parseFloat(item.item_price) * item.quatity;
     
     return `
-      <div class="cart-item-card">
+      <div class="cart-item-card" data-cart-id="${item.cart_id}">
         <div class="item-image-wrapper">
           <img src="${item.item_picture || '/images/placeholder.png'}" 
                alt="${item.item_name}" 
-               class="item-image">
+               class="item-image"
+               loading="lazy">
         </div>
         <div class="item-details">
           <h4 class="item-name">${item.item_name}</h4>
@@ -316,57 +348,107 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('service-fee-amount').textContent = `৳${serviceFee.toFixed(2)}`;
     document.getElementById('total-amount').textContent = `৳${total.toFixed(2)}`;
 
-    // Show/hide delivery fee row
     const deliveryFeeRow = document.getElementById('delivery-fee-row');
     if (deliveryFeeRow) {
       deliveryFeeRow.style.display = currentOrderType === 'delivery' ? 'flex' : 'none';
     }
   }
 
-  // ==================== UPDATE ITEM QUANTITY ====================
+  // ==================== UPDATE ITEM QUANTITY (OPTIMISTIC UPDATE) ====================
   window.updateItemQuantity = async function (cartId, newQuantity) {
     if (newQuantity < 1) {
       removeCartItem(cartId);
       return;
     }
 
-    try {
-      const res = await fetch(`/api/cart/update-quantity/${cartId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity: newQuantity })
-      });
+    // 🚀 OPTIMISTIC UPDATE - Update UI immediately
+    const activeCart = currentOrderType === 'delivery' ? deliveryCart : pickupCart;
+    const itemIndex = activeCart.findIndex(item => item.cart_id === cartId);
+    
+    if (itemIndex !== -1) {
+      const oldQuantity = activeCart[itemIndex].quatity;
+      activeCart[itemIndex].quatity = newQuantity;
+      
+      // 🎯 Instant UI update
+      const itemCard = document.querySelector(`[data-cart-id="${cartId}"]`);
+      if (itemCard) {
+        const quantityDisplay = itemCard.querySelector('.quantity-display');
+        const subtotalEl = itemCard.querySelector('.item-subtotal strong');
+        if (quantityDisplay) quantityDisplay.textContent = newQuantity;
+        if (subtotalEl) {
+          const price = parseFloat(activeCart[itemIndex].item_price);
+          subtotalEl.textContent = `৳${(price * newQuantity).toFixed(2)}`;
+        }
+      }
+      
+      // Update summary immediately
+      renderCart();
+      
+      // 🔄 Then update backend in background
+      try {
+        const res = await fetch(`/api/cart/update-quantity/${cartId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: newQuantity })
+        });
 
-      if (res.ok) {
-        await loadCartItems();
+        if (!res.ok) {
+          // 🔙 Rollback on failure
+          activeCart[itemIndex].quatity = oldQuantity;
+          renderCart();
+          alert('Failed to update quantity');
+        }
+      } catch (error) {
+        // 🔙 Rollback on error
+        activeCart[itemIndex].quatity = oldQuantity;
         renderCart();
-      } else {
+        console.error('Error updating quantity:', error);
         alert('Failed to update quantity');
       }
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-      alert('Failed to update quantity');
     }
   };
 
-  // ==================== REMOVE CART ITEM ====================
+  // ==================== REMOVE CART ITEM (OPTIMISTIC UPDATE) ====================
   window.removeCartItem = async function (cartId) {
     if (!confirm('Remove this item from your cart?')) return;
 
-    try {
-      const res = await fetch(`/api/cart/remove/${cartId}`, {
-        method: 'DELETE'
-      });
-
-      if (res.ok) {
-        await loadCartItems();
-        renderCart();
+    // 🚀 OPTIMISTIC UPDATE - Remove from UI immediately
+    const activeCart = currentOrderType === 'delivery' ? deliveryCart : pickupCart;
+    const itemIndex = activeCart.findIndex(item => item.cart_id === cartId);
+    
+    if (itemIndex !== -1) {
+      const removedItem = activeCart.splice(itemIndex, 1)[0];
+      
+      // 🎯 Instant UI update with smooth animation
+      const itemCard = document.querySelector(`[data-cart-id="${cartId}"]`);
+      if (itemCard) {
+        itemCard.style.transition = 'opacity 0.3s, transform 0.3s';
+        itemCard.style.opacity = '0';
+        itemCard.style.transform = 'translateX(-20px)';
+        setTimeout(() => renderCart(), 300);
       } else {
+        renderCart();
+      }
+      
+      // 🔄 Then update backend in background
+      try {
+        const res = await fetch(`/api/cart/remove/${cartId}`, {
+          method: 'DELETE'
+        });
+
+        if (!res.ok) {
+          // 🔙 Rollback on failure
+          activeCart.splice(itemIndex, 0, removedItem);
+          renderCart();
+          alert('Failed to remove item');
+        }
+      } catch (error) {
+        // 🔙 Rollback on error
+        activeCart.splice(itemIndex, 0, removedItem);
+        renderCart();
+        console.error('Error removing item:', error);
         alert('Failed to remove item');
       }
-    } catch (error) {
-      console.error('Error removing item:', error);
-      alert('Failed to remove item');
     }
   };
 
@@ -374,17 +456,34 @@ document.addEventListener("DOMContentLoaded", () => {
   window.clearRestaurantCart = async function (stakeholderId) {
     if (!confirm('Remove all items from this restaurant?')) return;
 
-    try {
-      const activeCart = currentOrderType === 'delivery' ? deliveryCart : pickupCart;
-      const itemsToRemove = activeCart.filter(item => item.stakeholder_id == stakeholderId);
-
-      for (const item of itemsToRemove) {
-        await fetch(`/api/cart/remove/${item.cart_id}`, { method: 'DELETE' });
+    const activeCart = currentOrderType === 'delivery' ? deliveryCart : pickupCart;
+    const itemsToRemove = activeCart.filter(item => item.stakeholder_id == stakeholderId);
+    
+    // 🚀 OPTIMISTIC UPDATE
+    const removedItems = [];
+    itemsToRemove.forEach(item => {
+      const index = activeCart.findIndex(i => i.cart_id === item.cart_id);
+      if (index !== -1) {
+        removedItems.push({ item, index });
+        activeCart.splice(index, 1);
       }
+    });
+    
+    renderCart();
 
-      await loadCartItems();
-      renderCart();
+    // 🔄 Update backend
+    try {
+      await Promise.all(
+        itemsToRemove.map(item => 
+          fetch(`/api/cart/remove/${item.cart_id}`, { method: 'DELETE' })
+        )
+      );
     } catch (error) {
+      // 🔙 Rollback
+      removedItems.reverse().forEach(({ item, index }) => {
+        activeCart.splice(index, 0, item);
+      });
+      renderCart();
       console.error('Error clearing restaurant cart:', error);
       alert('Failed to clear cart');
     }
@@ -398,12 +497,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let subtotal = 0;
     let totalDeliveryFee = 0;
 
-    // Group items by restaurant for modal display
     const groupedByRestaurant = activeCart.reduce((acc, item) => {
       const restaurantId = item.stakeholder_id;
-      if (!acc[restaurantId]) {
-        acc[restaurantId] = [];
-      }
+      if (!acc[restaurantId]) acc[restaurantId] = [];
       acc[restaurantId].push(item);
       return acc;
     }, {});
@@ -451,7 +547,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('modal-service-fee').textContent = `৳${serviceFee.toFixed(2)}`;
     document.getElementById('modal-total').textContent = `৳${total.toFixed(2)}`;
 
-    // Show/hide sections based on order type
     const deliveryAddressSection = document.getElementById('delivery-address-section');
     const pickupTimeSection = document.getElementById('pickup-time-section');
     const modalDeliveryRow = document.getElementById('modal-delivery-row');
@@ -463,7 +558,6 @@ document.addEventListener("DOMContentLoaded", () => {
       modalDeliveryRow.style.display = 'flex';
       cashOption.style.display = 'flex';
       
-      // Pre-fill address
       const consumerAddress = localStorage.getItem('consumer_address');
       if (consumerAddress) {
         document.getElementById('delivery-address').value = consumerAddress;
@@ -475,7 +569,6 @@ document.addEventListener("DOMContentLoaded", () => {
       cashOption.style.display = 'none';
       document.getElementById('payment-bkash').checked = true;
 
-      // Set default pickup time (30 minutes from now)
       const now = new Date();
       now.setMinutes(now.getMinutes() + 30);
       document.getElementById('pickup-time').value = now.toISOString().slice(0, 16);
@@ -483,15 +576,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     modal.style.display = 'flex';
 
-    // Modal event handlers
-    document.getElementById('close-payment-modal').onclick = () => {
-      modal.style.display = 'none';
-    };
-
-    document.getElementById('cancel-payment').onclick = () => {
-      modal.style.display = 'none';
-    };
-
+    document.getElementById('close-payment-modal').onclick = () => modal.style.display = 'none';
+    document.getElementById('cancel-payment').onclick = () => modal.style.display = 'none';
     document.getElementById('confirm-payment').onclick = async () => {
       await handlePaymentConfirmation(subtotal, totalDeliveryFee, serviceFee, total);
     };
@@ -556,7 +642,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (data.success && data.data.bkashURL) {
-        // Store order details for after payment
         const orderDetails = {
           cart: cart,
           orderType: currentOrderType,
@@ -583,7 +668,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==================== CASH PAYMENT ====================
   async function handleCashPayment(cart, deliveryAddress, notes, subtotal, deliveryFee, serviceFee, totalAmount) {
     try {
-      // Group by restaurant and create orders
       const groupedByRestaurant = cart.reduce((acc, item) => {
         if (!acc[item.stakeholder_id]) acc[item.stakeholder_id] = [];
         acc[item.stakeholder_id].push(item);
@@ -634,7 +718,6 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(data.message || 'Failed to create order');
         }
 
-        // Remove items from cart
         for (const item of items) {
           await fetch(`/api/cart/remove/${item.cart_id}`, { method: 'DELETE' });
         }
