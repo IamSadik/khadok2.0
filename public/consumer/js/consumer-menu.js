@@ -378,18 +378,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Setup cart functionality
   function setupCart() {
-    // Add to cart button clicks
-    document.body.addEventListener("click", async (e) => {
-      const addBtn = e.target.closest(".add-to-cart-btn");
-      if (addBtn) {
-        const itemId = addBtn.dataset.id;
-        const itemName = addBtn.dataset.name;
-        const itemPrice = parseFloat(addBtn.dataset.price);
-        const itemPicture = addBtn.closest('.menu-card').querySelector('img').src;
-
-        await addToCart({ id: itemId, name: itemName, price: itemPrice, picture: itemPicture });
-      }
-    });
+    // ✅ REMOVED DUPLICATE: Add to cart button clicks (this was causing double additions)
+    // The event listener is already set up at line 637 below setupCart()
 
     // Toggle cart popup
     cartIcon.addEventListener("click", () => {
@@ -709,7 +699,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Add to cart button clicks
+  // ✅ KEEP THIS ONE: Add to cart button clicks (single event listener)
   document.body.addEventListener("click", async (e) => {
     const addBtn = e.target.closest(".add-to-cart-btn");
     if (addBtn) {
