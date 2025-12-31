@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="css/khadok.consumer.cart.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 </head>
 <body>
     <!-- Sidebar -->
@@ -218,8 +221,52 @@
 
                 <!-- Delivery Address -->
                 <div class="modal-section" id="delivery-address-section">
-                    <h3><i class="fas fa-map-marker-alt"></i> Delivery Address</h3>
-                    <textarea id="delivery-address" rows="3" placeholder="Enter your delivery address"></textarea>
+                    <h3><i class="fas fa-map-marker-alt"></i> Delivery Location</h3>
+                    
+                    <!-- Map Preview Container -->
+                    <div class="delivery-map-container" id="delivery-map-container" style="
+                        height: 250px; 
+                        width: 100%; 
+                        border-radius: 12px; 
+                        overflow: hidden; 
+                        border: 2px solid #e0e0e0;
+                        margin-bottom: 1rem;
+                        position: relative;
+                    ">
+                        <!-- Map will be rendered here -->
+                    </div>
+                    
+                    <!-- Address Display (Read-only) -->
+                    <div style="
+                        background: #f8f9fa;
+                        border: 2px solid #e0e0e0;
+                        border-radius: 8px;
+                        padding: 1rem;
+                        margin-bottom: 0.5rem;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <i class="fas fa-map-marker-alt" style="color: #00b894;"></i>
+                            <strong style="color: #333;">Delivery Address</strong>
+                        </div>
+                        <p id="delivery-address-display" style="
+                            margin: 0;
+                            color: #666;
+                            font-size: 0.95rem;
+                            line-height: 1.5;
+                        ">Loading address...</p>
+                    </div>
+                    
+                    <p style="
+                        font-size: 0.85rem;
+                        color: #999;
+                        margin: 0.5rem 0 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                    ">
+                        <i class="fas fa-info-circle"></i>
+                        This is your saved location. To change it, go to Dashboard → Location Picker.
+                    </p>
                 </div>
 
                 <!-- Pickup Time -->
@@ -269,6 +316,10 @@
 
     <!-- Scripts -->
     <script src="js/khadok.consumer.cart.js"></script>
+    
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    
     <script>
         let btn = document.querySelector("#btn"); 
         let sidebar = document.querySelector(".sidebar");

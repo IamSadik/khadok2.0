@@ -466,6 +466,149 @@ document.addEventListener("DOMContentLoaded", () => {
   // PAYMENT MODAL FUNCTIONALITY
   // ============================================================================
   
+  let deliveryMap = null; // Store map instance
+  let tileURL = ''; // Store tile URL
+  
+  // Fetch tile URL for map
+  async function fetchMapTileURL() {
+    try {
+      const res = await fetch('/api/map/tile-url');
+      const data = await res.json();
+      tileURL = data.tileURL;
+     
+    } catch (err) {
+      console.error('❌ Failed to fetch tile URL:', err);
+      tileURL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'; // Fallback
+    }
+  }
+  
+  // Reverse geocode to get address from coordinates
+  async function reverseGeocode(lat, lng) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1&accept-language=en`
+      );
+      const data = await res.json();
+      return data.display_name || 'Unknown location';
+    } catch (err) {
+      console.error('Reverse geocode failed:', err);
+      return 'Unknown location';
+    }
+  }
+  
+  // Initialize delivery location map
+  async function initDeliveryMap() {
+    // Get user's location from localStorage
+    const userLat = parseFloat(localStorage.getItem('current_user_lat'));
+    const userLng = parseFloat(localStorage.getItem('current_user_lng'));
+    
+    if (!userLat || !userLng) {
+      console.error('❌ No user location found in localStorage');
+      document.getElementById('delivery-address-display').textContent = 
+        'Location not set. Please set your location from the dashboard.';
+      return;
+    }
+    
+    // Fetch tile URL if not already loaded
+    if (!tileURL) {
+      await fetchMapTileURL();
+    }
+    
+    const mapContainer = document.getElementById('delivery-map-container');
+    
+    // Clear any existing map
+    if (deliveryMap) {
+      deliveryMap.remove();
+      deliveryMap = null;
+    }
+    
+    // Clear container
+    mapContainer.innerHTML = '';
+    
+    // Wait a bit for the modal to be visible
+    setTimeout(() => {
+      try {
+        console.log('🗺️ Initializing delivery map at:', { lat: userLat, lng: userLng });
+        
+        // Create map instance
+        deliveryMap = L.map(mapContainer, {
+          center: [userLat, userLng],
+          zoom: 16,
+          zoomControl: true,
+          scrollWheelZoom: true, // Allow zoom in/out
+          dragging: false, // Disable panning
+          doubleClickZoom: false,
+          touchZoom: true,
+          keyboard: false
+        });
+        
+        // Add tile layer
+        L.tileLayer(tileURL, {
+          tileSize: 512,
+          zoomOffset: -1,
+          attribution: '<a href="https://www.maptiler.com/">© MapTiler</a> <a href="https://www.openstreetmap.org/">© OSM</a>'
+        }).addTo(deliveryMap);
+        
+        // Add custom marker at user's location
+        const userIcon = L.divIcon({
+          html: `<div style="
+            background-color: #00b894;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+          ">
+            <i class="fas fa-map-marker-alt" style="color: white; font-size: 18px;"></i>
+          </div>
+          <style>
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); opacity: 1; }
+              50% { transform: scale(1.1); opacity: 0.8; }
+            }
+          </style>`,
+          className: 'delivery-location-marker',
+          iconSize: [36, 36],
+          iconAnchor: [18, 36]
+        });
+        
+        const marker = L.marker([userLat, userLng], { icon: userIcon }).addTo(deliveryMap);
+        
+        marker.bindPopup(`
+          <div style="text-align: center; padding: 0.5rem;">
+            <strong style="color: #00b894;">📍 Your Delivery Location</strong>
+            <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: #666;">Items will be delivered here</p>
+          </div>
+        `).openPopup();
+        
+        console.log('✅ Delivery map initialized successfully');
+        
+      } catch (error) {
+        console.error('❌ Error initializing delivery map:', error);
+        mapContainer.innerHTML = `
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            background: #f8f9fa;
+            color: #666;
+          ">
+            <p><i class="fas fa-exclamation-circle"></i> Failed to load map</p>
+          </div>
+        `;
+      }
+    }, 300); // Wait for modal animation
+    
+    // Get and display address
+    const address = await reverseGeocode(userLat, userLng);
+    document.getElementById('delivery-address-display').textContent = address;
+  }
+  
   function openPaymentModal() {
     const modal = document.getElementById("payment-modal");
     const orderItemsList = document.getElementById("order-items-list");
@@ -505,11 +648,8 @@ document.addEventListener("DOMContentLoaded", () => {
       cashOption.style.display = 'flex';
       deliveryRow.style.display = 'flex';
       
-      // Pre-fill address from consumer profile if available
-      const consumerAddress = localStorage.getItem('consumer_address');
-      if (consumerAddress) {
-        document.getElementById("delivery-address").value = consumerAddress;
-      }
+      // 🗺️ Initialize delivery map with user's location
+      initDeliveryMap();
     } else {
       deliverySection.style.display = 'none';
       pickupSection.style.display = 'block';
@@ -539,6 +679,12 @@ document.addEventListener("DOMContentLoaded", () => {
   
   function closePaymentModal() {
     document.getElementById("payment-modal").style.display = 'none';
+    
+    // Clean up map instance
+    if (deliveryMap) {
+      deliveryMap.remove();
+      deliveryMap = null;
+    }
   }
   
   async function handlePaymentConfirmation() {
