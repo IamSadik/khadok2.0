@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       // 🚀 Fetch nearby restaurants and individual details in parallel
       const [nearbyData, ...restaurantDataArray] = await Promise.all([
-        fetch(`/api/restaurant/nearby?lat=${userLat}&lng=${userLng}&radius=12&useRoadDistance=true`)
+        fetch(`/api/restaurant/nearby?lat=${userLat}&lng=${userLng}&radius=50&useRoadDistance=true`)
           .then(r => r.json()),
         ...uncachedIds.map(id => 
           fetch(`/api/restaurant/${id}`).then(r => r.json()).catch(() => null)
@@ -131,27 +131,49 @@ document.addEventListener("DOMContentLoaded", () => {
         const stakeholderId = uncachedIds[index];
         const nearbyMatch = nearbyRestaurants.find(r => r.stakeholder_id == stakeholderId);
 
-        let estimatedDeliveryMins = 25;
-        let estimatedPickupMins = 20;
+        // ✅ Use fixed estimated_time from nearby API instead of random calculation
+        let estimatedDeliveryMins = 25; // Default fallback
+        let estimatedPickupMins = 20;   // Default fallback
 
         if (nearbyMatch && nearbyMatch.estimated_time) {
-          const travelTimeMins = Math.ceil(nearbyMatch.estimated_time);
-          estimatedDeliveryMins = travelTimeMins + Math.floor(Math.random() * 6) + 10;
-          estimatedPickupMins = Math.max(15, travelTimeMins - 5);
+          // ✅ Use the exact estimated_time from API
+          const baseTime = Math.ceil(nearbyMatch.estimated_time);
+          
+          // For delivery: estimated_time to (estimated_time + 15) mins
+          estimatedDeliveryMins = baseTime;
+          const maxDeliveryMins = baseTime + 15;
+          
+          // For pickup: estimated_time - 5 to (estimated_time + 10) mins
+          estimatedPickupMins = Math.max(15, baseTime - 5);
+          const maxPickupMins = baseTime + 10;
+
+          const restaurantInfo = {
+            ...data,
+            distance: nearbyMatch?.distance || 0,
+            roadDistance: nearbyMatch?.road_distance || 0,
+            estimatedDeliveryTime: `${estimatedDeliveryMins}-${maxDeliveryMins} mins`,
+            estimatedPickupTime: `${estimatedPickupMins}-${maxPickupMins} mins`,
+            estimatedDeliveryMins,
+            estimatedPickupMins
+          };
+
+          restaurantDetails[stakeholderId] = restaurantInfo;
+          restaurantDetailsCache[stakeholderId] = restaurantInfo; // 🚀 Cache it
+        } else {
+          // No nearby match - use defaults
+          const restaurantInfo = {
+            ...data,
+            distance: 0,
+            roadDistance: 0,
+            estimatedDeliveryTime: `${estimatedDeliveryMins}-${estimatedDeliveryMins + 15} mins`,
+            estimatedPickupTime: `${estimatedPickupMins}-${estimatedPickupMins + 10} mins`,
+            estimatedDeliveryMins,
+            estimatedPickupMins
+          };
+
+          restaurantDetails[stakeholderId] = restaurantInfo;
+          restaurantDetailsCache[stakeholderId] = restaurantInfo;
         }
-
-        const restaurantInfo = {
-          ...data,
-          distance: nearbyMatch?.distance || 0,
-          roadDistance: nearbyMatch?.road_distance || 0,
-          estimatedDeliveryTime: `${estimatedDeliveryMins}-${estimatedDeliveryMins + 10} mins`,
-          estimatedPickupTime: `${estimatedPickupMins}-${estimatedPickupMins + 5} mins`,
-          estimatedDeliveryMins,
-          estimatedPickupMins
-        };
-
-        restaurantDetails[stakeholderId] = restaurantInfo;
-        restaurantDetailsCache[stakeholderId] = restaurantInfo; // 🚀 Cache it
       });
 
       lastFetchTime = now;
