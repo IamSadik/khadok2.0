@@ -182,6 +182,62 @@
         .locate-me-btn:hover {
             background-color: #f0f0f0;
         }
+        
+        /* Status Toggle Buttons */
+        .status-btn {
+            padding: 8px 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-btn:hover:not(:disabled) {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .status-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status-btn.active {
+            background: white;
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .status-btn.status-available.active {
+            color: #00b894;
+        }
+        
+        .status-btn.status-busy.active {
+            color: #f39c12;
+        }
+        
+        .status-btn.status-break.active {
+            color: #3498db;
+        }
+        
+        .status-btn.status-offline.active {
+            color: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            .status-btn {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+        }
     </style>
 </head>
 
@@ -283,8 +339,33 @@
                 </div>
             </div>
 
-            <!-- ======================= Cards ================== -->
+            <!-- ======================= Cards ================== --> 
             <div class="cardBox">
+                <!-- Status Toggle Card -->
+                <div class="card" style="grid-column: span 4; background: linear-gradient(135deg,#5C8374  20%, #3b8986 100%); color: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <div class="cardName" style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Current Status</div>
+                            <div style="font-size: 1.8rem; font-weight: bold; margin: 8px 0;" id="current-status-text">Loading...</div>
+                            <div style="font-size: 0.85rem; opacity: 0.9;" id="work-schedule-text">Schedule: --:-- to --:--</div>
+                        </div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="status-btn status-available" data-status="available" title="Ready to receive orders">
+                                <i class="fas fa-check-circle"></i> Available
+                            </button>
+                            <button class="status-btn status-busy" data-status="busy" title="Currently delivering" disabled>
+                                <i class="fas fa-shipping-fast"></i> Busy
+                            </button>
+                            <button class="status-btn status-break" data-status="on_break" title="Taking a break">
+                                <i class="fas fa-coffee"></i> On Break
+                            </button>
+                            <button class="status-btn status-offline" data-status="offline" title="Not accepting orders">
+                                <i class="fas fa-times-circle"></i> Offline
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div>
                         <div class="numbers" id="totalDeliveries">0</div>
@@ -447,7 +528,39 @@
                 </label>
                 <div class="button-group">
                     <button class="secondary-btn" id="back-to-step-2">← Back</button>
-                    <button class="primary-btn" id="finish-setup">Finish ✔</button>
+                    <button class="primary-btn" id="to-step-4">Next →</button>
+                </div>
+            </div>
+            
+            <!-- Step 4: Work Schedule -->
+            <div class="popup-screen" id="step-4">
+                <h3>
+                    <i class="fa-solid fa-clock fa-bounce" style="color: #00b894;"></i>
+                    Work Schedule
+                </h3>
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">
+                    Set your daily working hours. You can change this anytime in settings.
+                </p>
+                <label>Start Time:
+                    <input type="time" id="work-start-time" value="09:00" required />
+                </label>
+                <label>End Time:
+                    <input type="time" id="work-end-time" value="21:00" required />
+                </label>
+                <label>
+                    <input type="checkbox" id="available-now" checked style="width: auto; display: inline-block; margin-right: 8px;" />
+                    <span style="font-weight: normal;">Set me as <strong style="color: #00b894;">Available</strong> after setup</span>
+                </label>
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 0.85rem;">
+                    <strong>💡 Status Explained:</strong><br>
+                    • <strong style="color: #00b894;">Available</strong> - Ready to receive orders<br>
+                    • <strong style="color: #f39c12;">Busy</strong> - Currently delivering an order<br>
+                    • <strong style="color: #e74c3c;">Offline</strong> - Not accepting orders<br>
+                    • <strong style="color: #3498db;">On Break</strong> - Temporarily unavailable
+                </div>
+                <div class="button-group">
+                    <button class="secondary-btn" id="back-to-step-3">← Back</button>
+                    <button class="primary-btn" id="finish-setup">Start Riding! 🏍️</button>
                 </div>
             </div>
             
@@ -491,6 +604,7 @@
                 step1: document.getElementById("step-1"),
                 step2: document.getElementById("step-2"),
                 step3: document.getElementById("step-3"),
+                step4: document.getElementById("step-4"),
             };
             
             function showScreen(el) {
@@ -517,6 +631,8 @@
             document.getElementById("back-to-step-1").onclick = () => showScreen(screens.step1);
             document.getElementById("to-step-3").onclick = () => showScreen(screens.step3);
             document.getElementById("back-to-step-2").onclick = () => showScreen(screens.step2);
+            document.getElementById("to-step-4").onclick = () => showScreen(screens.step4);
+            document.getElementById("back-to-step-3").onclick = () => showScreen(screens.step3);
 
             // Map & Geocoding
             let map, tileURL;
@@ -639,8 +755,11 @@
                 const vehicleType = document.getElementById("vehicle-type").value;
                 const vehicleNumber = document.getElementById("vehicle-number").value.trim();
                 const picFile = document.getElementById("rider-pic").files[0];
+                const startTime = document.getElementById("work-start-time").value;
+                const endTime = document.getElementById("work-end-time").value;
+                const availableNow = document.getElementById("available-now").checked;
 
-                if (!name || !number || !address || !vehicleType) {
+                if (!name || !number || !address || !vehicleType || !startTime || !endTime) {
                     return alert("Please complete all required fields.");
                 }
 
@@ -662,6 +781,9 @@
                 formData.append("vehicle_number", vehicleNumber);
                 formData.append("lat", lat);
                 formData.append("lng", lng);
+                formData.append("start_time", startTime);
+                formData.append("end_time", endTime);
+                formData.append("available_now", availableNow);
                 if (picFile) formData.append("profile_pic", picFile);
 
                 // Send to backend

@@ -478,6 +478,17 @@
       sidebar.classList.toggle('expanded');
       mainContent.classList.toggle('expanded');
     });
+
+    // Set active menu item
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuItems = document.querySelectorAll('.sidebar ul li');
+      menuItems.forEach(item => {
+        const parentLink = item.closest('a');
+        if (parentLink && parentLink.getAttribute('href') === './interior-setup.html') {
+          item.classList.add('active');
+        }
+      });
+    });
   </script>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

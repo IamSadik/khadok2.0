@@ -80,15 +80,15 @@ exports.updateRiderProfile = async (req, res) => {
     }
 };
 
-// Update rider status (available/busy/offline)
+// Update rider status (available/busy/offline/on_break)
 exports.updateRiderStatus = async (req, res) => {
     try {
         const { rider_id, status } = req.body;
 
-        if (!['available', 'busy', 'offline'].includes(status)) {
+        if (!['available', 'busy', 'offline', 'on_break'].includes(status)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid status. Must be: available, busy, or offline'
+                message: 'Invalid status. Must be: available, busy, offline, or on_break'
             });
         }
 
@@ -397,7 +397,19 @@ exports.checkFirstTime = async (req, res) => {
 // Update rider info (for first-time setup)
 exports.updateRiderInfo = async (req, res) => {
     try {
-        const { rider_id, name, number, address, vehicle_type, vehicle_number, lat, lng } = req.body;
+        const { 
+            rider_id, 
+            name, 
+            number, 
+            address, 
+            vehicle_type, 
+            vehicle_number, 
+            lat, 
+            lng,
+            start_time,
+            end_time,
+            available_now
+        } = req.body;
         
         if (!rider_id) {
             return res.status(400).json({
@@ -406,12 +418,15 @@ exports.updateRiderInfo = async (req, res) => {
             });
         }
 
-        if (!name || !number || !address || !vehicle_type) {
+        if (!name || !number || !address || !vehicle_type || !start_time || !end_time) {
             return res.status(400).json({
                 success: false,
                 message: 'Missing required fields'
             });
         }
+
+        // Determine initial status based on available_now checkbox
+        const initialStatus = (available_now === 'true' || available_now === true) ? 'available' : 'offline';
 
         const updates = {
             name: name,
@@ -421,8 +436,10 @@ exports.updateRiderInfo = async (req, res) => {
             vehicle_number: vehicle_number || null,
             lat: lat || '',
             lng: lng || '',
+            starts_at: start_time,
+            ends_at: end_time,
             is_active: 1,
-            status: 'offline'
+            status: initialStatus
         };
 
         // Handle profile picture if uploaded
@@ -434,13 +451,106 @@ exports.updateRiderInfo = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Rider information updated successfully'
+            message: 'Rider information updated successfully',
+            status: initialStatus
         });
     } catch (error) {
         console.error('Error updating rider info:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to update rider information',
+            error: error.message
+        });
+    }
+};
+
+// Update rider work schedule
+exports.updateWorkSchedule = async (req, res) => {
+    try {
+        const { rider_id, starts_at, ends_at } = req.body;
+
+        if (!rider_id || !starts_at || !ends_at) {
+            return res.status(400).json({
+                success: false,
+                message: 'Rider ID, start time, and end time are required'
+            });
+        }
+
+        // Validate time format (HH:MM)
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        if (!timeRegex.test(starts_at) || !timeRegex.test(ends_at)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid time format. Use HH:MM (24-hour format)'
+            });
+        }
+
+        await riderModel.updateRiderProfile(rider_id, { starts_at, ends_at });
+
+        res.json({
+            success: true,
+            message: 'Work schedule updated successfully'
+        });
+    } catch (error) {
+        console.error('Error updating work schedule:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update work schedule',
+            error: error.message
+        });
+    }
+};
+
+// Check if rider is within working hours
+exports.checkWorkingHours = async (req, res) => {
+    try {
+        const riderId = req.query.rider_id;
+
+        if (!riderId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Rider ID is required'
+            });
+        }
+
+        const rider = await riderModel.getRiderById(riderId);
+
+        if (!rider) {
+            return res.status(404).json({
+                success: false,
+                message: 'Rider not found'
+            });
+        }
+
+        // Check if rider has set work schedule
+        if (!rider.starts_at || !rider.ends_at) {
+            return res.json({
+                success: true,
+                isWithinWorkingHours: false,
+                message: 'Work schedule not set'
+            });
+        }
+
+        // Get current time in HH:MM format
+        const now = new Date();
+        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        // Compare times
+        const isWithinHours = currentTime >= rider.starts_at && currentTime <= rider.ends_at;
+
+        res.json({
+            success: true,
+            isWithinWorkingHours: isWithinHours,
+            starts_at: rider.starts_at,
+            ends_at: rider.ends_at,
+            current_time: currentTime,
+            current_status: rider.status
+        });
+    } catch (error) {
+        console.error('Error checking working hours:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to check working hours',
             error: error.message
         });
     }

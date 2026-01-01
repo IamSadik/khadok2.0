@@ -155,6 +155,12 @@
             text-decoration: none;
             /* Ensure no underline on hover */
         }
+        
+        /* Active menu item styling */
+        .sidebar ul li.active {
+            background-color: #4c5a88;
+            border-left: 4px solid #5dade2;
+        }
 
         /* Toggle button styles */
         .toggle-btn {
@@ -477,6 +483,16 @@
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('expanded');
             mainContent.classList.toggle('expanded');
+        });
+
+        // Set active menu item
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuItems = document.querySelectorAll('.sidebar ul li');
+            menuItems.forEach(item => {
+                if (item.getAttribute('data-title') === 'Dashboard') {
+                    item.classList.add('active');
+                }
+            });
         });
     </script>
 

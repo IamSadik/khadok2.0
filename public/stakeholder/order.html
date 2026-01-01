@@ -120,7 +120,7 @@
                         <option value="yesterday">Yesterday</option>
                         <option value="week">This Week</option>
                         <option value="month">This Month</option>
-                        <option value="all">All Time</option>
+                        <option value="all" selected>All Time</option>
                     </select>
                 </div>
             </div>
@@ -182,6 +182,20 @@
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('expanded');
             mainContent.classList.toggle('expanded');
+        });
+
+        // Set active menu item
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get all sidebar menu items
+            const menuItems = document.querySelectorAll('.sidebar ul li');
+            
+            // Find the Orders menu item (5th item, index 4)
+            // Or you can target it by its data-title attribute
+            menuItems.forEach(item => {
+                if (item.getAttribute('data-title') === 'Orders') {
+                    item.classList.add('active');
+                }
+            });
         });
     </script>
 

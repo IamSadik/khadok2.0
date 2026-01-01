@@ -3,7 +3,7 @@ let allOrders = [];
 let currentOrderType = 'delivery'; // 'delivery' or 'pickup'
 let currentFilters = {
     status: 'all',
-    date: 'today',
+    date: 'all', // ✅ Changed from 'today' to 'all'
     search: ''
 };
 
@@ -146,15 +146,32 @@ async function fetchOrders() {
         const response = await fetch(endpoint);
         const data = await response.json();
 
+        console.log('📦 Fetch Response:', { 
+            type: currentOrderType, 
+            success: data.success, 
+            data 
+        });
+
         if (data.success) {
-            allOrders = currentOrderType === 'delivery' ? data.orders : data.pickups;
+            // ✅ FIX: Handle both delivery and pickup orders properly
+            if (currentOrderType === 'delivery') {
+                allOrders = Array.isArray(data.orders) ? data.orders : [];
+            } else {
+                allOrders = Array.isArray(data.pickups) ? data.pickups : [];
+            }
+            
+            console.log('✅ Orders loaded:', allOrders.length);
             renderOrders();
             updateStats();
         } else {
-            showError('Failed to load orders');
+            // ✅ FIX: Set to empty array on failure
+            allOrders = [];
+            showError(data.message || 'Failed to load orders');
         }
     } catch (error) {
         console.error('Error fetching orders:', error);
+        // ✅ FIX: Set to empty array on error
+        allOrders = [];
         showError('Network error. Please try again.');
     }
 }
@@ -193,80 +210,99 @@ function createOrderCard(order) {
     card.innerHTML = `
         <div class="order-card-header">
             <div class="order-id">
-                <i class="fas fa-hashtag"></i>
-                ${orderId}
+                <i class="fas fa-receipt"></i>
+                <span>#${orderId}</span>
             </div>
             <span class="order-badge ${status}">${formatStatus(status)}</span>
         </div>
 
-        <div class="order-info-row">
-            <i class="fas fa-clock"></i>
-            <span>${formatDateTime(createdAt)}</span>
-        </div>
-
-        ${order.consumer_name ? `
-            <div class="order-info-row">
-                <i class="fas fa-user"></i>
-                <span>${order.consumer_name}</span>
-            </div>
-        ` : ''}
-
-        ${order.delivery_address ? `
-            <div class="order-info-row">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>${truncate(order.delivery_address, 40)}</span>
-            </div>
-        ` : ''}
-
-        ${order.payment_method ? `
-            <div class="order-info-row">
-                <i class="fas fa-credit-card"></i>
-                <span>${order.payment_method.toUpperCase()}</span>
-            </div>
-        ` : ''}
-
-        ${items.length > 0 ? `
-            <div class="order-items">
-                <div class="order-items-title">
-                    <i class="fas fa-shopping-cart"></i> Order Items (${items.length})
+        <div class="order-card-body">
+            <div class="order-meta">
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>${formatDateTime(createdAt)}</span>
                 </div>
-                <div class="order-item-list">
-                    ${items.slice(0, 3).map(item => `
-                        <div class="order-item-entry">
-                            <span>${item.quantity}x ${item.item_name}</span>
-                            <span>৳${item.item_price}</span>
-                        </div>
-                    `).join('')}
-                    ${items.length > 3 ? `<div class="order-item-entry"><span>+${items.length - 3} more items...</span></div>` : ''}
-                </div>
+                ${order.consumer_name ? `
+                    <div class="meta-item">
+                        <i class="fas fa-user"></i>
+                        <span>${order.consumer_name}</span>
+                    </div>
+                ` : ''}
+                ${order.consumer_phone ? `
+                    <div class="meta-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${order.consumer_phone}</span>
+                    </div>
+                ` : ''}
+                ${order.delivery_address ? `
+                    <div class="meta-item address">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${truncate(order.delivery_address, 45)}</span>
+                    </div>
+                ` : ''}
+                ${order.payment_method ? `
+                    <div class="meta-item">
+                        <i class="fas fa-credit-card"></i>
+                        <span>${order.payment_method.toUpperCase()}</span>
+                    </div>
+                ` : ''}
             </div>
-        ` : ''}
 
-        <div class="order-total">
-            <span class="order-total-label">Total Amount:</span>
-            <span class="order-total-amount">৳${order.total_amount}</span>
-        </div>
-
-        <div class="order-actions">
-            ${status === 'pending' ? `
-                <button class="order-action-btn accept" onclick="handleOrderAction(${orderId}, 'accept')">
-                    <i class="fas fa-check"></i> Accept
-                </button>
-                <button class="order-action-btn reject" onclick="handleOrderAction(${orderId}, 'reject')">
-                    <i class="fas fa-times"></i> Reject
-                </button>
-            ` : status === 'confirmed' ? `
-                <button class="order-action-btn update" onclick="handleOrderAction(${orderId}, 'preparing')">
-                    <i class="fas fa-fire"></i> Start Preparing
-                </button>
-            ` : status === 'preparing' ? `
-                <button class="order-action-btn update" onclick="handleOrderAction(${orderId}, 'ready')">
-                    <i class="fas fa-check-circle"></i> Mark Ready
-                </button>
+            ${items.length > 0 ? `
+                <div class="order-items">
+                    <div class="items-header">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Items (${items.length})</span>
+                    </div>
+                    <div class="items-list">
+                        ${items.slice(0, 3).map(item => `
+                            <div class="item-row">
+                                <span class="item-name">${item.quantity}× ${item.item_name}</span>
+                                <span class="item-price">৳${item.item_price}</span>
+                            </div>
+                        `).join('')}
+                        ${items.length > 3 ? `
+                            <div class="item-row more-items">
+                                <span>+${items.length - 3} more item${items.length - 3 > 1 ? 's' : ''}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
             ` : ''}
-            <button class="order-action-btn view" onclick="showOrderDetails(${orderId})">
-                <i class="fas fa-eye"></i> View Details
-            </button>
+        </div>
+
+        <div class="order-footer">
+            <div class="order-total">
+                <span class="total-label">Total Amount</span>
+                <span class="total-amount">৳${order.total_amount}</span>
+            </div>
+            
+            <div class="order-actions">
+                ${status === 'pending' ? `
+                    <button class="action-btn btn-accept" onclick="handleOrderAction(${orderId}, 'accept')">
+                        <i class="fas fa-check"></i>
+                        <span>Accept</span>
+                    </button>
+                    <button class="action-btn btn-reject" onclick="handleOrderAction(${orderId}, 'reject')">
+                        <i class="fas fa-times"></i>
+                        <span>Reject</span>
+                    </button>
+                ` : status === 'confirmed' ? `
+                    <button class="action-btn btn-update" onclick="handleOrderAction(${orderId}, 'preparing')">
+                        <i class="fas fa-fire"></i>
+                        <span>Start Preparing</span>
+                    </button>
+                ` : status === 'preparing' ? `
+                    <button class="action-btn btn-update" onclick="handleOrderAction(${orderId}, 'ready')">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Mark Ready</span>
+                    </button>
+                ` : ''}
+                <button class="action-btn btn-view" onclick="showOrderDetails(${orderId})">
+                    <i class="fas fa-eye"></i>
+                    <span>View Details</span>
+                </button>
+            </div>
         </div>
     `;
 
@@ -529,6 +565,12 @@ function closeModal() {
 
 // ========== FILTER ORDERS ==========
 function filterOrders(orders) {
+    // ✅ FIX: Add safety check for undefined/null orders
+    if (!orders || !Array.isArray(orders)) {
+        console.warn('⚠️ filterOrders received invalid data:', orders);
+        return [];
+    }
+    
     return orders.filter(order => {
         const status = order.order_status || order.status;
         const orderId = String(order.id || order.order_id || order.pickup_id);
@@ -552,6 +594,11 @@ function filterOrders(orders) {
 
 // ========== UPDATE STATS ==========
 function updateStats() {
+    // ✅ FIX: Add safety check for allOrders
+    if (!allOrders || !Array.isArray(allOrders)) {
+        allOrders = [];
+    }
+    
     const pending = allOrders.filter(o => (o.order_status || o.status) === 'pending').length;
     const preparing = allOrders.filter(o => (o.order_status || o.status) === 'preparing').length;
     const today = allOrders.filter(o => {

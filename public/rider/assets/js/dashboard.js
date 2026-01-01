@@ -18,11 +18,13 @@
         loadRecentOrders();
         loadRecentCustomers();
         setupSignOut();
+        setupStatusToggle();
         
         // Refresh data every 30 seconds
         setInterval(() => {
             loadRiderStats();
             loadRecentOrders();
+            loadRiderStatus();
         }, 30000);
     });
 
@@ -343,6 +345,183 @@
             alert("Something went wrong during logout.");
             window.location.href = '../rider_login.html'; // Redirect to login page on error
         }
+    }
+
+    // Setup status toggle buttons
+    function setupStatusToggle() {
+        const statusButtons = document.querySelectorAll('.status-btn');
+        
+        statusButtons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const newStatus = this.getAttribute('data-status');
+                
+                // Don't allow manually setting to 'busy' - only system can do that
+                if (newStatus === 'busy') {
+                    alert('Status "Busy" is automatically set when you accept an order.');
+                    return;
+                }
+                
+                // Confirm status change
+                const confirmMsg = `Change your status to "${formatStatusForDisplay(newStatus)}"?`;
+                if (!confirm(confirmMsg)) return;
+                
+                await updateRiderStatus(newStatus);
+            });
+        });
+        
+        // Load current status
+        loadRiderStatus();
+    }
+
+    // Load and display current rider status
+    async function loadRiderStatus() {
+        try {
+            const response = await fetch(`/api/rider/profile/${riderId}`);
+            const data = await response.json();
+
+            if (data.success && data.rider) {
+                const rider = data.rider;
+                const currentStatus = rider.status || 'offline';
+                const startsAt = rider.starts_at || '--:--';
+                const endsAt = rider.ends_at || '--:--';
+                
+                // Update status display
+                updateStatusDisplay(currentStatus);
+                
+                // Update work schedule display
+                document.getElementById('work-schedule-text').textContent = 
+                    `Schedule: ${startsAt} to ${endsAt}`;
+                
+                // Update button states
+                const statusButtons = document.querySelectorAll('.status-btn');
+                statusButtons.forEach(btn => {
+                    const btnStatus = btn.getAttribute('data-status');
+                    
+                    // Remove active class from all
+                    btn.classList.remove('active');
+                    
+                    // Add active to current status
+                    if (btnStatus === currentStatus) {
+                        btn.classList.add('active');
+                    }
+                    
+                    // Disable/enable based on status
+                    // Only 'busy' status should be disabled for manual selection
+                    if (btnStatus === 'busy' && currentStatus !== 'busy') {
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error loading rider status:', error);
+            document.getElementById('current-status-text').textContent = 'Error loading status';
+        }
+    }
+
+    // Update rider status on server
+    async function updateRiderStatus(newStatus) {
+        try {
+            const response = await fetch('/api/rider/status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    rider_id: riderId,
+                    status: newStatus
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                // Update UI immediately
+                updateStatusDisplay(newStatus);
+                
+                // Reload status to sync with server
+                await loadRiderStatus();
+                
+                // Show success message
+                showStatusChangeNotification(newStatus);
+            } else {
+                alert('Failed to update status: ' + (data.message || 'Unknown error'));
+                // Reload current status
+                await loadRiderStatus();
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Failed to update status. Please try again.');
+            await loadRiderStatus();
+        }
+    }
+
+    // Update status display text and color
+    function updateStatusDisplay(status) {
+        const statusText = document.getElementById('current-status-text');
+        const displayText = formatStatusForDisplay(status);
+        
+        // Update text
+        statusText.textContent = displayText;
+        
+        // Update color based on status
+        const colors = {
+            'available': '#00b894',
+            'busy': '#f39c12',
+            'offline': '#e74c3c',
+            'on_break': '#3498db'
+        };
+        
+        statusText.style.color = colors[status] || '#fff';
+    }
+
+    // Format status for display
+    function formatStatusForDisplay(status) {
+        const statusMap = {
+            'available': '🟢 Available',
+            'busy': '🟡 Busy',
+            'offline': '🔴 Offline',
+            'on_break': '🔵 On Break'
+        };
+        
+        return statusMap[status] || status;
+    }
+
+    // Show notification for status change
+    function showStatusChangeNotification(status) {
+        const messages = {
+            'available': '✅ You are now AVAILABLE to receive orders!',
+            'offline': '⭕ You are now OFFLINE. You won\'t receive new orders.',
+            'on_break': '☕ You are now ON BREAK. Enjoy your rest!'
+        };
+        
+        const message = messages[status] || `Status changed to ${status}`;
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2ecc71;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
 })();

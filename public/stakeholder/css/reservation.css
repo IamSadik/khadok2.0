@@ -116,7 +116,7 @@ body {
     cursor: pointer;
     outline: none;
     transition: background-color 0.3s ease-in-out;
-    color: #f0f0f0;
+    
 }
 
 .toggle-btn i {
@@ -174,7 +174,7 @@ body {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 8px rgba(42, 61, 102, 0.08);
-    border-left: 4px solid #2a3d66;
+    border-left: 4px solid #4DA8CC;
 }
 
 .header-left h1 {
@@ -199,7 +199,7 @@ body {
 }
 
 .btn-refresh {
-    background: #2a3d66;
+    background: #4DA8CC;
     color: white;
     padding: 12px 24px;
     border: none;
@@ -363,9 +363,9 @@ body {
 }
 
 .tab-btn.active {
-    background: #2a3d66;
+    background: #4DA8CC;
     color: white;
-    border-color: #2a3d66;
+    border-color: #4DA8CC;
 }
 
 .tab-btn.active .badge {
@@ -456,7 +456,7 @@ body {
 
 .card-header {
     padding: 20px;
-    background: linear-gradient(135deg, #2a3d66 0%, #4c5a88 100%);
+    background: #4DA8CC;
     color: white;
     position: relative;
 }
@@ -670,9 +670,9 @@ body {
 }
 
 .btn-complete {
-    background: #5dade2;
+    background: #4DA8CC;
     color: white;
-    border: 2px solid #5dade2;
+    border: 2px solid #4DA8CC;
 }
 
 .btn-complete:hover {
@@ -836,7 +836,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #2a3d66 0%, #4c5a88 100%);
+    background: #4DA8CC;
     color: white;
     border-radius: 16px 16px 0 0;
 }
@@ -850,7 +850,7 @@ body {
 }
 
 .modal-header i {
-    color: #5dade2;
+    color: #2a3d66;
     font-size: 22px;
 }
 

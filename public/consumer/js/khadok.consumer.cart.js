@@ -850,6 +850,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return acc;
       }, {});
 
+      // Get user's delivery coordinates from localStorage
+      const deliveryLat = parseFloat(localStorage.getItem('current_user_lat'));
+      const deliveryLng = parseFloat(localStorage.getItem('current_user_lng'));
+
+      // Validate coordinates for delivery orders
+      if (currentOrderType === 'delivery' && (!deliveryLat || !deliveryLng)) {
+        throw new Error('Delivery coordinates (lat/lng) are required for delivery orders');
+      }
+
       for (const stakeholderId of Object.keys(groupedByRestaurant)) {
         const items = groupedByRestaurant[stakeholderId];
         const restaurant = restaurantDetails[stakeholderId] || {};
@@ -872,6 +881,8 @@ document.addEventListener("DOMContentLoaded", () => {
           service_fee: serviceFee,
           total_amount: restaurantSubtotal + restaurantDeliveryFee + serviceFee,
           delivery_address: deliveryAddress,
+          delivery_lat: currentOrderType === 'delivery' ? deliveryLat : null,
+          delivery_lng: currentOrderType === 'delivery' ? deliveryLng : null,
           notes: notes,
           items: items.map(item => ({
             menu_id: item.menu_id,

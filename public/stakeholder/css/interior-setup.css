@@ -127,6 +127,12 @@ html {
     /* Ensure no underline on hover */
 }
 
+/* Active menu item styling */
+.sidebar ul li.active {
+    background-color: #4c5a88;
+    border-left: 4px solid #5dade2;
+}
+
 /* Toggle button styles */
 .toggle-btn {
     display: flex;

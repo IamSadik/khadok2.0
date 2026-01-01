@@ -21,11 +21,17 @@ router.get('/stats/:riderId', riderController.getRiderStats);
 
 // ==================== RIDER STATUS & LOCATION ROUTES ====================
 
-// Update rider status (available/busy/offline)
+// Update rider status (available/busy/offline/on_break)
 router.post('/status', riderController.updateRiderStatus);
 
 // Update rider location (real-time tracking)
 router.post('/location', riderController.updateRiderLocation);
+
+// Update work schedule
+router.post('/schedule', riderController.updateWorkSchedule);
+
+// Check if rider is within working hours
+router.get('/working-hours', riderController.checkWorkingHours);
 
 // Get available riders near a location (for order assignment)
 router.get('/available', riderController.getAvailableRiders);

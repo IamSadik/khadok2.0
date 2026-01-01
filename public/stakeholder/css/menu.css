@@ -123,6 +123,13 @@ body {
   transform: scale(1.05);
 }
 
+/* Active menu item styling */
+.sidebar ul li.active {
+  background-color: #4c5a88;
+  border-left: 4px solid #5dade2;
+}
+
+
 /* Sidebar Toggle Button */
 .toggle-btn {
   display: flex;

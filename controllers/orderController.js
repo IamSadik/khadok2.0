@@ -22,64 +22,6 @@ function calculateDeliveryTime(distance) {
   return Math.round(baseTime + (distance * timePerKm));
 }
 
-// NEW: Get orders for stakeholder with date filter (for delivery orders)
-exports.getOrdersByStakeholderWithDate = async (req, res) => {
-  try {
-    const { stakeholder_id, date } = req.query;
-
-    if (!stakeholder_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Stakeholder ID is required'
-      });
-    }
-
-    const orders = await orderModel.getOrdersByStakeholderWithDate(stakeholder_id, date || 'today', 'delivery');
-
-    res.json({
-      success: true,
-      orders: orders
-    });
-
-  } catch (error) {
-    console.error('Get orders with date filter error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch orders',
-      error: error.message
-    });
-  }
-};
-
-// NEW: Get pickup orders for stakeholder with date filter
-exports.getPickupOrdersByStakeholderWithDate = async (req, res) => {
-  try {
-    const { stakeholder_id, date } = req.query;
-
-    if (!stakeholder_id) {
-      return res.status(400).json({
-        success: false,
-        message: 'Stakeholder ID is required'
-      });
-    }
-
-    const pickups = await orderModel.getOrdersByStakeholderWithDate(stakeholder_id, date || 'today', 'pickup');
-
-    res.json({
-      success: true,
-      pickups: pickups
-    });
-
-  } catch (error) {
-    console.error('Get pickup orders with date filter error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch pickup orders',
-      error: error.message
-    });
-  }
-}
-
 // Create a new order
 exports.createOrder = async (req, res) => {
   try {
@@ -116,12 +58,21 @@ exports.createOrder = async (req, res) => {
       });
     }
 
-    // Validate delivery address for delivery orders
-    if (order_type === 'delivery' && !delivery_address) {
-      return res.status(400).json({
-        success: false,
-        message: 'Delivery address is required for delivery orders'
-      });
+    // Validate delivery requirements for delivery orders
+    if (order_type === 'delivery') {
+      if (!delivery_address) {
+        return res.status(400).json({
+          success: false,
+          message: 'Delivery address is required for delivery orders'
+        });
+      }
+      
+      if (!delivery_lat || !delivery_lng) {
+        return res.status(400).json({
+          success: false,
+          message: 'Delivery coordinates (lat/lng) are required for delivery orders'
+        });
+      }
     }
 
     // Create order data
@@ -153,6 +104,13 @@ exports.createOrder = async (req, res) => {
         });
       }
 
+      if (!restaurant.lat || !restaurant.lng) {
+        return res.status(400).json({
+          success: false,
+          message: 'Restaurant location not configured. Please contact support.'
+        });
+      }
+
       orderData.restaurant_lat = restaurant.lat;
       orderData.restaurant_lng = restaurant.lng;
       orderData.delivery_lat = delivery_lat;
@@ -160,18 +118,19 @@ exports.createOrder = async (req, res) => {
       orderData.delivery_status = 'pending_rider';
 
       // Calculate distance and estimated delivery time
-      if (delivery_lat && delivery_lng && restaurant.lat && restaurant.lng) {
-        const distance = calculateDistance(
-          parseFloat(restaurant.lat),
-          parseFloat(restaurant.lng),
-          parseFloat(delivery_lat),
-          parseFloat(delivery_lng)
-        );
-        orderData.estimated_delivery_time = calculateDeliveryTime(distance);
-      }
+      const distance = calculateDistance(
+        parseFloat(restaurant.lat),
+        parseFloat(restaurant.lng),
+        parseFloat(delivery_lat),
+        parseFloat(delivery_lng)
+      );
+      orderData.estimated_delivery_time = calculateDeliveryTime(distance);
+      
+      console.log(`📍 Order delivery distance: ${distance.toFixed(2)} km, estimated time: ${orderData.estimated_delivery_time} min`);
     }
 
     const orderId = await orderModel.createOrder(orderData);
+    console.log(`✅ Order ${orderId} created successfully (${order_type})`);
 
     // Create order items
     const orderItems = items.map(item => ({
@@ -185,20 +144,54 @@ exports.createOrder = async (req, res) => {
 
     await orderModel.createOrderItems(orderItems);
 
-    // Create initial delivery tracking entry for delivery orders
+    // 🔥 IMMEDIATE RIDER ASSIGNMENT FOR DELIVERY ORDERS
     if (order_type === 'delivery') {
+      // Create initial tracking entry
       await orderModel.createTrackingEntry(orderId, null, 'order_placed', 'Order has been placed');
+      
+      console.log(`🚴 Starting immediate rider assignment for order ${orderId}...`);
+      
+      // Auto-assign rider immediately after order creation
+      const assignmentResult = await assignRiderToOrder(orderId);
+      
+      if (assignmentResult.success) {
+        console.log(`✅ Rider ${assignmentResult.rider.name} assigned immediately to order ${orderId}`);
+        
+        // Update delivery status to 'assigned'
+        await orderModel.updateDeliveryStatus(orderId, 'assigned');
+        
+        res.json({
+          success: true,
+          message: 'Order created and rider assigned successfully',
+          orderId: orderId,
+          estimated_delivery_time: orderData.estimated_delivery_time,
+          rider_assigned: true,
+          rider_name: assignmentResult.rider.name,
+          rider_phone: assignmentResult.rider.phone
+        });
+      } else {
+        console.warn(`⚠️ Rider assignment failed for order ${orderId}: ${assignmentResult.message}`);
+        
+        res.json({
+          success: true,
+          message: 'Order created successfully but no rider available yet',
+          orderId: orderId,
+          estimated_delivery_time: orderData.estimated_delivery_time,
+          rider_assigned: false,
+          rider_message: assignmentResult.message
+        });
+      }
+    } else {
+      // Pickup order - no rider needed
+      res.json({
+        success: true,
+        message: 'Pickup order created successfully',
+        orderId: orderId
+      });
     }
 
-    res.json({
-      success: true,
-      message: 'Order created successfully',
-      orderId: orderId,
-      estimated_delivery_time: orderData.estimated_delivery_time || null
-    });
-
   } catch (error) {
-    console.error('Create order error:', error);
+    console.error('❌ Create order error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create order',
@@ -265,6 +258,79 @@ exports.getStakeholderOrders = async (req, res) => {
   }
 };
 
+// Get orders for a stakeholder with date filter (query params)
+exports.getOrdersByStakeholderWithDate = async (req, res) => {
+  try {
+    const { stakeholder_id, date } = req.query;
+
+    if (!stakeholder_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Stakeholder ID is required'
+      });
+    }
+
+    let orders;
+    if (date) {
+      // Get delivery orders for specific date using the correct function name
+      orders = await orderModel.getOrdersByStakeholderWithDate(stakeholder_id, date, 'delivery');
+    } else {
+      // Get all orders
+      orders = await orderModel.getOrdersByStakeholder(stakeholder_id);
+    }
+
+    res.json({
+      success: true,
+      orders: orders
+    });
+
+  } catch (error) {
+    console.error('Get stakeholder orders with date error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch orders',
+      error: error.message
+    });
+  }
+};
+
+// Get pickup orders for a stakeholder with date filter
+exports.getPickupOrdersByStakeholderWithDate = async (req, res) => {
+  try {
+    const { stakeholder_id, date } = req.query;
+
+    if (!stakeholder_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Stakeholder ID is required'
+      });
+    }
+
+    let orders;
+    if (date) {
+      // Get pickup orders for specific date using the correct function with 'pickup' order type
+      orders = await orderModel.getOrdersByStakeholderWithDate(stakeholder_id, date, 'pickup');
+    } else {
+      // Get all orders and filter for pickup orders
+      const allOrders = await orderModel.getOrdersByStakeholder(stakeholder_id);
+      orders = allOrders.filter(order => order.order_type === 'pickup');
+    }
+
+    res.json({
+      success: true,
+      orders: orders
+    });
+
+  } catch (error) {
+    console.error('Get pickup orders with date error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch pickup orders',
+      error: error.message
+    });
+  }
+};
+
 // Update order status
 exports.updateOrderStatus = async (req, res) => {
   try {
@@ -288,18 +354,63 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     await orderModel.updateOrderStatus(order_id, order_status);
+    console.log(`📦 Order ${order_id} status updated to: ${order_status}`);
 
-    // Create tracking entry when restaurant confirms order
-    if (order_status === 'confirmed') {
-      const order = await orderModel.getOrderById(order_id);
-      if (order && order.order_type === 'delivery') {
-        await orderModel.createTrackingEntry(order_id, null, 'restaurant_confirmed', 'Restaurant confirmed your order');
-        
-        // Try to auto-assign rider
-        const assigned = await assignRiderToOrder(order_id);
-        if (!assigned.success) {
-          console.warn('Auto rider assignment failed:', assigned.message);
-        }
+    // Get order details
+    const order = await orderModel.getOrderById(order_id);
+    
+    if (order && order.order_type === 'delivery') {
+      // Create tracking entry for status changes
+      let trackingMessage = '';
+      
+      switch(order_status) {
+        case 'confirmed':
+          trackingMessage = 'Restaurant confirmed your order';
+          await orderModel.createTrackingEntry(order_id, order.rider_id, 'restaurant_confirmed', trackingMessage);
+          
+          // 🔥 Try to assign rider if not already assigned
+          if (!order.rider_id) {
+            console.log(`🚴 Order ${order_id} confirmed but no rider - attempting assignment...`);
+            const assigned = await assignRiderToOrder(order_id);
+            if (assigned.success) {
+              await orderModel.updateDeliveryStatus(order_id, 'assigned');
+              console.log(`✅ Rider assigned during confirmation: ${assigned.rider.name}`);
+            } else {
+              console.warn(`⚠️ Rider assignment failed: ${assigned.message}`);
+            }
+          }
+          break;
+          
+        case 'preparing':
+          trackingMessage = 'Restaurant is preparing your order';
+          await orderModel.createTrackingEntry(order_id, order.rider_id, 'preparing', trackingMessage);
+          break;
+          
+        case 'ready':
+          trackingMessage = 'Order is ready for pickup by rider';
+          await orderModel.createTrackingEntry(order_id, order.rider_id, 'ready_for_pickup', trackingMessage);
+          
+          // Notify rider if assigned
+          if (order.rider_id) {
+            console.log(`🔔 Notifying rider ${order.rider_id} that order ${order_id} is ready`);
+          }
+          break;
+          
+        case 'completed':
+          trackingMessage = 'Order completed';
+          await orderModel.createTrackingEntry(order_id, order.rider_id, 'completed', trackingMessage);
+          break;
+          
+        case 'cancelled':
+          trackingMessage = 'Order cancelled';
+          await orderModel.createTrackingEntry(order_id, order.rider_id, 'cancelled', trackingMessage);
+          
+          // Free up rider if assigned
+          if (order.rider_id) {
+            await orderModel.updateRiderStatus(order.rider_id, 'available');
+            console.log(`🚴 Rider ${order.rider_id} marked available after order ${order_id} cancelled`);
+          }
+          break;
       }
     }
 
@@ -309,7 +420,7 @@ exports.updateOrderStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Update order status error:', error);
+    console.error('❌ Update order status error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update order status',
@@ -358,25 +469,41 @@ exports.linkPaymentToOrder = async (req, res) => {
 // AUTO RIDER ASSIGNMENT ALGORITHM
 async function assignRiderToOrder(orderId) {
   try {
+    console.log(`🔍 Attempting to assign rider to order ${orderId}...`);
+    
     const order = await orderModel.getOrderById(orderId);
     
     if (!order || order.order_type !== 'delivery') {
       return { success: false, message: 'Invalid order for delivery' };
     }
 
+    // Check if rider already assigned
+    if (order.rider_id) {
+      console.log(`⚠️ Order ${orderId} already has rider ${order.rider_id} assigned`);
+      return { success: false, message: 'Rider already assigned to this order' };
+    }
+
     if (!order.restaurant_lat || !order.restaurant_lng) {
       return { success: false, message: 'Restaurant location not available' };
     }
 
+    if (!order.delivery_lat || !order.delivery_lng) {
+      return { success: false, message: 'Delivery location not available' };
+    }
+
     // Find available riders within 5km of restaurant
+    console.log(`🔍 Searching for riders within 5km of restaurant (${order.restaurant_lat}, ${order.restaurant_lng})...`);
+    
     const availableRiders = await orderModel.getAvailableRiders(
       order.restaurant_lat,
       order.restaurant_lng,
       5 // radius in km
     );
 
+    console.log(`📋 Found ${availableRiders.length} available riders`);
+
     if (availableRiders.length === 0) {
-      return { success: false, message: 'No riders available' };
+      return { success: false, message: 'No riders available within 5km radius' };
     }
 
     // Calculate delivery feasibility score for each rider
@@ -402,6 +529,8 @@ async function assignRiderToOrder(orderId) {
     // Assign to best rider (lowest score = best)
     const bestRider = scoredRiders.sort((a, b) => a.score - b.score)[0];
 
+    console.log(`🎯 Best rider selected: ${bestRider.name} (ID: ${bestRider.rider_id}) - Score: ${bestRider.score.toFixed(2)}`);
+
     // Update order with rider assignment
     await orderModel.assignRider(orderId, bestRider.rider_id);
 
@@ -416,7 +545,7 @@ async function assignRiderToOrder(orderId) {
       `Rider ${bestRider.name} has been assigned to your order`
     );
 
-    console.log(`✅ Rider ${bestRider.name} assigned to order ${orderId}`);
+    console.log(`✅ Rider ${bestRider.name} assigned to order ${orderId} successfully`);
 
     return { 
       success: true, 
@@ -425,7 +554,7 @@ async function assignRiderToOrder(orderId) {
     };
 
   } catch (error) {
-    console.error('Rider assignment error:', error);
+    console.error('❌ Rider assignment error:', error);
     return { success: false, message: error.message };
   }
 }
