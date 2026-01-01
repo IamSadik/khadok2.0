@@ -730,6 +730,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const serviceFee = 5;
     const total = subtotal + deliveryFee + serviceFee;
     
+    // 🔥 Get delivery coordinates from localStorage
+    const deliveryLat = localStorage.getItem('current_user_lat');
+    const deliveryLng = localStorage.getItem('current_user_lng');
+    
     try {
       // Create bKash payment
       const response = await fetch('/api/payment/bkash/create', {
@@ -755,6 +759,8 @@ document.addEventListener("DOMContentLoaded", () => {
           serviceFee: serviceFee,
           totalAmount: total,
           deliveryAddress: orderType === 'delivery' ? document.getElementById("delivery-address").value : null,
+          deliveryLat: orderType === 'delivery' ? deliveryLat : null, // 🔥 NEW
+          deliveryLng: orderType === 'delivery' ? deliveryLng : null, // 🔥 NEW
           pickupTime: orderType === 'pickup' ? document.getElementById("pickup-time").value : null,
           notes: document.getElementById("order-notes").value,
           stakeholderId: stakeholderId,
@@ -783,6 +789,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const serviceFee = 5;
     const total = subtotal + deliveryFee + serviceFee;
     
+    // 🔥 Get delivery coordinates from localStorage
+    const deliveryLat = localStorage.getItem('current_user_lat');
+    const deliveryLng = localStorage.getItem('current_user_lng');
+    
     try {
       // Create order with cash payment
       const orderData = {
@@ -794,7 +804,10 @@ document.addEventListener("DOMContentLoaded", () => {
         delivery_fee: deliveryFee,
         service_fee: serviceFee,
         total_amount: total,
-        delivery_address: document.getElementById("delivery-address").value,
+        delivery_address: orderType === 'delivery' ? document.getElementById("delivery-address").value : null,
+        delivery_lat: orderType === 'delivery' ? deliveryLat : null, // 🔥 NEW
+        delivery_lng: orderType === 'delivery' ? deliveryLng : null, // 🔥 NEW
+        pickup_time: orderType === 'pickup' ? document.getElementById("pickup-time").value : null,
         notes: document.getElementById("order-notes").value,
         items: cart.map(item => ({
           menu_id: item.id,

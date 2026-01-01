@@ -69,6 +69,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payment', paymentRoutes);
 const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
+const riderRoutes = require('./routes/riderRoutes');
+app.use('/api/rider', riderRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));

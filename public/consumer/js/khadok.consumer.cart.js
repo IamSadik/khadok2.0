@@ -768,9 +768,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let pickupTime = null;
 
     if (currentOrderType === 'delivery') {
-      deliveryAddress = document.getElementById('delivery-address').value.trim();
-      if (!deliveryAddress) {
-        alert('Please enter your delivery address!');
+      // ✅ FIX: Get text content from paragraph element instead of value from input
+      deliveryAddress = document.getElementById('delivery-address-display').textContent.trim();
+      if (!deliveryAddress || deliveryAddress === 'Loading address...') {
+        alert('Please wait for your delivery address to load, or set your location from the dashboard!');
         return;
       }
     } else {

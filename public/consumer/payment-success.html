@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful - Khadok</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 500px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #00b894;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 30px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: #00b894;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 30px;
+      animation: scaleIn 0.5s ease;
+    }
+
+    .success-icon i {
+      font-size: 40px;
+      color: white;
+    }
+
+    @keyframes scaleIn {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #2d3436;
+      margin-bottom: 15px;
+    }
+
+    .message {
+      font-size: 16px;
+      color: #636e72;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+
+    .order-details {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+
+    .order-details h3 {
+      font-size: 18px;
+      color: #2d3436;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #dfe6e9;
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+      font-weight: bold;
+      font-size: 18px;
+      color: #00b894;
+    }
+
+    .detail-label {
+      color: #636e72;
+    }
+
+    .detail-value {
+      color: #2d3436;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: #00b894;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background: #00a383;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,184,148,0.3);
+    }
+
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      background: #d63031;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 30px;
+    }
+
+    .error-icon i {
+      font-size: 40px;
+      color: white;
+    }
+
+    .error-message {
+      color: #d63031;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner" id="spinner"></div>
+    <div class="success-icon" id="successIcon">
+      <i class="fas fa-check"></i>
+    </div>
+    <div class="error-icon" id="errorIcon">
+      <i class="fas fa-times"></i>
+    </div>
+
+    <h1 id="title">Processing Payment...</h1>
+    <p class="message" id="message">Please wait while we confirm your payment and create your order.</p>
+
+    <div class="order-details" id="orderDetails" style="display: none;">
+      <h3>Order Summary</h3>
+      <div class="detail-row">
+        <span class="detail-label">Order ID:</span>
+        <span class="detail-value" id="orderId">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Transaction ID:</span>
+        <span class="detail-value" id="trxId">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Order Type:</span>
+        <span class="detail-value" id="orderType">-</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Total Amount:</span>
+        <span class="detail-value" id="totalAmount">-</span>
+      </div>
+    </div>
+
+    <a href="khadok.consumer.order.html" class="btn-primary" id="viewOrdersBtn" style="display: none;">
+      <i class="fas fa-receipt"></i> View My Orders
+    </a>
+  </div>
+
+  <script>
+    // Get payment ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentID = urlParams.get('paymentID');
+
+    const spinner = document.getElementById('spinner');
+    const successIcon = document.getElementById('successIcon');
+    const errorIcon = document.getElementById('errorIcon');
+    const title = document.getElementById('title');
+    const message = document.getElementById('message');
+    const orderDetails = document.getElementById('orderDetails');
+    const viewOrdersBtn = document.getElementById('viewOrdersBtn');
+
+    async function processPayment() {
+      try {
+        if (!paymentID) {
+          throw new Error('Payment ID not found');
+        }
+
+        // Get pending order details from localStorage
+        const pendingOrderStr = localStorage.getItem('pendingOrder');
+        if (!pendingOrderStr) {
+          throw new Error('Order details not found');
+        }
+
+        const pendingOrder = JSON.parse(pendingOrderStr);
+
+        // Execute bKash payment
+        const executeRes = await fetch('/api/payment/bkash/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentID })
+        });
+
+        const executeData = await executeRes.json();
+
+        if (!executeData.success || executeData.data.transactionStatus !== 'Completed') {
+          throw new Error('Payment execution failed');
+        }
+
+        // Create order with all details including delivery coordinates
+        const orderData = {
+          consumer_id: pendingOrder.consumerId,
+          stakeholder_id: pendingOrder.stakeholderId,
+          order_type: pendingOrder.orderType,
+          payment_method: 'bkash',
+          subtotal: pendingOrder.subtotal,
+          delivery_fee: pendingOrder.deliveryFee,
+          service_fee: pendingOrder.serviceFee,
+          total_amount: pendingOrder.totalAmount,
+          delivery_address: pendingOrder.deliveryAddress,
+          delivery_lat: pendingOrder.deliveryLat, // 🔥 Include delivery coordinates
+          delivery_lng: pendingOrder.deliveryLng, // 🔥 Include delivery coordinates
+          pickup_time: pendingOrder.pickupTime,
+          notes: pendingOrder.notes,
+          items: pendingOrder.cart.map(item => ({
+            menu_id: item.id,
+            item_name: item.name,
+            item_price: item.price,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity
+          }))
+        };
+
+        const orderRes = await fetch('/api/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+
+        const orderData2 = await orderRes.json();
+
+        if (!orderData2.success) {
+          throw new Error(orderData2.message || 'Failed to create order');
+        }
+
+        // Clear cart
+        await fetch(`/api/cart/clear?consumer_id=${pendingOrder.consumerId}&type=${pendingOrder.orderType}`, {
+          method: 'DELETE'
+        });
+
+        // Clear pending order from localStorage
+        localStorage.removeItem('pendingOrder');
+
+        // Show success
+        showSuccess(orderData2.orderId, executeData.data.trxID, pendingOrder);
+
+      } catch (error) {
+        console.error('Payment processing error:', error);
+        showError(error.message);
+      }
+    }
+
+    function showSuccess(orderId, trxId, orderInfo) {
+      spinner.style.display = 'none';
+      successIcon.style.display = 'flex';
+      title.textContent = 'Payment Successful!';
+      message.textContent = 'Your order has been placed successfully. You will receive a confirmation shortly.';
+
+      document.getElementById('orderId').textContent = `#${orderId}`;
+      document.getElementById('trxId').textContent = trxId;
+      document.getElementById('orderType').textContent = orderInfo.orderType === 'delivery' ? 'Delivery' : 'Pickup';
+      document.getElementById('totalAmount').textContent = `৳ ${orderInfo.totalAmount.toFixed(2)}`;
+
+      orderDetails.style.display = 'block';
+      viewOrdersBtn.style.display = 'inline-block';
+    }
+
+    function showError(errorMsg) {
+      spinner.style.display = 'none';
+      errorIcon.style.display = 'flex';
+      title.textContent = 'Payment Failed';
+      message.textContent = `An error occurred: ${errorMsg}. Please contact support.`;
+      message.classList.add('error-message');
+      viewOrdersBtn.textContent = 'Back to Dashboard';
+      viewOrdersBtn.href = 'khadok.consumer.dashboard.html';
+      viewOrdersBtn.style.display = 'inline-block';
+    }
+
+    // Start processing when page loads
+    window.addEventListener('DOMContentLoaded', processPayment);
+  </script>
+</body>
+</html>

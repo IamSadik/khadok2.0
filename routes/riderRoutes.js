@@ -1,0 +1,53 @@
+const express = require('express');
+const router = express.Router();
+const riderController = require('../controllers/riderController');
+
+// ==================== RIDER PROFILE ROUTES ====================
+
+// Check if rider is first-time user
+router.get('/first-time', riderController.checkFirstTime);
+
+// Update rider info (for first-time setup with profile picture)
+router.post('/update-info', riderController.uploadProfilePicture, riderController.updateRiderInfo);
+
+// Get rider profile
+router.get('/profile/:riderId', riderController.getRiderProfile);
+
+// Update rider profile
+router.put('/profile/:riderId', riderController.updateRiderProfile);
+
+// Get rider statistics
+router.get('/stats/:riderId', riderController.getRiderStats);
+
+// ==================== RIDER STATUS & LOCATION ROUTES ====================
+
+// Update rider status (available/busy/offline)
+router.post('/status', riderController.updateRiderStatus);
+
+// Update rider location (real-time tracking)
+router.post('/location', riderController.updateRiderLocation);
+
+// Get available riders near a location (for order assignment)
+router.get('/available', riderController.getAvailableRiders);
+
+// ==================== ORDER MANAGEMENT ROUTES ====================
+
+// Get assigned orders for rider
+router.get('/orders/:riderId', riderController.getAssignedOrders);
+
+// Accept order assignment
+router.post('/orders/accept', riderController.acceptOrder);
+
+// Mark order as picked up from restaurant
+router.post('/orders/picked-up', riderController.markOrderPickedUp);
+
+// Complete delivery
+router.post('/orders/complete', riderController.completeDelivery);
+
+// Cancel order
+router.post('/orders/cancel', riderController.cancelOrder);
+
+// Get delivery history
+router.get('/history/:riderId', riderController.getDeliveryHistory);
+
+module.exports = router;
