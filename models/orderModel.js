@@ -78,7 +78,7 @@ exports.getOrdersByConsumer = async (consumer_id) => {
     SELECT 
       o.*,
       s.restaurant_name,
-      s.logo_url
+      s.picture as logo_url
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     WHERE o.consumer_id = ?

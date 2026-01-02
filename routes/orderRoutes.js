@@ -14,7 +14,13 @@ router.get('/pickups', orderController.getPickupOrdersByStakeholderWithDate);
 // Create a new order
 router.post('/create', orderController.createOrder);
 
-// Get orders for a consumer
+// ✅ NEW: Get orders for a consumer (query params for frontend compatibility)
+router.get('/consumer', orderController.getConsumerOrdersQuery);
+
+// ✅ NEW: Get pickup orders for a consumer (query params)
+router.get('/pickup', orderController.getConsumerPickupOrdersQuery);
+
+// Get orders for a consumer (path params - keeping for backward compatibility)
 router.get('/consumer/:consumer_id', orderController.getConsumerOrders);
 
 // Get orders for a stakeholder (restaurant)
@@ -22,6 +28,9 @@ router.get('/stakeholder/:stakeholder_id', orderController.getStakeholderOrders)
 
 // Update order status
 router.put('/status/:order_id', orderController.updateOrderStatus);
+
+// ✅ NEW: Update pickup order status
+router.put('/pickup/status/:pickup_id', orderController.updatePickupOrderStatus);
 
 // Link payment to order (after bKash payment)
 router.post('/link-payment', orderController.linkPaymentToOrder);

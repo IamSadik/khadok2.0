@@ -229,6 +229,76 @@ exports.getConsumerOrders = async (req, res) => {
   }
 };
 
+// ✅ NEW: Get orders for a consumer (query params version)
+exports.getConsumerOrdersQuery = async (req, res) => {
+  try {
+    const { consumer_id } = req.query;
+
+    if (!consumer_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Consumer ID is required'
+      });
+    }
+
+    console.log(`📦 Fetching delivery orders for consumer ${consumer_id}...`);
+
+    // Get all orders and filter for delivery orders
+    const allOrders = await orderModel.getOrdersByConsumer(consumer_id);
+    const deliveryOrders = allOrders.filter(order => order.order_type === 'delivery');
+
+    console.log(`✅ Found ${deliveryOrders.length} delivery orders for consumer ${consumer_id}`);
+
+    res.json({
+      success: true,
+      orders: deliveryOrders
+    });
+
+  } catch (error) {
+    console.error('❌ Get consumer delivery orders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch orders',
+      error: error.message
+    });
+  }
+};
+
+// ✅ NEW: Get pickup orders for a consumer (query params version)
+exports.getConsumerPickupOrdersQuery = async (req, res) => {
+  try {
+    const { consumer_id } = req.query;
+
+    if (!consumer_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Consumer ID is required'
+      });
+    }
+
+    console.log(`📦 Fetching pickup orders for consumer ${consumer_id}...`);
+
+    // Get all orders and filter for pickup orders
+    const allOrders = await orderModel.getOrdersByConsumer(consumer_id);
+    const pickupOrders = allOrders.filter(order => order.order_type === 'pickup');
+
+    console.log(`✅ Found ${pickupOrders.length} pickup orders for consumer ${consumer_id}`);
+
+    res.json({
+      success: true,
+      orders: pickupOrders
+    });
+
+  } catch (error) {
+    console.error('❌ Get consumer pickup orders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch pickup orders',
+      error: error.message
+    });
+  }
+};
+
 // Get orders for a stakeholder (restaurant)
 exports.getStakeholderOrders = async (req, res) => {
   try {
@@ -424,6 +494,46 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to update order status',
+      error: error.message
+    });
+  }
+};
+
+// ✅ NEW: Update pickup order status (for compatibility)
+exports.updatePickupOrderStatus = async (req, res) => {
+  try {
+    const { pickup_id } = req.params;
+    const { order_status } = req.body;
+
+    if (!pickup_id || !order_status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pickup ID and status are required'
+      });
+    }
+
+    // Validate order status
+    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+    if (!validStatuses.includes(order_status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order status'
+      });
+    }
+
+    await orderModel.updateOrderStatus(pickup_id, order_status);
+    console.log(`📦 Pickup order ${pickup_id} status updated to: ${order_status}`);
+
+    res.json({
+      success: true,
+      message: 'Pickup order status updated successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Update pickup order status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update pickup order status',
       error: error.message
     });
   }

@@ -103,68 +103,127 @@
 
     </div>
     <div class="home_content">
-        <!-- Order Section -->
-        <div class="order-container">
-            <!-- Order Sidebar -->
-            <div class="order-sidebar">
-                <div class="order-sidebar-header">
-                    <h3>Your Orders</h3>
-                    <div class="order-filter">
-                        <button id="all-filter" class="filter-btn active">All</button>
-                        <button id="active-filter" class="filter-btn">Active</button>
-                        <button id="completed-filter" class="filter-btn">Completed</button>
-                    </div>
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <h1><i class='bx bxs-package'></i> My Orders</h1>
+                <p class="subtitle">Track and manage all your orders in one place</p>
+            </div>
+            <button class="refresh-btn" id="refresh-orders">
+                <i class='bx bx-refresh'></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+
+        <!-- Order Stats -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class='bx bx-time-five'></i>
                 </div>
-                <div class="order-list" id="order-list">
-                    <!-- Orders will be dynamically loaded here -->
+                <div class="stat-info">
+                    <h3 id="pending-count">0</h3>
+                    <p>Pending</p>
                 </div>
             </div>
-
-            <!-- Order Details Area -->
-            <div class="order-details">
-                <div class="order-header">
-                    <h4>Order Details</h4>
+            <div class="stat-card">
+                <div class="stat-icon active">
+                    <i class='bx bx-package'></i>
                 </div>
-                <div class="order-info" id="order-info">
-                    <div class="placeholder">
-                        <i class="fas fa-box"></i>
-                        <p>Select an order to view details</p>
-                    </div>
+                <div class="stat-info">
+                    <h3 id="active-count">0</h3>
+                    <p>Active</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon completed">
+                    <i class='bx bx-check-circle'></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="completed-count">0</h3>
+                    <p>Completed</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <i class='bx bx-receipt'></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="total-count">0</h3>
+                    <p>Total Orders</p>
                 </div>
             </div>
         </div>
 
-        <!-- Reservation Section -->
-        <div class="reservation-container">
-            <!-- Reservation Sidebar -->
-            <div class="reservation-sidebar">
-                <div class="reservation-sidebar-header">
-                    <h3>Your Reservations</h3>
-                    <div class="reservation-filter">
-                        <button id="all-reservation-filter" class="reservation-filter-btn active">All</button>
-                        <button id="upcoming-reservation-filter" class="reservation-filter-btn">Upcoming</button>
-                        <button id="past-reservation-filter" class="reservation-filter-btn">Past</button>
-                    </div>
-                </div>
-                <div class="reservation-list" id="reservation-list">
-                    <!-- Reservations will be dynamically loaded here -->
-                </div>
-            </div>
+        <!-- Order Type Tabs -->
+        <div class="order-tabs">
+            <button class="tab-btn active" data-type="delivery">
+                <i class='bx bx-cycling'></i>
+                <span>Delivery Orders</span>
+                <span class="badge" id="delivery-badge">0</span>
+            </button>
+            <button class="tab-btn" data-type="pickup">
+                <i class='bx bx-shopping-bag'></i>
+                <span>Pickup Orders</span>
+                <span class="badge" id="pickup-badge">0</span>
+            </button>
+        </div>
 
-            <!-- Reservation Details Area -->
-            <div class="reservation-details">
-                <div class="reservation-header">
-                    <h4>Reservation Details</h4>
-                </div>
-                <div class="reservation-info" id="reservation-info">
-                    <div class="placeholder">
-                        <i class="fas fa-calendar-alt"></i>
-                        <p>Select a reservation to view details</p>
-                    </div>
-                </div>
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label><i class='bx bx-filter'></i> Status:</label>
+                <select id="status-filter">
+                    <option value="all">All Orders</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="preparing">Preparing</option>
+                    <option value="ready">Ready</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <i class='bx bx-search'></i>
+                <input type="text" id="search-orders" placeholder="Search by order ID or restaurant...">
+            </div>
+        </div>
+
+        <!-- Orders Grid -->
+        <div class="orders-grid" id="orders-grid">
+            <div class="loading-state">
+                <i class='bx bx-loader-alt bx-spin'></i>
+                <p>Loading your orders...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state" style="display: none;">
+            <i class='bx bx-package'></i>
+            <h3>No Orders Found</h3>
+            <p>You haven't placed any orders yet. Start exploring restaurants!</p>
+            <a href="khadok.consumer.dashboard.html" class="explore-btn">
+                <i class='bx bx-search-alt'></i>
+                Explore Restaurants
+            </a>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal-overlay" id="order-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class='bx bx-receipt'></i> Order Details</h3>
+                <button class="close-modal" id="close-modal">
+                    <i class='bx bx-x'></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Order details will be loaded here -->
             </div>
         </div>
     </div>
+
     <script src="js/khadok.consumer.order.js"></script>
     <script>
         let btn = document.querySelector("#btn");
