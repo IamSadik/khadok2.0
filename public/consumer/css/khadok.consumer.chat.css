@@ -1,12 +1,17 @@
 /* General Layout */
 .home_content {
-    margin: 0 20px 20px 70px;
-    width: 100%;
-    padding: 20px;
-    display: grid;
-    grid-template-columns: 1fr; /* Single column layout */
-    gap: 20px;
+    margin-left: 78px;
+    width: calc(100% - 78px);
+    padding: 40px 30px 30px 40px; /* Consistent padding: 40px top/left, 30px right/bottom */
+    min-height: 100vh;
+    transition: all 0.5s ease;
 }
+
+.sidebar.active ~ .home_content {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+}
+
 .chat-container {
     display: flex;
     height: 85vh;

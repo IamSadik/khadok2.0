@@ -273,29 +273,17 @@ body{
 }
 
 .home_content{
-    position: absolute;
-    height: 100%;
-    left: 78px;
-    width: calc(100%-78px);
+    margin-left: 78px;
+    width: calc(100% - 78px);
+    padding: 40px 30px 30px 40px; /* Consistent padding: 40px top/left, 30px right/bottom */
+    min-height: 100vh;
     transition: all 0.5s ease;
 }
-.home_content .text{
-    font-size: 25px;
-    font-weight: 500;
-    color: #1d1b31;
-    margin: 12px;
 
+.sidebar.active ~ .home_content {
+    margin-left: 240px;
+    width: calc(100% - 240px);
 }
-
-
-
-.sidebar.active ~ .home_content{
-    width: calc(100%-240px);
-    left: 240px;
-}
-
-
-
 
 /* Reset some default styles */
 * {

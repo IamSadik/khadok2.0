@@ -38,17 +38,28 @@ const addToCart = async (req, res) => {
           return res.status(200).json({ message: "Cart updated successfully" });
         });
       } else {
-        // Insert new item
-        const insertQuery = `
-          INSERT INTO cart (consumer_id, menu_id, quatity, stakeholder_id, item_name, item_price, item_picture, type)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `;
-        db.query(insertQuery, [consumer_id, menu_id, quantity || 1, stakeholder_id, item_name, item_price, item_picture, jsonType], (err) => {
+        // Fetch category from menu table
+        const categoryQuery = `SELECT category FROM menu WHERE menu_id = ?`;
+        db.query(categoryQuery, [menu_id], (err, menuResults) => {
           if (err) {
-            console.error("Error adding to cart:", err);
-            return res.status(500).json({ error: "Failed to add to cart" });
+            console.error("Error fetching category:", err);
+            return res.status(500).json({ error: "Database error" });
           }
-          return res.status(201).json({ message: "Item added to cart successfully" });
+
+          const category = menuResults.length > 0 ? menuResults[0].category : null;
+
+          // Insert new item with category
+          const insertQuery = `
+            INSERT INTO cart (consumer_id, menu_id, quatity, stakeholder_id, item_name, item_price, item_picture, type, category)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+          db.query(insertQuery, [consumer_id, menu_id, quantity || 1, stakeholder_id, item_name, item_price, item_picture, jsonType, category], (err) => {
+            if (err) {
+              console.error("Error adding to cart:", err);
+              return res.status(500).json({ error: "Failed to add to cart" });
+            }
+            return res.status(201).json({ message: "Item added to cart successfully" });
+          });
         });
       }
     });

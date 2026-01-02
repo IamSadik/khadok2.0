@@ -804,13 +804,35 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==================== BKASH PAYMENT ====================
   async function handleBkashPayment(cart, deliveryAddress, pickupTime, notes, totalAmount) {
     try {
+      // Get user's delivery coordinates from localStorage
+      const deliveryLat = parseFloat(localStorage.getItem('current_user_lat'));
+      const deliveryLng = parseFloat(localStorage.getItem('current_user_lng'));
+
+      // Group by restaurant to get first stakeholder_id and calculate fees
+      const groupedByRestaurant = cart.reduce((acc, item) => {
+        if (!acc[item.stakeholder_id]) acc[item.stakeholder_id] = [];
+        acc[item.stakeholder_id].push(item);
+        return acc;
+      }, {});
+
+      const firstStakeholderId = Object.keys(groupedByRestaurant)[0];
+      const restaurant = restaurantDetails[firstStakeholderId] || {};
+      
+      const subtotal = cart.reduce((sum, item) => 
+        sum + (parseFloat(item.item_price) * item.quatity), 0
+      );
+      
+      const deliveryFee = currentOrderType === 'delivery'
+        ? calculateDeliveryFee(restaurant.roadDistance || restaurant.distance)
+        : 0;
+
       const response = await fetch('/api/payment/bkash/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: totalAmount,
           consumer_id: consumerId,
-          stakeholder_id: cart[0].stakeholder_id,
+          stakeholder_id: firstStakeholderId,
           order_type: currentOrderType
         })
       });
@@ -819,11 +841,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (data.success && data.data.bkashURL) {
         const orderDetails = {
-          cart: cart,
+          cart: cart, // ✅ Full cart with category field
+          consumerId: consumerId,
+          stakeholderId: firstStakeholderId,
           orderType: currentOrderType,
           deliveryAddress: deliveryAddress,
+          deliveryLat: currentOrderType === 'delivery' ? deliveryLat : null,
+          deliveryLng: currentOrderType === 'delivery' ? deliveryLng : null,
           pickupTime: pickupTime,
           notes: notes,
+          subtotal: subtotal,
+          deliveryFee: deliveryFee,
+          serviceFee: 5,
           totalAmount: totalAmount,
           paymentId: data.data.paymentID,
           paymentRecordId: data.data.paymentRecordId
@@ -889,6 +918,7 @@ document.addEventListener("DOMContentLoaded", () => {
             item_name: item.item_name,
             item_price: parseFloat(item.item_price),
             quantity: item.quatity,
+            category: item.category || null, // ✅ Include category from cart
             subtotal: parseFloat(item.item_price) * item.quatity
           }))
         };

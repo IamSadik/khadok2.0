@@ -310,6 +310,29 @@ const getReservationsOrderedByCreation = (stakeholder_id, callback) => {
   db.query(query, [stakeholder_id], callback);
 };
 
+// Alias for dashboard - get reservations by stakeholder (optimized)
+const getReservationsByStakeholder = (stakeholder_id, callback) => {
+  const query = `
+    SELECT 
+      d.dine_in_id,
+      d.consumer_id,
+      d.stakeholder_id,
+      d.table_size,
+      d.quantity,
+      d.booking_time,
+      d.status,
+      d.created_at,
+      c.name as consumer_name
+    FROM dine_in d
+    LEFT JOIN consumer c ON d.consumer_id = c.consumer_id
+    WHERE d.stakeholder_id = ?
+    ORDER BY d.created_at DESC
+    LIMIT 50
+  `;
+
+  db.query(query, [stakeholder_id], callback);
+};
+
 module.exports = {
   checkTableAvailability,
   insertReservation,
@@ -330,5 +353,6 @@ module.exports = {
   getReservationsByCreatedDateRange,
   getRecentReservations,
   getConsumerReservationsByCreatedDate,
-  getReservationsOrderedByCreation
+  getReservationsOrderedByCreation,
+  getReservationsByStakeholder  // Add the new function
 };

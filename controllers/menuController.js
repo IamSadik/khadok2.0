@@ -17,13 +17,14 @@ const addMenuItem = async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Insert menu item
+    // Insert menu item with the first cuisine ID for category lookup
     const menuId = await menuModel.insertMenuItem({
       stakeholder_id,
       item_name: name,
       item_price: price,
       description,
       item_picture: itemPic,
+      cuisine_id: cuisine[0], // Pass the first cuisine ID to get the category name
     });
 
     // Insert related cuisine entries
@@ -157,6 +158,7 @@ const getMenuItemById = (req, res) => {
 // PUT /api/menu/edit-menu-item/:id
 const editMenuItemById = (req, res) => {
   const menuId = req.params.id;
+  const db = require('../config/configdb');
 
   // First, fetch the existing row
   menuModel.getMenuItemById(menuId, (err, existing) => {
@@ -190,37 +192,56 @@ const editMenuItemById = (req, res) => {
     console.log("⏺️ Updating menu_id=", menuId,
                 { name, price, description, itemPic, cuisines });
 
-    // 1) update the main row
-    menuModel.updateMenuItemById(
-      menuId,
-      { name, price, description, itemPic },
-      err2 => {
-        if (err2) {
-          console.error("DB error updating menu:", err2);
-          return res.status(500).json({ message: 'Server error updating menu' });
+    // If cuisines are provided, fetch the category name
+    if (cuisines.length > 0) {
+      db.query('SELECT name FROM cuisine WHERE id = ?', [cuisines[0]], (err, results) => {
+        if (err) {
+          console.error("DB error fetching cuisine name:", err);
+          return res.status(500).json({ message: 'Server error fetching cuisine' });
         }
-        // 2) only replace cuisines if the client sent any
-        if (cuisines.length) {
-          // stakeholder_id comes from the form
-          const stakeholderId = req.body.stakeholder_id;
-          menuModel.replaceMenuCuisines(
-            menuId,
-            stakeholderId,
-            cuisines,
-            err3 => {
-              if (err3) {
-                console.error("DB error updating cuisines:", err3);
-                return res.status(500).json({ message: 'Server error updating cuisines' });
-              }
-              return res.json({ message: 'Menu updated successfully' });
+        
+        const category = results.length > 0 ? results[0].name : null;
+
+        // 1) update the main row with category
+        menuModel.updateMenuItemById(
+          menuId,
+          { name, price, description, itemPic, category },
+          err2 => {
+            if (err2) {
+              console.error("DB error updating menu:", err2);
+              return res.status(500).json({ message: 'Server error updating menu' });
             }
-          );
-        } else {
-          // nothing to do for cuisines
+            // 2) replace cuisines
+            const stakeholderId = req.body.stakeholder_id;
+            menuModel.replaceMenuCuisines(
+              menuId,
+              stakeholderId,
+              cuisines,
+              err3 => {
+                if (err3) {
+                  console.error("DB error updating cuisines:", err3);
+                  return res.status(500).json({ message: 'Server error updating cuisines' });
+                }
+                return res.json({ message: 'Menu updated successfully' });
+              }
+            );
+          }
+        );
+      });
+    } else {
+      // No cuisine change, update without category
+      menuModel.updateMenuItemById(
+        menuId,
+        { name, price, description, itemPic },
+        err2 => {
+          if (err2) {
+            console.error("DB error updating menu:", err2);
+            return res.status(500).json({ message: 'Server error updating menu' });
+          }
           return res.json({ message: 'Menu updated (no cuisine change)' });
         }
-      }
-    );
+      );
+    }
   });
 };
 

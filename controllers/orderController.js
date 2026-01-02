@@ -139,6 +139,7 @@ exports.createOrder = async (req, res) => {
       item_name: item.item_name,
       item_price: parseFloat(item.item_price),
       quantity: parseInt(item.quantity),
+      category: item.category || null, // ✅ Include category from cart
       subtotal: parseFloat(item.subtotal)
     }));
 

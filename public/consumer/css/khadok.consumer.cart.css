@@ -19,10 +19,16 @@ h2.page-title {
 }
 
 .home_content {
-    margin-left: 90px;
-    padding: 30px 40px;
+    margin-left: 78px;
+    width: calc(100% - 78px);
+    padding: 40px 30px 30px 40px; /* Consistent padding: 40px top/left, 30px right/bottom */
     min-height: 100vh;
-    background: #f5f7fa;
+    transition: all 0.5s ease;
+}
+
+.sidebar.active ~ .home_content {
+    margin-left: 240px;
+    width: calc(100% - 240px);
 }
 
 /* Cart Container */
@@ -72,9 +78,9 @@ h2.page-title {
     font-size: 14px;
     color: #333;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Removed truncation - allow full name display */
+    word-wrap: break-word;
+    line-height: 1.4;
 }
 
 .cart-item-price {
@@ -1165,7 +1171,9 @@ h2.page-title {
 /* Responsive Design */
 @media (max-width: 1024px) {
     .home_content {
-        margin: 20px 30px 20px 70px;
+        margin-left: 78px;
+        width: calc(100% - 78px);
+        padding: 25px 20px;
     }
     
     .cart-item {
@@ -1183,8 +1191,14 @@ h2.page-title {
 
 @media (max-width: 768px) {
     .home_content {
-        margin: 15px;
+        margin-left: 78px; /* Keep margin to prevent going under sidebar */
+        width: calc(100% - 78px);
         padding: 20px 15px;
+    }
+
+    .sidebar.active ~ .home_content {
+        margin-left: 78px; /* Collapse sidebar on small screens */
+        width: calc(100% - 78px);
     }
     
     h2.page-title {
@@ -1239,6 +1253,12 @@ h2.page-title {
 }
 
 @media (max-width: 480px) {
+    .home_content {
+        margin-left: 78px;
+        width: calc(100% - 78px);
+        padding: 15px 10px;
+    }
+
     .checkout-btn {
         padding: 14px 30px;
         font-size: 16px;
@@ -1648,6 +1668,12 @@ h2.page-title {
     font-weight: 600;
     color: #2d3748;
     margin: 0;
+    /* Ensure full name display without truncation */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+    max-width: 100%;
 }
 
 .item-description {
@@ -2236,8 +2262,14 @@ h2.page-title {
 
 @media (max-width: 992px) {
     .home_content {
-        margin-left: 70px;
+        margin-left: 78px; /* Keep margin to prevent going under sidebar */
+        width: calc(100% - 78px);
         padding: 25px 30px;
+    }
+
+    .sidebar.active ~ .home_content {
+        margin-left: 78px; /* Collapse sidebar on small screens */
+        width: calc(100% - 78px);
     }
 
     .cart-layout {
@@ -2256,8 +2288,14 @@ h2.page-title {
 
 @media (max-width: 768px) {
     .home_content {
-        margin-left: 0;
+        margin-left: 78px; /* Keep margin to prevent going under sidebar */
+        width: calc(100% - 78px);
         padding: 20px 15px;
+    }
+
+    .sidebar.active ~ .home_content {
+        margin-left: 78px; /* Collapse sidebar on small screens */
+        width: calc(100% - 78px);
     }
 
     .cart-header {
@@ -2281,7 +2319,7 @@ h2.page-title {
     .cart-item-card {
         flex-direction: column;
     }
-    .cart-items-container
+    
     .item-actions {
         flex-direction: row;
         width: 100%;
@@ -2313,6 +2351,12 @@ h2.page-title {
 }
 
 @media (max-width: 480px) {
+    .home_content {
+        margin-left: 78px;
+        width: calc(100% - 78px);
+        padding: 15px 10px;
+    }
+
     .restaurant-header {
         padding: 20px;
     }

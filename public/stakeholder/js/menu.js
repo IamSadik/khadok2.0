@@ -61,13 +61,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const stakeholder_id = localStorage.getItem('stakeholder_id');
   const selectedCuisine = document.querySelector('input[name="cuisine"]:checked');
 
+  // ✅ Validate required fields
+  if (!name) {
+    alert('Please enter item name');
+    return;
+  }
+  if (isNaN(price) || price <= 0) {
+    alert('Please enter a valid price');
+    return;
+  }
+  if (!description) {
+    alert('Please enter item description');
+    return;
+  }
+  if (!selectedCuisine) {
+    alert('Please select a cuisine type');
+    return;
+  }
+  
+  // For new items, image is required
+  if (!menuId && !imageFile) {
+    alert('Please select an image for the menu item');
+    return;
+  }
+
   const formData = new FormData();
   formData.append('stakeholder_id', stakeholder_id);
-  if (name) formData.append('name', name);
-  if (!isNaN(price)) formData.append('price', price);
-  if (description) formData.append('description', description);
-  if (selectedCuisine) formData.append('cuisine', selectedCuisine.value);
-  if (imageFile) formData.append('itemPic', imageFile);
+  formData.append('name', name);
+  formData.append('price', price);
+  formData.append('description', description);
+  formData.append('cuisine', selectedCuisine.value);
+  if (imageFile) {
+    formData.append('itemPic', imageFile);
+  }
 
   try {
     const endpoint = menuId ? `/api/menu/edit-menu-item/${menuId}` : '/api/menu/add-menu-item';
@@ -83,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (res.ok) {
       alert(menuId ? 'Item updated successfully!' : 'Menu item added successfully!');
       popup.style.display = 'none';
+      resetMenuForm();
       location.reload();
     } else {
       alert(result.message || 'Failed to save item');

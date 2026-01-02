@@ -48,7 +48,7 @@ exports.createOrder = async (orderData) => {
 // Create order items
 exports.createOrderItems = async (orderItems) => {
   const sql = `
-    INSERT INTO order_items (order_id, menu_id, item_name, item_price, quantity, subtotal)
+    INSERT INTO order_items (order_id, menu_id, item_name, item_price, quantity, subtotal, category)
     VALUES ?
   `;
 
@@ -58,7 +58,8 @@ exports.createOrderItems = async (orderItems) => {
     item.item_name,
     item.item_price,
     item.quantity,
-    item.subtotal
+    item.subtotal,
+    item.category 
   ]);
 
   return new Promise((resolve, reject) => {

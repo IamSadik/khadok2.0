@@ -1,16 +1,28 @@
 const db = require('../config/configdb');
 
 const insertMenuItem = async (data) => {
-  const { stakeholder_id, item_name, item_price, description, item_picture } = data;
+  const { stakeholder_id, item_name, item_price, description, item_picture, cuisine_id } = data;
 
   return new Promise((resolve, reject) => {
+    // First, fetch the cuisine name from the cuisine table
     db.query(
-      `INSERT INTO menu (stakeholder_id, item_name, item_price, description, item_picture)
-       VALUES (?, ?, ?, ?, ?)`,
-      [stakeholder_id, item_name, item_price, description, item_picture],
-      (err, result) => {
+      `SELECT name FROM cuisine WHERE id = ?`,
+      [cuisine_id],
+      (err, results) => {
         if (err) return reject(err);
-        resolve(result.insertId); // menu_id
+        
+        const category = results.length > 0 ? results[0].name : null;
+
+        // Now insert the menu item with the category
+        db.query(
+          `INSERT INTO menu (stakeholder_id, item_name, category, item_price, description, item_picture)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [stakeholder_id, item_name, category, item_price, description, item_picture],
+          (err, result) => {
+            if (err) return reject(err);
+            resolve(result.insertId); // menu_id
+          }
+        );
       }
     );
   });
@@ -178,13 +190,17 @@ const fetchMenuCuisines = (menuId, callback) => {
   });
 };
 
-// Update the menu row (name, price, description, optionally picture)
-const updateMenuItemById = (menuId, { name, price, description, itemPic }, callback) => {
+// Update the menu row (name, price, description, optionally picture, and category)
+const updateMenuItemById = (menuId, { name, price, description, itemPic, category }, callback) => {
   const fields = [ name, price, description ];
   let sql = `
     UPDATE menu
     SET item_name = ?, item_price = ?, description = ?
   `;
+  if (category) {
+    sql += `, category = ?`;
+    fields.push(category);
+  }
   if (itemPic) {
     sql += `, item_picture = ?`;
     fields.push(itemPic);

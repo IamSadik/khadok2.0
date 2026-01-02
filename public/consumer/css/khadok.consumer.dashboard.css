@@ -77,26 +77,25 @@ body {
 
 
 .home_content {
-    position: absolute;
-    height: 100vh;
-    left: 70px;
-    width: 100vw;
-    transition: all 0.5s ease; /* Smooth transition for expansion */
-    align-items: center;
-    margin-top: 40px;
+    margin-left: 78px;
+    width: calc(100% - 78px);
+    padding: 40px 30px 30px 40px; /* Consistent padding: 40px top/left, 30px right/bottom */
+    min-height: 100vh;
+    transition: all 0.5s ease;
     overflow: auto;
-    justify-content: center;
+    position: relative;
+    z-index: 1; /* Stay above background but below sidebar on mobile */
 }
 
 .sidebar.active ~ .home_content {
-    left: 240px; /* Matches the expanded width of the sidebar */
+    margin-left: 240px;
     width: calc(100% - 240px);
 }
 
 /* Dashboard Main Content */
 .dashboard-container {
     flex-grow: 1;
-    margin-left: 70px;
+    margin-left: 0; /* Remove extra margin, already handled by home_content */
     padding: 20px;
 }
 
@@ -401,7 +400,7 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 99;
   flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
@@ -1174,6 +1173,17 @@ body {
 
 /* Responsive Design for Navbar */
 @media (max-width: 768px) {
+  .home_content {
+    margin-left: 78px; /* Keep margin to prevent going under sidebar */
+    width: calc(100% - 78px);
+    padding: 25px 20px;
+  }
+
+  .sidebar.active ~ .home_content {
+   
+    width: calc(100% - 78px);
+  }
+
   .navbar {
     padding: 10px 20px;
     gap: 10px;
@@ -1201,6 +1211,17 @@ body {
 }
 
 @media (max-width: 480px) {
+  .home_content {
+    margin-left: 78px; /* Keep margin */
+    width: calc(100% - 78px);
+    padding: 20px 15px;
+  }
+
+  .sidebar.active ~ .home_content {
+   
+    width: calc(100% - 78px);
+  }
+
   .navbar {
     padding: 8px 15px;
   }
@@ -1281,20 +1302,38 @@ body {
 
 /* ===== COMPREHENSIVE RESPONSIVE DESIGN ===== */
 
+/* Desktop: Keep content beside sidebar */
+@media (min-width: 769px) {
+  .home_content {
+    margin-left: 78px;
+    width: calc(100% - 78px);
+  }
+
+  .sidebar.active ~ .home_content {
+    margin-left: 240px;
+    width: calc(100% - 240px);
+  }
+}
+
 /* Tablet and below (768px) */
 @media (max-width: 768px) {
+  /* Sidebar becomes overlay - content takes full width with left padding */
   .home_content {
-    left: 78px;
-    width: calc(100% - 78px);
-    margin-top: 20px;
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 25px 20px 25px 90px; /* Add left padding to avoid sidebar */
+    transition: none;
+    transform: none !important;
   }
-  
+
   .sidebar.active ~ .home_content {
-    left: 240px;
-    width: calc(100% - 240px);
+    margin-left: 0 !important;
+    width: 100% !important;
+    transform: none !important;
   }
   
   .dashboard-container {
+    margin-left: 0;
     padding: 15px;
   }
   
@@ -1361,19 +1400,36 @@ body {
 
 /* Mobile (480px and below) */
 @media (max-width: 480px) {
+  /* Full width content with left padding to avoid sidebar */
   .home_content {
-    left: 0;
-    width: 100%;
-    margin-top: 0;
-    padding-top: 60px; /* Account for fixed navbar */
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 70px 10px 15px 85px; /* Add left padding to avoid sidebar, top padding for navbar */
+    transform: none !important;
   }
   
+  /* When sidebar is active on mobile, keep content in place but add overlay */
   .sidebar.active ~ .home_content {
-    left: 240px;
-    width: calc(100% - 240px);
+    margin-left: 0 !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+  
+  /* Add overlay to darken content when sidebar is open */
+  .sidebar.active ~ .home_content::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    pointer-events: auto;
   }
   
   .dashboard-container {
+    margin-left: 0;
     padding: 10px;
   }
   
@@ -1511,6 +1567,10 @@ body {
 
 /* Extra small devices (360px and below) */
 @media (max-width: 360px) {
+  .home_content {
+    padding: 70px 8px 15px 85px; /* Maintain left padding for sidebar */
+  }
+  
   .hero-content h1 {
     font-size: 1.3rem;
   }
@@ -1581,11 +1641,18 @@ img {
 @media (max-width: 768px) {
   body {
     overflow-x: hidden;
+    position: relative;
   }
   
   .home_content {
-    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+  
+  /* Make sidebar overlay on mobile instead of pushing content */
+  .sidebar {
+    position: fixed;
+    z-index: 1000;
   }
 }
 

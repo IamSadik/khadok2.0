@@ -251,16 +251,17 @@
           service_fee: pendingOrder.serviceFee,
           total_amount: pendingOrder.totalAmount,
           delivery_address: pendingOrder.deliveryAddress,
-          delivery_lat: pendingOrder.deliveryLat, // 🔥 Include delivery coordinates
-          delivery_lng: pendingOrder.deliveryLng, // 🔥 Include delivery coordinates
+          delivery_lat: pendingOrder.deliveryLat,
+          delivery_lng: pendingOrder.deliveryLng,
           pickup_time: pendingOrder.pickupTime,
           notes: pendingOrder.notes,
           items: pendingOrder.cart.map(item => ({
-            menu_id: item.id,
-            item_name: item.name,
-            item_price: item.price,
-            quantity: item.quantity,
-            subtotal: item.price * item.quantity
+            menu_id: item.menu_id || item.id,
+            item_name: item.item_name || item.name,
+            item_price: item.item_price || item.price,
+            quantity: item.quatity || item.quantity,
+            category: item.category || null, // ✅ Include category from cart
+            subtotal: (item.item_price || item.price) * (item.quatity || item.quantity)
           }))
         };
 
