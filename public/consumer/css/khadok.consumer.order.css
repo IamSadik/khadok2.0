@@ -27,7 +27,7 @@
 .home_content {
     margin-left: 78px;
     width: calc(100% - 78px);
-    padding: 40px 30px 30px 40px; /* Added extra padding on top and left */
+    padding: 60px 50px 30px 60px; /* Added extra padding on top and left */
     min-height: 100vh;
     background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
     transition: all 0.5s ease;

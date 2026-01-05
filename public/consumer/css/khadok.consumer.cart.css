@@ -21,7 +21,7 @@ h2.page-title {
 .home_content {
     margin-left: 78px;
     width: calc(100% - 78px);
-    padding: 40px 30px 30px 40px; /* Consistent padding: 40px top/left, 30px right/bottom */
+    padding: 60px 50px 30px 40px; /* Consistent padding: 60px top/left, 30px right/bottom */
     min-height: 100vh;
     transition: all 0.5s ease;
 }
@@ -1310,8 +1310,9 @@ h2.page-title {
 
 /* ==================== CART PAGE CONTAINER ==================== */
 .cart-page-container {
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: 1600px; /* Increased from 1400px to use more screen space */
+    margin: 0;
+    padding: 0 20px; /* Add horizontal padding instead of relying on margin */
     animation: fadeInUp 0.5s ease-out;
 }
 
@@ -1483,7 +1484,7 @@ h2.page-title {
     border-radius: 20px;
     padding: 60px 40px;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 .empty-cart-icon {

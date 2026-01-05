@@ -40,7 +40,7 @@ body {
 
 .reservation-container {
     flex-grow: 1;
-    margin-left: 70px;
+    
     padding: 20px;
 }
 
@@ -696,16 +696,38 @@ body {
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+
+/* Desktop: Keep content beside sidebar */
+@media (min-width: 769px) {
     .home_content {
-        margin-left: 78px; /* Keep margin to prevent going under sidebar */
+        margin-left: 78px;
         width: calc(100% - 78px);
-        padding: 20px 15px;
     }
 
     .sidebar.active ~ .home_content {
-        margin-left: 78px; /* Collapse sidebar on small screens */
-        width: calc(100% - 78px);
+        margin-left: 240px;
+        width: calc(100% - 240px);
+    }
+}
+
+@media (max-width: 768px) {
+    /* Content takes full width with left padding to avoid sidebar */
+    .home_content {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 25px 20px 25px 90px; /* Add left padding to avoid sidebar */
+    }
+
+    .sidebar.active ~ .home_content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Center the main content */
+    .reservation-main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
     }
 
     .page-header {
@@ -758,15 +780,36 @@ body {
 }
 
 @media (max-width: 480px) {
+    /* Content with left padding to avoid sidebar */
     .home_content {
-        margin-left: 78px; /* Keep margin */
-        width: calc(100% - 78px);
-        padding: 15px 10px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 20px 10px 15px 85px; /* Add left padding to avoid sidebar */
     }
 
     .sidebar.active ~ .home_content {
-        margin-left: 78px; /* Keep margin */
-        width: calc(100% - 78px);
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Add overlay when sidebar is active on mobile */
+    .sidebar.active ~ .home_content::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        pointer-events: auto;
+    }
+
+    /* Center content */
+    .reservation-main-content {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 0 10px;
     }
 
     .header-left h1 {
@@ -779,5 +822,16 @@ body {
 
     .reservation-card {
         border-radius: 8px;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+    .home_content {
+        padding: 20px 8px 15px 85px; /* Maintain left padding for sidebar */
+    }
+
+    .reservation-main-content {
+        padding: 0 5px;
     }
 }
