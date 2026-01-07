@@ -415,6 +415,21 @@
 
             <!-- ================ Order Details List ================= -->
             <div class="details">
+                <!-- ================ ACTIVE DELIVERIES SECTION ================= -->
+                <div id="activeDeliveriesSection" class="recentOrders" style="display: none; margin-bottom: 20px; border: 2px solid #f39c12; box-shadow: 0 4px 12px rgba(243, 156, 18, 0.2);">
+                    <div class="cardHeader" style="background: linear-gradient(135deg, #5C8374 0%, #3F8883 100%); color: white; padding: 15px; border-radius: 8px 8px 0 0;">
+                        <h2 style="color: white; display: flex; align-items: center; gap: 10px;">
+                            <ion-icon name="bicycle-outline" style="font-size: 1.5rem;"></ion-icon>
+                            Active Deliveries
+                            <span id="activeDeliveryCount" style="background: white; color: #f39c12; padding: 2px 10px; border-radius: 12px; font-size: 0.9rem; font-weight: bold;">0</span>
+                        </h2>
+                    </div>
+
+                    <div id="activeDeliveriesContainer" style="padding: 20px;">
+                        <!-- Active deliveries will be loaded here -->
+                    </div>
+                </div>
+
                 <div class="recentOrders">
                     <div class="cardHeader">
                         <h2>Recent Orders</h2>
@@ -424,9 +439,9 @@
                     <table>
                         <thead>
                             <tr>
-                                <td>Customer</td>
-                                <td>Amount</td>
-                                <td>Date</td>
+                                <td>Order & Restaurant</td>
+                                <td>Amount & Items</td>
+                                <td>Date & Time</td>
                                 <td>Payment</td>
                                 <td>Status</td>
                             </tr>

@@ -49,7 +49,10 @@ document.querySelectorAll(".accept-btn").forEach(button => {
     });
 });
 
-document.getElementById("stop-timer-btn").addEventListener("click", () => {
-    clearInterval(countdownInterval);
-    alert("Timer Stopped!");
-});
+const stopTimerBtn = document.getElementById("stop-timer-btn");
+if (stopTimerBtn) {
+    stopTimerBtn.addEventListener("click", () => {
+        clearInterval(countdownInterval);
+        alert("Timer Stopped!");
+    });
+}

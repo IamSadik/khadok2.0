@@ -15,6 +15,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadRiderProfile();
         loadRiderStats();
+        loadActiveDeliveries(); // Load active deliveries first
         loadRecentOrders();
         loadRecentCustomers();
         setupSignOut();
@@ -23,6 +24,7 @@
         // Refresh data every 30 seconds
         setInterval(() => {
             loadRiderStats();
+            loadActiveDeliveries(); // Refresh active deliveries
             loadRecentOrders();
             loadRiderStatus();
         }, 30000);
@@ -33,6 +35,15 @@
         try {
             const response = await fetch(`/api/rider/profile/${riderId}`);
             const data = await response.json();
+
+            if (response.status === 401 || data.requiresAuth) {
+                // Session expired, redirect to login
+                console.warn('Session expired. Redirecting to login...');
+                localStorage.removeItem('rider_id');
+                sessionStorage.clear();
+                window.location.href = '../rider_login.html';
+                return;
+            }
 
             if (data.success && data.rider) {
                 const rider = data.rider;
@@ -51,6 +62,15 @@
         try {
             const response = await fetch(`/api/rider/stats/${riderId}`);
             const data = await response.json();
+
+            if (response.status === 401 || data.requiresAuth) {
+                // Session expired, redirect to login
+                console.warn('Session expired. Redirecting to login...');
+                localStorage.removeItem('rider_id');
+                sessionStorage.clear();
+                window.location.href = '../rider_login.html';
+                return;
+            }
 
             if (data.success && data.stats) {
                 const stats = data.stats;
@@ -79,8 +99,17 @@
     // Load recent orders
     async function loadRecentOrders() {
         try {
-            const response = await fetch(`/api/rider/history/${riderId}?limit=10`);
+            const response = await fetch(`/api/rider/recent-orders/${riderId}?limit=10`);
             const data = await response.json();
+
+            if (response.status === 401 || data.requiresAuth) {
+                // Session expired, redirect to login
+                console.warn('Session expired. Redirecting to login...');
+                localStorage.removeItem('rider_id');
+                sessionStorage.clear();
+                window.location.href = '../rider_login.html';
+                return;
+            }
 
             if (data.success && data.orders) {
                 displayRecentOrders(data.orders);
@@ -93,7 +122,7 @@
         }
     }
 
-    // Display recent orders in table
+    // Display recent orders in table with full details
     function displayRecentOrders(orders) {
         const tbody = document.getElementById('recentOrdersBody');
         
@@ -103,29 +132,146 @@
         }
 
         tbody.innerHTML = orders.map(order => {
-            const statusClass = getStatusClass(order.delivery_status || order.status);
-            const statusText = formatStatus(order.delivery_status || order.status);
-            const paymentStatus = order.payment_status || 'Pending';
-            const date = formatDate(order.order_date || order.created_at);
-            const amount = parseFloat(order.total_amount || order.amount || 0);
+            const orderStatusClass = getOrderStatusClass(order.order_status, order.delivery_status);
+            const orderStatusText = formatOrderStatus(order.order_status, order.delivery_status);
+            const paymentStatus = formatPaymentStatus(order.payment_method, order.payment_status);
+            const date = formatDate(order.created_at);
+            const amount = parseFloat(order.total_amount || 0);
+            const customerName = order.consumer_name || 'Unknown';
+            const restaurantName = order.restaurant_name || 'Restaurant';
+            
+            // Get item count and preview
+            const itemCount = order.items?.length || 0;
+            const itemPreview = order.items?.slice(0, 2).map(item => 
+                `${item.quantity}x ${item.item_name}`
+            ).join(', ') || 'No items';
 
             return `
-                <tr>
-                    <td>${escapeHtml(order.consumer_name || order.customer_name || 'Unknown')}</td>
-                    <td>৳${formatNumber(amount)}</td>
-                    <td>${date}</td>
-                    <td>${escapeHtml(paymentStatus)}</td>
-                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                <tr onclick="viewOrderDetails(${order.id})" style="cursor: pointer;" title="Click to view full details">
+                    <td>
+                        <strong>#${order.id}</strong><br>
+                        <small style="color: #666;">${escapeHtml(restaurantName)}</small><br>
+                        <small style="color: #888;">👤 ${escapeHtml(customerName)}</small>
+                    </td>
+                    <td>
+                        <strong>৳${formatNumber(amount)}</strong><br>
+                        <small style="color: #666;">${itemCount} item${itemCount !== 1 ? 's' : ''}</small><br>
+                        <small style="color: #888;" title="${escapeHtml(itemPreview)}">${escapeHtml(truncate(itemPreview, 30))}</small>
+                    </td>
+                    <td>
+                        ${date}<br>
+                        <small style="color: #666;">${formatTime(order.created_at)}</small>
+                    </td>
+                    <td>
+                        <span style="display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.85rem; ${getPaymentMethodStyle(order.payment_method)}">
+                            ${paymentStatus}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status ${orderStatusClass}">${orderStatusText}</span>
+                    </td>
                 </tr>
             `;
         }).join('');
     }
+
+    // Get order status CSS class
+    function getOrderStatusClass(orderStatus, deliveryStatus) {
+        const status = (deliveryStatus || orderStatus || '').toLowerCase();
+        
+        if (status === 'delivered' || status === 'completed') {
+            return 'delivered';
+        } else if (status === 'cancelled' || status === 'rejected') {
+            return 'return';
+        } else if (status === 'assigned' || status === 'picked_up' || status === 'out_for_delivery') {
+            return 'inProgress';
+        } else {
+            return 'pending';
+        }
+    }
+
+    // Format order status text
+    function formatOrderStatus(orderStatus, deliveryStatus) {
+        // Prioritize delivery status for delivery orders
+        const status = deliveryStatus || orderStatus;
+        if (!status) return 'Pending';
+        
+        const statusMap = {
+            'pending_rider': '⏳ Pending Assignment',
+            'assigned': '📋 Assigned',
+            'picked_up': '📦 Picked Up',
+            'out_for_delivery': '🚚 Out for Delivery',
+            'arrived': '📍 Arrived',
+            'delivered': '✅ Delivered',
+            'completed': '✅ Completed',
+            'cancelled': '❌ Cancelled',
+            'pending': '⏳ Pending',
+            'confirmed': '✔️ Confirmed',
+            'preparing': '👨‍🍳 Preparing',
+            'ready': '✅ Ready'
+        };
+
+        return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    // Format payment status
+    function formatPaymentStatus(paymentMethod, paymentStatus) {
+        const method = (paymentMethod || 'cash').toUpperCase();
+        const status = (paymentStatus || 'pending').toLowerCase();
+        
+        if (method === 'CASH') {
+            return '💵 Cash';
+        } else if (method === 'BKASH') {
+            return status === 'paid' ? '💳 bKash (Paid)' : '💳 bKash';
+        }
+        return method;
+    }
+
+    // Get payment method styling
+    function getPaymentMethodStyle(paymentMethod) {
+        if (paymentMethod === 'cash') {
+            return 'background: #d4edda; color: #155724;';
+        } else if (paymentMethod === 'bkash') {
+            return 'background: #ffe4e8; color: #d81b60;';
+        }
+        return 'background: #e2e3e5; color: #383d41;';
+    }
+
+    // Format time from datetime
+    function formatTime(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${hours}:${minutes}`;
+    }
+
+    // View order details (modal or navigation)
+    window.viewOrderDetails = function(orderId) {
+        // You can implement a modal here or navigate to order details page
+        console.log('View order details:', orderId);
+        // For now, just show an alert - you can expand this later
+        alert(`Order #${orderId}\n\nClick OK to continue.\n\n(Feature: Full order details view can be implemented here)`);
+    };
 
     // Load recent customers from order history
     async function loadRecentCustomers() {
         try {
             const response = await fetch(`/api/rider/history/${riderId}?limit=8`);
             const data = await response.json();
+
+            if (response.status === 401 || data.requiresAuth) {
+                // Session expired, redirect to login
+                console.warn('Session expired. Redirecting to login...');
+                localStorage.removeItem('rider_id');
+                sessionStorage.clear();
+                window.location.href = '../rider_login.html';
+                return;
+            }
 
             if (data.success && data.orders) {
                 displayRecentCustomers(data.orders);
@@ -379,6 +525,15 @@
             const response = await fetch(`/api/rider/profile/${riderId}`);
             const data = await response.json();
 
+            if (response.status === 401 || data.requiresAuth) {
+                // Session expired, redirect to login
+                console.warn('Session expired. Redirecting to login...');
+                localStorage.removeItem('rider_id');
+                sessionStorage.clear();
+                window.location.href = '../rider_login.html';
+                return;
+            }
+
             if (data.success && data.rider) {
                 const rider = data.rider;
                 const currentStatus = rider.status || 'offline';
@@ -522,6 +677,280 @@
             notification.style.animation = 'slideOutRight 0.3s ease-in';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    // Load active deliveries (orders currently being delivered)
+    async function loadActiveDeliveries() {
+        try {
+            const response = await fetch(`/api/rider/active-orders/${riderId}`);
+            const data = await response.json();
+
+            if (response.status === 401 || data.requiresAuth) {
+                // Session expired, redirect to login
+                console.warn('Session expired. Redirecting to login...');
+                localStorage.removeItem('rider_id');
+                sessionStorage.clear();
+                window.location.href = '../rider_login.html';
+                return;
+            }
+
+            if (data.success && data.orders && data.orders.length > 0) {
+                displayActiveDeliveries(data.orders);
+            } else {
+                hideActiveDeliveriesSection();
+            }
+        } catch (error) {
+            console.error('Error loading active deliveries:', error);
+            hideActiveDeliveriesSection();
+        }
+    }
+
+    // Display active deliveries with action buttons
+    function displayActiveDeliveries(orders) {
+        const section = document.getElementById('activeDeliveriesSection');
+        const container = document.getElementById('activeDeliveriesContainer');
+        const countBadge = document.getElementById('activeDeliveryCount');
+        
+        section.style.display = 'block';
+        countBadge.textContent = orders.length;
+
+        container.innerHTML = orders.map(order => {
+            const deliveryStatus = order.delivery_status || 'assigned';
+            const itemsHtml = order.items?.map(item => 
+                `<li>${item.quantity}x ${escapeHtml(item.item_name)}</li>`
+            ).join('') || '<li>No items</li>';
+
+            return `
+                <div class="active-delivery-card" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #f39c12;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 1.2rem;">
+                                Order #${order.id} - ${escapeHtml(order.restaurant_name || 'Restaurant')}
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                                <div>
+                                    <strong>📍 Pick Up:</strong><br>
+                                    <small style="color: #666;">${escapeHtml(truncate(order.restaurant_address || 'N/A', 40))}</small>
+                                </div>
+                                <div>
+                                    <strong>🏠 Deliver To:</strong><br>
+                                    <small style="color: #666;">${escapeHtml(truncate(order.delivery_address || 'N/A', 40))}</small>
+                                </div>
+                                <div>
+                                    <strong>👤 Customer:</strong><br>
+                                    <small style="color: #666;">${escapeHtml(order.consumer_name || 'Unknown')}</small><br>
+                                    <small style="color: #666;">📞 ${escapeHtml(order.consumer_phone || 'N/A')}</small>
+                                </div>
+                                <div>
+                                    <strong>💰 Amount:</strong><br>
+                                    <span style="font-size: 1.3rem; color: #27ae60; font-weight: bold;">৳${formatNumber(order.total_amount)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong>📦 Order Items:</strong>
+                        <ul style="margin: 8px 0 0 0; padding-left: 20px; max-height: 100px; overflow-y: auto;">
+                            ${itemsHtml}
+                        </ul>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1;">
+                            ${getDeliveryActionButtons(order.id, deliveryStatus)}
+                        </div>
+                        <div>
+                            <span style="padding: 8px 16px; background: ${getStatusColor(deliveryStatus)}; color: white; border-radius: 20px; font-weight: 600; font-size: 0.9rem;">
+                                ${formatOrderStatus('', deliveryStatus)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add event listeners to action buttons
+        attachDeliveryActionListeners();
+    }
+
+    // Get delivery action buttons based on current status
+    function getDeliveryActionButtons(orderId, status) {
+        const btnStyle = 'padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.9rem;';
+        
+        switch (status) {
+            case 'assigned':
+                return `
+                    <button class="delivery-action-btn" data-action="pickup" data-order-id="${orderId}" 
+                        style="${btnStyle} background: #3498db; color: white;">
+                        📦 Pick Up Order
+                    </button>
+                `;
+            
+            case 'picked_up':
+                return `
+                    <button class="delivery-action-btn" data-action="on-way" data-order-id="${orderId}" 
+                        style="${btnStyle} background: #9b59b6; color: white;">
+                        🚚 Start Delivery
+                    </button>
+                `;
+            
+            case 'out_for_delivery':
+                return `
+                    <button class="delivery-action-btn" data-action="arrived" data-order-id="${orderId}" 
+                        style="${btnStyle} background: #e67e22; color: white;">
+                        📍 Mark as Arrived
+                    </button>
+                `;
+            
+            case 'arrived':
+                return `
+                    <button class="delivery-action-btn" data-action="complete" data-order-id="${orderId}" 
+                        style="${btnStyle} background: #27ae60; color: white;">
+                        ✅ Complete Delivery
+                    </button>
+                `;
+            
+            default:
+                return '';
+        }
+    }
+
+    // Get status color
+    function getStatusColor(status) {
+        const colors = {
+            'assigned': '#3498db',
+            'picked_up': '#9b59b6',
+            'out_for_delivery': '#e67e22',
+            'arrived': '#f39c12',
+            'delivered': '#27ae60'
+        };
+        return colors[status] || '#95a5a6';
+    }
+
+    // Attach event listeners to delivery action buttons
+    function attachDeliveryActionListeners() {
+        const buttons = document.querySelectorAll('.delivery-action-btn');
+        buttons.forEach(button => {
+            button.addEventListener('click', async function() {
+                const action = this.getAttribute('data-action');
+                const orderId = this.getAttribute('data-order-id');
+                await handleDeliveryAction(action, orderId);
+            });
+        });
+    }
+
+    // Handle delivery actions
+    async function handleDeliveryAction(action, orderId) {
+        const actionMap = {
+            'pickup': {
+                endpoint: '/api/rider/orders/picked-up',
+                confirmMsg: 'Have you picked up the order from the restaurant?',
+                successMsg: '📦 Order marked as picked up!'
+            },
+            'on-way': {
+                endpoint: '/api/rider/orders/out-for-delivery',
+                confirmMsg: 'Start delivery to customer?',
+                successMsg: '🚚 You\'re on your way to the customer!'
+            },
+            'arrived': {
+                endpoint: '/api/rider/orders/arrived',
+                confirmMsg: 'Have you arrived at the delivery location?',
+                successMsg: '📍 Marked as arrived!'
+            },
+            'complete': {
+                endpoint: '/api/rider/orders/complete',
+                confirmMsg: 'Confirm that you have successfully delivered the order to the customer?',
+                successMsg: '✅ Delivery completed! Great job!'
+            }
+        };
+
+        const config = actionMap[action];
+        if (!config) return;
+
+        // Confirm action
+        if (!confirm(config.confirmMsg)) return;
+
+        // Show loading state
+        showNotification('Processing...', 'info');
+
+        try {
+            const response = await fetch(config.endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    rider_id: riderId
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showNotification(config.successMsg, 'success');
+                
+                // Show earnings for completed delivery
+                if (action === 'complete' && data.earnings) {
+                    setTimeout(() => {
+                        showNotification(`💰 You earned ৳${formatNumber(data.earnings)}!`, 'success');
+                    }, 1500);
+                }
+
+                // Reload deliveries and stats
+                await loadActiveDeliveries();
+                await loadRiderStats();
+                await loadRiderStatus();
+                await loadRecentOrders();
+            } else {
+                showNotification(data.message || 'Failed to update status', 'error');
+            }
+        } catch (error) {
+            console.error('Error handling delivery action:', error);
+            showNotification('Something went wrong. Please try again.', 'error');
+        }
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info') {
+        const colors = {
+            success: '#27ae60',
+            error: '#e74c3c',
+            info: '#3498db',
+            warning: '#f39c12'
+        };
+
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 400px;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 4 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
+
+    // Hide active deliveries section
+    function hideActiveDeliveriesSection() {
+        const section = document.getElementById('activeDeliveriesSection');
+        section.style.display = 'none';
     }
 
 })();

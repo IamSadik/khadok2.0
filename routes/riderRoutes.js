@@ -41,11 +41,23 @@ router.get('/available', riderController.getAvailableRiders);
 // Get assigned orders for rider
 router.get('/orders/:riderId', riderController.getAssignedOrders);
 
+// Get active orders (currently being delivered)
+router.get('/active-orders/:riderId', riderController.getActiveOrders);
+
+// Get recent orders with full details (for dashboard)
+router.get('/recent-orders/:riderId', riderController.getRecentOrders);
+
 // Accept order assignment
 router.post('/orders/accept', riderController.acceptOrder);
 
 // Mark order as picked up from restaurant
 router.post('/orders/picked-up', riderController.markOrderPickedUp);
+
+// Mark order as out for delivery
+router.post('/orders/out-for-delivery', riderController.markOutForDelivery);
+
+// Mark as arrived at delivery location
+router.post('/orders/arrived', riderController.markArrived);
 
 // Complete delivery
 router.post('/orders/complete', riderController.completeDelivery);

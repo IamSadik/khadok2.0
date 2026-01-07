@@ -780,4 +780,154 @@ exports.addOrderNote = async (order_id, note) => {
   });
 };
 
+// 🔥 NEW: Get recent orders by rider with full details
+exports.getRecentOrdersByRider = async (rider_id, limit = 20, statusFilter = null) => {
+  let whereClause = 'WHERE o.rider_id = ?';
+  
+  // Add status filter if provided
+  if (statusFilter === 'active') {
+    whereClause += ` AND o.delivery_status IN ('assigned', 'picked_up', 'out_for_delivery', 'arrived')`;
+  } else if (statusFilter === 'completed') {
+    whereClause += ` AND o.delivery_status = 'delivered' AND o.order_status = 'completed'`;
+  } else if (statusFilter === 'cancelled') {
+    whereClause += ` AND o.order_status = 'cancelled'`;
+  }
+  
+  const sql = `
+    SELECT 
+      o.*,
+      s.restaurant_name,
+      s.address as restaurant_address,
+      s.picture as restaurant_logo,
+      s.lat as restaurant_lat,
+      s.lng as restaurant_lng,
+      s.number as restaurant_phone,
+      c.name as consumer_name,
+      c.number as consumer_phone,
+      c.picture as consumer_picture,
+      c.address as consumer_address
+    FROM orders o
+    LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
+    LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
+    ${whereClause}
+    ORDER BY o.created_at DESC
+    LIMIT ?
+  `;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, [rider_id, limit], (err, orders) => {
+      if (err) {
+        console.error('Get recent orders by rider error:', err);
+        return reject(err);
+      }
+
+      if (orders.length === 0) {
+        return resolve([]);
+      }
+
+      // Get order items for each order
+      const orderIds = orders.map(o => o.id);
+      const itemsSql = `
+        SELECT * FROM order_items
+        WHERE order_id IN (?)
+        ORDER BY order_id
+      `;
+
+      db.query(itemsSql, [orderIds], (err, items) => {
+        if (err) {
+          console.error('Get order items error:', err);
+          return reject(err);
+        }
+
+        // Group items by order_id
+        const itemsByOrder = {};
+        items.forEach(item => {
+          if (!itemsByOrder[item.order_id]) {
+            itemsByOrder[item.order_id] = [];
+          }
+          itemsByOrder[item.order_id].push(item);
+        });
+
+        // Attach items to orders
+        orders.forEach(order => {
+          order.items = itemsByOrder[order.id] || [];
+        });
+
+        resolve(orders);
+      });
+    });
+  });
+};
+
+// 🔥 NEW: Get active orders by rider (orders in progress)
+exports.getActiveOrdersByRider = async (rider_id) => {
+  const sql = `
+    SELECT 
+      o.*,
+      s.restaurant_name,
+      s.address as restaurant_address,
+      s.picture as restaurant_logo,
+      s.lat as restaurant_lat,
+      s.lng as restaurant_lng,
+      s.number as restaurant_phone,
+      c.name as consumer_name,
+      c.number as consumer_phone,
+      c.picture as consumer_picture,
+      c.address as consumer_address,
+      c.lat as consumer_lat,
+      c.lng as consumer_lng
+    FROM orders o
+    LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
+    LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
+    WHERE o.rider_id = ? 
+      AND o.delivery_status IN ('assigned', 'picked_up', 'out_for_delivery', 'arrived')
+      AND o.order_status NOT IN ('cancelled', 'completed')
+    ORDER BY o.created_at ASC
+  `;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, [rider_id], (err, orders) => {
+      if (err) {
+        console.error('Get active orders by rider error:', err);
+        return reject(err);
+      }
+
+      if (orders.length === 0) {
+        return resolve([]);
+      }
+
+      // Get order items for each order
+      const orderIds = orders.map(o => o.id);
+      const itemsSql = `
+        SELECT * FROM order_items
+        WHERE order_id IN (?)
+        ORDER BY order_id
+      `;
+
+      db.query(itemsSql, [orderIds], (err, items) => {
+        if (err) {
+          console.error('Get order items error:', err);
+          return reject(err);
+        }
+
+        // Group items by order_id
+        const itemsByOrder = {};
+        items.forEach(item => {
+          if (!itemsByOrder[item.order_id]) {
+            itemsByOrder[item.order_id] = [];
+          }
+          itemsByOrder[item.order_id].push(item);
+        });
+
+        // Attach items to orders
+        orders.forEach(order => {
+          order.items = itemsByOrder[order.id] || [];
+        });
+
+        resolve(orders);
+      });
+    });
+  });
+};
+
 module.exports = exports;

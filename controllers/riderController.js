@@ -92,6 +92,18 @@ exports.updateRiderStatus = async (req, res) => {
             });
         }
 
+        // Check if rider has active deliveries - prevent manual status change from "busy"
+        const activeOrders = await orderModel.getActiveOrdersByRider(rider_id);
+        
+        if (activeOrders && activeOrders.length > 0) {
+            // Rider has active deliveries - cannot change status manually
+            return res.status(403).json({
+                success: false,
+                message: 'Cannot change status while you have active deliveries. Please complete or cancel your current deliveries first.',
+                activeOrders: activeOrders.length
+            });
+        }
+
         await riderModel.updateRiderStatus(rider_id, status);
 
         res.json({
@@ -193,9 +205,29 @@ exports.acceptOrder = async (req, res) => {
 // Mark order as picked up from restaurant
 exports.markOrderPickedUp = async (req, res) => {
     try {
-        const { order_id } = req.body;
+        const { order_id, rider_id } = req.body;
 
-        await orderModel.updateOrderStatus(order_id, 'picked_up');
+        if (!order_id || !rider_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and Rider ID are required'
+            });
+        }
+
+        // Update order status
+        await orderModel.updateDeliveryStatus(order_id, 'picked_up');
+        await orderModel.updatePickupTime(order_id);
+        
+        // Create tracking entry
+        await orderModel.createTrackingEntry(
+            order_id, 
+            rider_id, 
+            'picked_up', 
+            'Order picked up from restaurant'
+        );
+
+        // Ensure rider is busy
+        await riderModel.updateRiderStatus(rider_id, 'busy');
 
         res.json({
             success: true,
@@ -211,29 +243,178 @@ exports.markOrderPickedUp = async (req, res) => {
     }
 };
 
-// Complete delivery
-exports.completeDelivery = async (req, res) => {
+// Mark order as out for delivery
+exports.markOutForDelivery = async (req, res) => {
     try {
-        const { order_id, rider_id, delivery_time } = req.body;
+        const { order_id, rider_id } = req.body;
 
-        // Update order status to delivered
-        await orderModel.updateOrderStatus(order_id, 'delivered');
+        if (!order_id || !rider_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and Rider ID are required'
+            });
+        }
 
-        // Update rider stats
-        await riderModel.updateDeliveryStats(rider_id, delivery_time, true);
-
-        // Update rider status to available
-        await riderModel.updateRiderStatus(rider_id, 'available');
+        // Update order status
+        await orderModel.updateDeliveryStatus(order_id, 'out_for_delivery');
+        
+        // Create tracking entry
+        await orderModel.createTrackingEntry(
+            order_id, 
+            rider_id, 
+            'out_for_delivery', 
+            'Order is on the way to customer'
+        );
 
         res.json({
             success: true,
-            message: 'Delivery completed successfully'
+            message: 'Order marked as out for delivery'
+        });
+    } catch (error) {
+        console.error('Error marking order as out for delivery:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update order status',
+            error: error.message
+        });
+    }
+};
+
+// Mark rider as arrived at delivery location
+exports.markArrived = async (req, res) => {
+    try {
+        const { order_id, rider_id } = req.body;
+
+        if (!order_id || !rider_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and Rider ID are required'
+            });
+        }
+
+        // Update order status
+        await orderModel.updateDeliveryStatus(order_id, 'arrived');
+        
+        // Create tracking entry
+        await orderModel.createTrackingEntry(
+            order_id, 
+            rider_id, 
+            'arrived', 
+            'Rider has arrived at delivery location'
+        );
+
+        res.json({
+            success: true,
+            message: 'Marked as arrived at delivery location'
+        });
+    } catch (error) {
+        console.error('Error marking as arrived:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update status',
+            error: error.message
+        });
+    }
+};
+
+// Complete delivery
+exports.completeDelivery = async (req, res) => {
+    try {
+        const { order_id, rider_id, delivery_notes, delivery_photo } = req.body;
+
+        if (!order_id || !rider_id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and Rider ID are required'
+            });
+        }
+
+        // Get order details for calculating delivery time
+        const order = await orderModel.getOrderById(order_id);
+        
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Complete the delivery
+        await orderModel.completeDelivery(order_id);
+        
+        // Create tracking entry with notes
+        await orderModel.createTrackingEntry(
+            order_id, 
+            rider_id, 
+            'delivered', 
+            delivery_notes || 'Order delivered successfully'
+        );
+
+        // Calculate actual delivery time in minutes
+        const deliveryTime = Math.round((Date.now() - new Date(order.created_at).getTime()) / 60000);
+
+        // Update rider stats
+        await riderModel.updateDeliveryStats(rider_id, deliveryTime, true);
+
+        // Calculate earnings (80% of delivery fee goes to rider)
+        const deliveryFee = parseFloat(order.delivery_fee) || 0;
+        const riderCommission = deliveryFee * 0.8;
+        const platformFee = deliveryFee * 0.2;
+
+        // Create earning record
+        await orderModel.createRiderEarning({
+            rider_id: rider_id,
+            order_id: order_id,
+            delivery_fee: deliveryFee,
+            rider_commission: riderCommission,
+            platform_fee: platformFee,
+            bonus_amount: 0,
+            net_earning: riderCommission,
+            delivery_distance: null,
+            delivery_time: deliveryTime
+        });
+
+        // Check if rider has more active orders
+        const remainingOrders = await orderModel.getActiveOrdersByRider(rider_id);
+        
+        // If no more active orders, set status back to available
+        if (!remainingOrders || remainingOrders.length === 0) {
+            await riderModel.updateRiderStatus(rider_id, 'available');
+        }
+
+        res.json({
+            success: true,
+            message: 'Delivery completed successfully! 🎉',
+            earnings: riderCommission,
+            hasMoreOrders: remainingOrders && remainingOrders.length > 0
         });
     } catch (error) {
         console.error('Error completing delivery:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to complete delivery',
+            error: error.message
+        });
+    }
+};
+
+// Get active orders for rider (orders in progress)
+exports.getActiveOrders = async (req, res) => {
+    try {
+        const riderId = req.params.riderId || req.query.rider_id;
+
+        const orders = await orderModel.getActiveOrdersByRider(riderId);
+
+        res.json({
+            success: true,
+            orders: orders || [],
+            count: orders?.length || 0
+        });
+    } catch (error) {
+        console.error('Error fetching active orders:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch active orders',
             error: error.message
         });
     }
@@ -318,6 +499,30 @@ exports.getDeliveryHistory = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Failed to fetch delivery history',
+            error: error.message
+        });
+    }
+};
+
+// Get recent orders with full details (including active orders)
+exports.getRecentOrders = async (req, res) => {
+    try {
+        const riderId = req.params.riderId || req.query.rider_id;
+        const limit = parseInt(req.query.limit) || 20;
+        const status = req.query.status; // Optional filter: 'active', 'completed', 'cancelled', 'all'
+
+        const orders = await orderModel.getRecentOrdersByRider(riderId, limit, status);
+
+        res.json({
+            success: true,
+            orders: orders || [],
+            count: orders?.length || 0
+        });
+    } catch (error) {
+        console.error('Error fetching recent orders:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch recent orders',
             error: error.message
         });
     }
