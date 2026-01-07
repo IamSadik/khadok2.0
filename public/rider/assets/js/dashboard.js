@@ -36,15 +36,6 @@
             const response = await fetch(`/api/rider/profile/${riderId}`);
             const data = await response.json();
 
-            if (response.status === 401 || data.requiresAuth) {
-                // Session expired, redirect to login
-                console.warn('Session expired. Redirecting to login...');
-                localStorage.removeItem('rider_id');
-                sessionStorage.clear();
-                window.location.href = '../rider_login.html';
-                return;
-            }
-
             if (data.success && data.rider) {
                 const rider = data.rider;
                 // Update avatar if available
@@ -62,15 +53,6 @@
         try {
             const response = await fetch(`/api/rider/stats/${riderId}`);
             const data = await response.json();
-
-            if (response.status === 401 || data.requiresAuth) {
-                // Session expired, redirect to login
-                console.warn('Session expired. Redirecting to login...');
-                localStorage.removeItem('rider_id');
-                sessionStorage.clear();
-                window.location.href = '../rider_login.html';
-                return;
-            }
 
             if (data.success && data.stats) {
                 const stats = data.stats;
@@ -101,15 +83,6 @@
         try {
             const response = await fetch(`/api/rider/recent-orders/${riderId}?limit=10`);
             const data = await response.json();
-
-            if (response.status === 401 || data.requiresAuth) {
-                // Session expired, redirect to login
-                console.warn('Session expired. Redirecting to login...');
-                localStorage.removeItem('rider_id');
-                sessionStorage.clear();
-                window.location.href = '../rider_login.html';
-                return;
-            }
 
             if (data.success && data.orders) {
                 displayRecentOrders(data.orders);
@@ -263,15 +236,6 @@
         try {
             const response = await fetch(`/api/rider/history/${riderId}?limit=8`);
             const data = await response.json();
-
-            if (response.status === 401 || data.requiresAuth) {
-                // Session expired, redirect to login
-                console.warn('Session expired. Redirecting to login...');
-                localStorage.removeItem('rider_id');
-                sessionStorage.clear();
-                window.location.href = '../rider_login.html';
-                return;
-            }
 
             if (data.success && data.orders) {
                 displayRecentCustomers(data.orders);
@@ -525,15 +489,6 @@
             const response = await fetch(`/api/rider/profile/${riderId}`);
             const data = await response.json();
 
-            if (response.status === 401 || data.requiresAuth) {
-                // Session expired, redirect to login
-                console.warn('Session expired. Redirecting to login...');
-                localStorage.removeItem('rider_id');
-                sessionStorage.clear();
-                window.location.href = '../rider_login.html';
-                return;
-            }
-
             if (data.success && data.rider) {
                 const rider = data.rider;
                 const currentStatus = rider.status || 'offline';
@@ -684,15 +639,6 @@
         try {
             const response = await fetch(`/api/rider/active-orders/${riderId}`);
             const data = await response.json();
-
-            if (response.status === 401 || data.requiresAuth) {
-                // Session expired, redirect to login
-                console.warn('Session expired. Redirecting to login...');
-                localStorage.removeItem('rider_id');
-                sessionStorage.clear();
-                window.location.href = '../rider_login.html';
-                return;
-            }
 
             if (data.success && data.orders && data.orders.length > 0) {
                 displayActiveDeliveries(data.orders);

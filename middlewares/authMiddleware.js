@@ -14,3 +14,20 @@ exports.requireLogin = (role) => {
         next();
     };
 };
+
+// Simple rider authentication using rider_id from request body/query
+// This bypasses session for rider API calls
+exports.requireRiderAuth = (req, res, next) => {
+    const riderId = req.body.rider_id || req.query.rider_id || req.params.riderId;
+    
+    if (!riderId) {
+        return res.status(400).json({
+            success: false,
+            message: 'Rider ID is required'
+        });
+    }
+    
+    // Store rider_id in request for use in controllers
+    req.riderId = riderId;
+    next();
+};

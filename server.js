@@ -13,7 +13,7 @@ const pool = require('./config/configdb');
 const authRoutes = require('./routes/authRoutes');
 const signupRoutes = require('./routes/signupRoutes');
 const sessionMiddleware = require('./middlewares/sessionMiddleware');
-const { requireLogin } = require('./middlewares/authMiddleware');
+const { requireLogin, requireRiderAuth } = require('./middlewares/authMiddleware');
 const mapRoutes = require('./routes/mapRoutes');
 
 const app = express();
@@ -42,7 +42,8 @@ app.use(session({
 // Protect routes by role first
 app.use('/api/consumer', requireLogin('consumer'));
 app.use('/api/stakeholder', requireLogin('stakeholder'));
-app.use('/api/rider', requireLogin('rider'));
+// Remove session authentication for rider routes - using simple rider_id validation instead
+// app.use('/api/rider', requireLogin('rider'));
 
 // Then register routes
 app.use('/api/auth', authRoutes);
