@@ -667,8 +667,45 @@
             ).join('') || '<li>No items</li>';
 
             return `
-                <div class="active-delivery-card" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #f39c12;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div class="active-delivery-card" onclick="openTracking(${order.id})" style="
+                    background: white; 
+                    border-radius: 12px; 
+                    padding: 20px; 
+                    margin-bottom: 15px; 
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+                    border-left: 4px solid #f39c12;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(0,0,0,0.15)';"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';"
+                   title="Click to open live tracking">
+                   
+                    <!-- Live Tracking Button (Top Right) -->
+                    <button onclick="event.stopPropagation(); openTracking(${order.id})" style="
+                        position: absolute;
+                        top: 15px;
+                        right: 15px;
+                        padding: 8px 16px;
+                        background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-size: 0.85rem;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+                        transition: all 0.3s;
+                        z-index: 10;
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(33, 150, 243, 0.4)';"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(33, 150, 243, 0.3)';">
+                        📍 Live Tracking
+                    </button>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; padding-right: 140px;">
                         <div style="flex: 1;">
                             <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 1.2rem;">
                                 Order #${order.id} - ${escapeHtml(order.restaurant_name || 'Restaurant')}
@@ -719,6 +756,12 @@
         // Add event listeners to action buttons
         attachDeliveryActionListeners();
     }
+
+    // Open live tracking page
+    window.openTracking = function(orderId) {
+        // Open tracking page with order ID
+        window.location.href = `tracking.html?orderId=${orderId}`;
+    };
 
     // Get delivery action buttons based on current status
     function getDeliveryActionButtons(orderId, status) {
@@ -778,7 +821,8 @@
     function attachDeliveryActionListeners() {
         const buttons = document.querySelectorAll('.delivery-action-btn');
         buttons.forEach(button => {
-            button.addEventListener('click', async function() {
+            button.addEventListener('click', async function(e) {
+                e.stopPropagation(); // Prevent card click
                 const action = this.getAttribute('data-action');
                 const orderId = this.getAttribute('data-order-id');
                 await handleDeliveryAction(action, orderId);

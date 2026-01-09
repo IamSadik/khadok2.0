@@ -420,6 +420,52 @@ exports.getActiveOrders = async (req, res) => {
     }
 };
 
+// Get order tracking data (for real-time tracking page)
+exports.getOrderTrackingData = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        const riderId = req.query.rider_id;
+
+        if (!orderId || !riderId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Order ID and Rider ID are required'
+            });
+        }
+
+        // Get order with all details
+        const orders = await orderModel.getRecentOrdersByRider(riderId, 1, null);
+        const order = orders.find(o => o.id == orderId);
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found or not assigned to this rider'
+            });
+        }
+
+        // Verify order is assigned to this rider
+        if (order.rider_id != riderId) {
+            return res.status(403).json({
+                success: false,
+                message: 'This order is not assigned to you'
+            });
+        }
+
+        res.json({
+            success: true,
+            order: order
+        });
+    } catch (error) {
+        console.error('Error fetching order tracking data:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch order tracking data',
+            error: error.message
+        });
+    }
+};
+
 // Get rider statistics
 exports.getRiderStats = async (req, res) => {
     try {

@@ -47,6 +47,9 @@ router.get('/active-orders/:riderId', riderController.getActiveOrders);
 // Get recent orders with full details (for dashboard)
 router.get('/recent-orders/:riderId', riderController.getRecentOrders);
 
+// Get order tracking data (for real-time tracking page)
+router.get('/tracking/order/:orderId', riderController.getOrderTrackingData);
+
 // Accept order assignment
 router.post('/orders/accept', riderController.acceptOrder);
 

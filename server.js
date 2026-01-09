@@ -96,6 +96,41 @@ const io = socketio(server);
 // attach io to req if needed
 app.set('io', io);
 
+// ==================== SOCKET.IO - REAL-TIME TRACKING ====================
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+
+    // Rider joins a tracking room for an order
+    socket.on('join-tracking', (data) => {
+        const { orderId, riderId } = data;
+        const room = `order-${orderId}`;
+        socket.join(room);
+        console.log(`Rider ${riderId} joined tracking room for order ${orderId}`);
+    });
+
+    // Rider sends location update
+    socket.on('update-rider-location', (data) => {
+        const { orderId, riderId, lat, lng } = data;
+        const room = `order-${orderId}`;
+
+        // Broadcast location to everyone in the room (including consumer tracking)
+        io.to(room).emit('rider-location-update', {
+            orderId: orderId,
+            riderId: riderId,
+            lat: lat,
+            lng: lng,
+            timestamp: new Date().toISOString()
+        });
+
+        console.log(`Location update for order ${orderId}: ${lat}, ${lng}`);
+    });
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
+
 // Start
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => console.log(`Server running on ${PORT}`));
