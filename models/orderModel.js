@@ -340,7 +340,28 @@ exports.getRestaurantCoordinates = async (stakeholder_id) => {
 
 // 🔥 NEW: Get order by ID
 exports.getOrderById = async (order_id) => {
-  const sql = `SELECT * FROM orders WHERE id = ?`;
+  const sql = `
+    SELECT 
+      o.*,
+      s.restaurant_name,
+      s.address as restaurant_address,
+      s.picture as restaurant_logo,
+      s.lat as restaurant_lat,
+      s.lng as restaurant_lng,
+      s.number as restaurant_phone,
+      c.name as consumer_name,
+      c.number as consumer_phone,
+      r.name as rider_name,
+      r.number as rider_phone,
+      r.vehicle_type,
+      r.current_lat as rider_lat,
+      r.current_lng as rider_lng
+    FROM orders o
+    LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
+    LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
+    LEFT JOIN rider r ON o.rider_id = r.rider_id
+    WHERE o.id = ?
+  `;
 
   return new Promise((resolve, reject) => {
     db.query(sql, [order_id], (err, results) => {
@@ -349,6 +370,21 @@ exports.getOrderById = async (order_id) => {
         return reject(err);
       }
       resolve(results[0] || null);
+    });
+  });
+};
+
+// 🔥 NEW: Get order items by order ID
+exports.getOrderItems = async (order_id) => {
+  const sql = `SELECT * FROM order_items WHERE order_id = ? ORDER BY id`;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, [order_id], (err, results) => {
+      if (err) {
+        console.error('Get order items error:', err);
+        return reject(err);
+      }
+      resolve(results || []);
     });
   });
 };

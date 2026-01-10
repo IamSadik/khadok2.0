@@ -7,6 +7,7 @@
   <title>dashoard</title>
   <link rel="stylesheet" href="css/khadok.consumer.sidebar.css">
   <link rel="stylesheet" href="css/khadok.consumer.dashboard.css">\
+  <link rel="stylesheet" href="css/delivery-notification.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-A7vV8IFfih/D732iSSl2gBj5b0hyYLtP7kD+3h7gUGI=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -22,6 +23,8 @@
   <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
   <script src="https://kit.fontawesome.com/a2d9d6a1f3.js" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
+  <!-- Socket.IO for real-time order tracking -->
+  <script src="/socket.io/socket.io.js"></script>
   <script src="js/app.js"></script>
 
 
@@ -793,6 +796,40 @@
           <i class="fas fa-lock"></i> Place Order
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 🔥 PERSISTENT ORDER TRACKING WIDGET (Fixed at bottom right) -->
+  <div id="order-tracking-widget" class="order-tracking-widget" style="display: none;">
+    <div class="widget-header">
+      <i class="fas fa-motorcycle"></i>
+      <span id="widget-status-text">Order On The Way</span>
+      <button class="widget-close-btn" onclick="closeTrackingWidget()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="widget-body">
+      <div class="widget-order-info">
+        <p class="widget-restaurant-name" id="widget-restaurant-name">Loading...</p>
+        <p class="widget-order-id">Order #<span id="widget-order-id">---</span></p>
+      </div>
+      <div class="widget-progress">
+        <div class="progress-step completed">
+          <i class="fas fa-check-circle"></i>
+          <span>Confirmed</span>
+        </div>
+        <div class="progress-step" id="widget-preparing">
+          <i class="fas fa-clock"></i>
+          <span>Preparing</span>
+        </div>
+        <div class="progress-step" id="widget-on-way">
+          <i class="fas fa-motorcycle"></i>
+          <span>On The Way</span>
+        </div>
+      </div>
+      <button class="widget-track-btn" onclick="openTrackingPage()">
+        <i class="fas fa-map-marked-alt"></i> Track on Map
+      </button>
     </div>
   </div>
 

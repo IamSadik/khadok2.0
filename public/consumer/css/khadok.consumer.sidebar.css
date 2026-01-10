@@ -30,6 +30,7 @@ body{
     transition: all 0.5s ease;
     overflow: visible; /* Ensure no clipping occurs */
     z-index: 1000; /* Add z-index to sidebar */
+    height: 100vh;
 }
 
 .sidebar.active{

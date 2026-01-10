@@ -1,5 +1,14 @@
 const orderModel = require('../models/orderModel');
 
+// 🔥 Get Socket.IO instance for real-time notifications
+let io;
+try {
+  const server = require('../server');
+  io = server.io;
+} catch (error) {
+  console.warn('⚠️ Socket.IO not available yet');
+}
+
 // Helper function to calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
@@ -300,6 +309,133 @@ exports.getConsumerPickupOrdersQuery = async (req, res) => {
   }
 };
 
+// ✅ NEW: Get single order by ID (for tracking page)
+exports.getOrderById = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+
+    if (!order_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order ID is required'
+      });
+    }
+
+    console.log(`📦 Fetching order details for order ${order_id}...`);
+
+    const order = await orderModel.getOrderById(order_id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // Get order items
+    const items = await orderModel.getOrderItems(order_id);
+
+    // Get tracking history if it's a delivery order
+    let tracking = [];
+    if (order.order_type === 'delivery') {
+      tracking = await orderModel.getTrackingHistory(order_id);
+    }
+
+    console.log(`✅ Order ${order_id} fetched successfully`);
+
+    res.json({
+      success: true,
+      order: {
+        ...order,
+        items: items,
+        tracking: tracking
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Get order by ID error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch order',
+      error: error.message
+    });
+  }
+};
+
+// ✅ NEW: Get active delivery orders for a consumer
+exports.getActiveDeliveryOrders = async (req, res) => {
+  try {
+    const { consumer_id } = req.params;
+
+    if (!consumer_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Consumer ID is required'
+      });
+    }
+
+    console.log(`🚚 Fetching active delivery orders for consumer ${consumer_id}...`);
+
+    // Get all orders for consumer
+    const allOrders = await orderModel.getOrdersByConsumer(consumer_id);
+    
+    // ✅ SIMPLIFIED: Active order = any order that is NOT completed or cancelled
+    // Don't check delivery_status at all - just order_status
+    const activeDeliveryOrders = allOrders.filter(order => {
+      const isDeliveryOrder = order.order_type === 'delivery';
+      const isActive = !['completed', 'cancelled'].includes(order.order_status);
+      
+      return isDeliveryOrder && isActive;
+    });
+
+    console.log(`✅ Found ${activeDeliveryOrders.length} active delivery orders for consumer ${consumer_id}`);
+    console.log(`📊 Active orders:`, activeDeliveryOrders.map(o => ({
+      id: o.id,
+      order_status: o.order_status,
+      delivery_status: o.delivery_status
+    })));
+
+    // If there are active orders, return the most recent one with full details
+    if (activeDeliveryOrders.length > 0) {
+      const activeOrder = activeDeliveryOrders[0]; // Most recent active order
+      
+      // Get tracking history for the order
+      const tracking = await orderModel.getTrackingHistory(activeOrder.id);
+      
+      res.json({
+        success: true,
+        hasActiveOrder: true,
+        order: {
+          id: activeOrder.id,
+          restaurant_name: activeOrder.restaurant_name,
+          order_status: activeOrder.order_status,
+          delivery_status: activeOrder.delivery_status,
+          estimated_delivery_time: activeOrder.estimated_delivery_time,
+          rider_name: activeOrder.rider_name,
+          rider_phone: activeOrder.rider_phone,
+          total_amount: activeOrder.total_amount,
+          created_at: activeOrder.created_at,
+          tracking: tracking
+        }
+      });
+    } else {
+      res.json({
+        success: true,
+        hasActiveOrder: false,
+        message: 'No active delivery orders'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Get active delivery orders error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch active delivery orders',
+      error: error.message
+    });
+  }
+};
+
 // Get orders for a stakeholder (restaurant)
 exports.getStakeholderOrders = async (req, res) => {
   try {
@@ -429,6 +565,22 @@ exports.updateOrderStatus = async (req, res) => {
 
     // Get order details
     const order = await orderModel.getOrderById(order_id);
+    
+    // 🔥 EMIT SOCKET.IO NOTIFICATION TO CONSUMER
+    if (order && req.app.get('io')) {
+      const io = req.app.get('io');
+      const notificationData = {
+        order_id: order.id,
+        status: order_status,
+        restaurant_name: order.restaurant_name || 'Restaurant',
+        rider_name: order.rider_name || null,
+        estimated_time: order.estimated_delivery_time || null
+      };
+      
+      // Emit to specific consumer
+      io.to(`consumer-${order.consumer_id}`).emit('deliveryStatusUpdate', notificationData);
+      console.log(`🔔 Notification sent to consumer ${order.consumer_id} for order ${order_id}`);
+    }
     
     if (order && order.order_type === 'delivery') {
       // Create tracking entry for status changes

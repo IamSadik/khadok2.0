@@ -20,6 +20,12 @@ router.get('/consumer', orderController.getConsumerOrdersQuery);
 // ✅ NEW: Get pickup orders for a consumer (query params)
 router.get('/pickup', orderController.getConsumerPickupOrdersQuery);
 
+// ✅ NEW: Get active delivery orders for a consumer
+router.get('/consumer/:consumer_id/active', orderController.getActiveDeliveryOrders);
+
+// ✅ NEW: Get single order by ID (for tracking page)
+router.get('/:order_id', orderController.getOrderById);
+
 // Get orders for a consumer (path params - keeping for backward compatibility)
 router.get('/consumer/:consumer_id', orderController.getConsumerOrders);
 

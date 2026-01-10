@@ -1003,3 +1003,298 @@ window.viewRestaurant = function(restaurantId) {
     // 🔹 Load restaurants (localStorage is now guaranteed to be set)
     await loadNearbyRestaurants();
   });
+
+// ========================================================================================
+// 🚀🚀🚀 DELIVERY NOTIFICATION & REAL-TIME TRACKING SYSTEM 🚀🚀🚀
+// ========================================================================================
+
+// Global variable to store active notifications
+let activeDeliveryNotifications = [];
+let notificationCheckInterval = null;
+let trackingWidgetVisible = false;
+
+// 🔥 Function to check for active deliveries and show notifications
+async function checkForActiveDeliveries() {
+  const consumerId = localStorage.getItem('consumer_id');
+  
+  if (!consumerId) {
+    console.warn('❌ No consumer ID found');
+    return;
+  }
+
+  try {
+    // Fetch all active orders for this consumer
+    const response = await fetch(`/api/orders/consumer/${consumerId}/active`);
+    
+    if (!response.ok) {
+      console.error('❌ Failed to fetch active deliveries');
+      return;
+    }
+
+    const data = await response.json();
+    console.log('📦 Active deliveries:', data);
+
+    // ✅ Check if there's an active order from the API
+    if (data.hasActiveOrder && data.order) {
+      const order = data.order;
+      
+      console.log('🚚 Active order found:', {
+        id: order.id,
+        order_status: order.order_status,
+        delivery_status: order.delivery_status
+      });
+
+      // Show persistent widget if not already visible
+      if (!trackingWidgetVisible) {
+        showTrackingWidget(order);
+      }
+
+      // ✅ Show popup notification for new orders
+      if (!activeDeliveryNotifications.includes(order.id)) {
+        showDeliveryNotification(order);
+        activeDeliveryNotifications.push(order.id);
+      }
+    } else {
+      // No active orders - hide widget
+      hideTrackingWidget();
+    }
+
+  } catch (error) {
+    console.error('❌ Error checking for active deliveries:', error);
+  }
+}
+
+// 🔥 Function to show delivery notification popup (temporary)
+function showDeliveryNotification(order) {
+  console.log('🔔 Showing delivery notification for order:', order);
+
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = 'delivery-notification show';
+  notification.setAttribute('data-order-id', order.id);
+
+  // Calculate estimated delivery time
+  const estimatedTime = order.estimated_delivery_time || '15-20';
+
+  // Get restaurant name
+  const restaurantName = order.restaurant_name || 'Restaurant';
+  const riderName = order.rider_name || 'Your delivery partner';
+
+  notification.innerHTML = `
+    <div class="notification-header">
+      <h3><i class="fas fa-motorcycle"></i> Order Update!</h3>
+      <button class="notification-close" onclick="closeDeliveryNotification('${order.id}')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="notification-body">
+      <div class="notification-order-info">
+        <p><i class="fas fa-utensils"></i> <strong>${restaurantName}</strong></p>
+        <p><i class="fas fa-hashtag"></i> Order #${order.id}</p>
+        <p><i class="fas fa-clock"></i> Estimated: ${estimatedTime} min</p>
+      </div>
+      <div class="notification-status">
+        <i class="fas fa-shipping-fast"></i>
+        ${getStatusMessage(order.delivery_status)}
+      </div>
+      <div class="notification-actions">
+        <button class="notification-btn primary" onclick="trackDelivery(${order.id})">
+          <i class="fas fa-map-marked-alt"></i> Track Live
+        </button>
+        <button class="notification-btn secondary" onclick="closeDeliveryNotification('${order.id}')">
+          <i class="fas fa-check"></i> Got it
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Append to body
+  document.body.appendChild(notification);
+
+  // Play notification sound (optional)
+  playNotificationSound();
+
+  // Auto-remove after 30 seconds if not interacted with
+  setTimeout(() => {
+    if (document.body.contains(notification)) {
+      notification.classList.add('hide');
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          notification.remove();
+        }
+      }, 500);
+    }
+  }, 30000);
+}
+
+// 🔥 Function to show persistent tracking widget (bottom-right)
+function showTrackingWidget(order) {
+  let widget = document.getElementById('order-tracking-widget');
+  
+  if (!widget) {
+    // Create widget if it doesn't exist
+    widget = document.createElement('div');
+    widget.id = 'order-tracking-widget';
+    widget.className = 'order-tracking-widget';
+    document.body.appendChild(widget);
+  }
+
+  // Get order status information
+  const restaurantName = order.restaurant_name || 'Restaurant';
+  const statusText = getWidgetStatusText(order.delivery_status);
+  
+  // Determine progress steps
+  const isConfirmed = true; // Always true if order exists
+  const isPreparing = ['preparing', 'ready', 'picked_up', 'on_the_way'].includes(order.delivery_status);
+  const isOnWay = ['picked_up', 'on_the_way'].includes(order.delivery_status);
+
+  widget.innerHTML = `
+    <div class="widget-header">
+      <i class="fas fa-motorcycle"></i>
+      <span id="widget-status-text">${statusText}</span>
+      <button class="widget-close-btn" onclick="closeTrackingWidget()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="widget-body">
+      <div class="widget-order-info">
+        <p class="widget-restaurant-name">${restaurantName}</p>
+        <p class="widget-order-id">Order #${order.id}</p>
+      </div>
+      <div class="widget-progress">
+        <div class="progress-step ${isConfirmed ? 'completed' : ''}">
+          <i class="fas fa-check-circle"></i>
+          <span>Confirmed</span>
+        </div>
+        <div class="progress-step ${isPreparing ? 'completed' : ''} ${isPreparing && !isOnWay ? 'active' : ''}">
+          <i class="fas fa-utensils"></i>
+          <span>Preparing</span>
+        </div>
+        <div class="progress-step ${isOnWay ? 'completed active' : ''}">
+          <i class="fas fa-motorcycle"></i>
+          <span>On The Way</span>
+        </div>
+      </div>
+      <button class="widget-track-btn" onclick="trackDelivery(${order.id})">
+        <i class="fas fa-map-marked-alt"></i> Track on Map
+      </button>
+    </div>
+  `;
+
+  widget.style.display = 'block';
+  trackingWidgetVisible = true;
+}
+
+// 🔥 Function to hide tracking widget
+function hideTrackingWidget() {
+  const widget = document.getElementById('order-tracking-widget');
+  if (widget) {
+    widget.style.display = 'none';
+    trackingWidgetVisible = false;
+  }
+}
+
+// 🔥 Function to close tracking widget
+window.closeTrackingWidget = function() {
+  hideTrackingWidget();
+};
+
+// 🔥 Function to get status message for notification
+function getStatusMessage(deliveryStatus) {
+  const messages = {
+    'pending': 'Your order has been placed',
+    'confirmed': 'Restaurant is preparing your order',
+    'preparing': 'Your food is being prepared',
+    'ready': 'Your order is ready for pickup',
+    'picked_up': 'Rider is on the way to you',
+    'on_the_way': 'Delivery partner is arriving soon',
+    'delivered': 'Your order has been delivered',
+    'cancelled': 'Order was cancelled'
+  };
+  
+  return messages[deliveryStatus] || 'Order is being processed';
+}
+
+// 🔥 Function to get widget status text
+function getWidgetStatusText(deliveryStatus) {
+  const texts = {
+    'pending': 'Order Placed',
+    'confirmed': 'Being Prepared',
+    'preparing': 'Preparing Your Food',
+    'ready': 'Ready for Pickup',
+    'picked_up': 'On The Way',
+    'on_the_way': 'Arriving Soon',
+    'delivered': 'Delivered',
+    'cancelled': 'Cancelled'
+  };
+  
+  return texts[deliveryStatus] || 'Order Processing';
+}
+
+// 🔥 Function to close notification
+window.closeDeliveryNotification = function(orderId) {
+  const notification = document.querySelector(`.delivery-notification[data-order-id="${orderId}"]`);
+  if (notification) {
+    notification.classList.add('hide');
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        notification.remove();
+      }
+    }, 500);
+  }
+};
+
+// 🔥 Function to track delivery - Navigate to tracking page
+window.trackDelivery = function(orderId) {
+  console.log('🗺️ Tracking delivery for order:', orderId);
+  
+  // Close the notification
+  closeDeliveryNotification(orderId);
+  
+  // Navigate to consumer tracking page
+  window.location.href = `consumer-delivery-tracking.html?order_id=${orderId}`;
+};
+
+// 🔥 Function to open tracking page from widget
+window.openTrackingPage = function() {
+  // Get order ID from widget
+  const widgetOrderId = document.querySelector('.widget-order-id');
+  if (widgetOrderId) {
+    const orderIdText = widgetOrderId.textContent.replace('Order #', '');
+    trackDelivery(orderIdText);
+  }
+};
+
+// 🔥 Function to play notification sound
+function playNotificationSound() {
+  try {
+    // Create audio element for notification sound
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZSA0PVqzn7qxgGAg+ltryxXMpBSuBzvLZiTYIGWi78OScTgwNUKXh8LdjGwU3j9bx0HwrBSl+zPDdjUELElyx6OyrWBUIQ5zd8sFuJAYuhM/z1YU1Bx1rtO7mnEgMDlOp5O+zXBsGPJHY88V0KgUqgM3y2Ik2Bxlouuzim0wMCk+j4PCzYhsENo/V8M98KwUofsvv3I1BCxFbr+bsq1gVCEKb3PKvaB8ELH3M8NWDNgccaq/t55tLCw1QpuLusV0aEDyO1fDBcykFKn/M8diJNQYYZrns4JhNDAoRTaHh7a5aGQc7j9XxxnQpBSl+yvDckUQMEFSs5e6qVxcHPpHW8L90KgUqgMvw14k0Bhtmuezhm00LCw5OnuDtsFsaBD2P1vDGcykFKH3J8NuNQwwPUqvm7qxYFQc9kNXwv3QqBSiAyvDXiTYGHGi58OGaTgwLDk2e4OywWxkEOpDV8MZ0KQUofcrw241DDAxPquXtqVcWBz+R1fC+cyoFKIDK8NaJNgYbZrrr4JpOCwsMTJ3e7K9aGQQ5j9TwxnQpBSh9yfDbjUMMCw9Pp+Xuq1gWBzuQ1fC+cyoFJ4DJ8NWINwYbZrrr4ZhMCwsLTZze7K5bGQQ3j9TwxnMpBSd8yO/bjEMLCw5Opubup1kVBziP1O++cykFJn/J8NWHNwYaZbns4ZdMCgsMTJzd7K1bGQQ4jtPwxXIpBSd8yO/ajEMLCg1NpubupVkWBzaO0++/cikFJn7I8NWHNgYaZLnr4ZdLCQsLTJrc66xaGQQ3js/uxXEpBSZ7x+7ai0MMDExNpebuo1kVBzWN0u+/cikFJXzH8NSGNgYZY7nr4JdKCgoJSZjZ6qtZGAQxiM3uw3AoBSR5xu7YiUMMDElLoeTtolcUBzCK0O+9cioFJHrF8NOFNgYXYbjo4JVJCgoISJfY6qpYFwQviMzuu28oBSN4xe7Xh0MNCUhKouPtoVcTBi6Jz+69cCkFI3nE8NKENQYXYLfn4JRICQkHR5bX6alYFwQuhs3tw28nBSF2xO/Wh0EMCEdJouLtn1YTBi6Iz++9bykFInfD8dGENQYWX7bn35RHCAkGRpTW6KlXFgQthsvts24nBSF0w+/Whk4MCUZIoOHtnlUTBiyGzu+8bikFIXbC8dCDNQUWXrXm35RGCAkFRZPV56hXFgQrhsrtsm4mBB9zweXVhk4MCUVHnuDsnFQSBiuEze+7bSgEIHS/8c+DNAUVXbTl3pNGBwgERJLT5qdWFgQphsjtr2wlBB9xwOTUhU0MBENGnN/sm1QRBSmCzO+6bCgEH3K+8M6CMwUUXLPk3pJFBwgDQZDR5aZWFgQogsbtrmwlBB5vvuPUhEwMBEJEm97rmlMRBSeAy++5aygEHm+98c2CMwUTWrLj3ZJEBwgCQI7Q5KRVFQQngsXtrmslBB1uveHTgksLBEBDmtzomlISBSZ+yu+4aimEH228rw==');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Could not play notification sound:', e));
+  } catch (e) {
+    console.log('Audio not supported:', e);
+  }
+}
+
+// 🔥 Initialize delivery notification system when dashboard loads
+document.addEventListener('DOMContentLoaded', () => {
+  // Check for active deliveries immediately
+  setTimeout(() => {
+    checkForActiveDeliveries();
+  }, 2000); // Wait 2 seconds after page load
+
+  // Check every 15 seconds for new deliveries
+  notificationCheckInterval = setInterval(() => {
+    checkForActiveDeliveries();
+  }, 15000);
+});
+
+// 🔥 Clean up interval when page unloads
+window.addEventListener('beforeunload', () => {
+  if (notificationCheckInterval) {
+    clearInterval(notificationCheckInterval);
+  }
+});
+
+console.log('✅ Delivery notification system initialized');

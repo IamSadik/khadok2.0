@@ -1,0 +1,523 @@
+/* ========================================================================
+   🚀 DELIVERY NOTIFICATION & TRACKING WIDGET STYLES
+   Beautiful, modern, and responsive design for order tracking
+   ======================================================================== */
+
+/* =====================================================
+   1. DELIVERY NOTIFICATION POPUP (Bottom-Right Toast)
+   ===================================================== */
+
+.delivery-notification {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 400px;
+  max-width: calc(100vw - 60px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: 9999;
+  overflow: hidden;
+  transform: translateX(450px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation: slideInBounce 0.6s ease-out forwards;
+}
+
+.delivery-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.delivery-notification.hide {
+  transform: translateX(450px);
+  opacity: 0;
+}
+
+@keyframes slideInBounce {
+  0% {
+    transform: translateX(450px) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-10px) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.notification-header {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notification-header h3 {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-header h3 i {
+  font-size: 24px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.notification-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.notification-body {
+  padding: 20px;
+  background: #ffffff;
+}
+
+.notification-order-info {
+  margin-bottom: 16px;
+}
+
+.notification-order-info p {
+  margin: 8px 0;
+  color: #333;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notification-order-info p i {
+  color: #667eea;
+  width: 20px;
+}
+
+.notification-order-info strong {
+  color: #1a202c;
+  font-weight: 600;
+}
+
+.notification-status {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: #1a202c;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.notification-status i {
+  font-size: 20px;
+  animation: moveRight 1.5s infinite;
+}
+
+@keyframes moveRight {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.notification-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.notification-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.notification-btn.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.notification-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.notification-btn.secondary {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.notification-btn.secondary:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+/* =====================================================
+   2. PERSISTENT ORDER TRACKING WIDGET (Bottom-Right)
+   ===================================================== */
+
+.order-tracking-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 9998;
+  overflow: hidden;
+  animation: slideInWidget 0.5s ease-out;
+}
+
+@keyframes slideInWidget {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.widget-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #ffffff;
+  position: relative;
+}
+
+.widget-header i.fa-motorcycle {
+  font-size: 20px;
+  animation: shake 2s infinite;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.widget-header #widget-status-text {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.widget-close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.widget-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.widget-body {
+  padding: 16px;
+}
+
+.widget-order-info {
+  margin-bottom: 16px;
+}
+
+.widget-restaurant-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 4px 0;
+}
+
+.widget-order-id {
+  font-size: 13px;
+  color: #718096;
+  margin: 0;
+}
+
+.widget-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.widget-progress::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+.progress-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.progress-step i {
+  width: 24px;
+  height: 24px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #a0aec0;
+  transition: all 0.3s ease;
+}
+
+.progress-step span {
+  font-size: 11px;
+  color: #718096;
+  text-align: center;
+  font-weight: 500;
+}
+
+.progress-step.completed i {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.progress-step.completed span {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.progress-step.active i {
+  background: #fbbf24;
+  color: #ffffff;
+  animation: bounce 1s infinite;
+}
+
+.progress-step.active span {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.widget-track-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.widget-track-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.widget-track-btn i {
+  font-size: 16px;
+}
+
+/* =====================================================
+   3. RESPONSIVE DESIGN
+   ===================================================== */
+
+@media (max-width: 768px) {
+  .delivery-notification {
+    width: calc(100vw - 40px);
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .order-tracking-widget {
+    width: calc(100vw - 40px);
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .notification-actions {
+    flex-direction: column;
+  }
+
+  .notification-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .delivery-notification {
+    width: calc(100vw - 20px);
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .order-tracking-widget {
+    width: calc(100vw - 20px);
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .notification-header h3 {
+    font-size: 16px;
+  }
+
+  .widget-progress {
+    gap: 4px;
+  }
+
+  .progress-step span {
+    font-size: 10px;
+  }
+}
+
+/* =====================================================
+   4. ADDITIONAL UTILITY STYLES
+   ===================================================== */
+
+.hidden {
+  display: none !important;
+}
+
+/* Ensure widget appears above other elements */
+.delivery-notification,
+.order-tracking-widget {
+  z-index: 99999 !important;
+}
+
+/* Smooth fade animations */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Loading spinner for widget */
+.widget-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.widget-loading i {
+  font-size: 24px;
+  color: #667eea;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

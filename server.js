@@ -89,16 +89,22 @@ app.use((req, res, next) => {
     next();
 });
 
-// ... your socket.io setup, other routes, etc.
-
 const server = http.createServer(app);
 const io = socketio(server);
-// attach io to req if needed
 app.set('io', io);
 
 // ==================== SOCKET.IO - REAL-TIME TRACKING ====================
+const consumerSockets = new Map(); // Track consumer connections
+
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
+
+    // 🔥 Consumer registers for notifications
+    socket.on('registerConsumer', (consumerId) => {
+        consumerSockets.set(consumerId, socket.id);
+        socket.join(`consumer-${consumerId}`);
+        console.log(`✅ Consumer ${consumerId} registered for notifications (Socket: ${socket.id})`);
+    });
 
     // Rider joins a tracking room for an order
     socket.on('join-tracking', (data) => {
@@ -106,6 +112,14 @@ io.on('connection', (socket) => {
         const room = `order-${orderId}`;
         socket.join(room);
         console.log(`Rider ${riderId} joined tracking room for order ${orderId}`);
+    });
+
+    // 🔥 Consumer joins tracking room for their order
+    socket.on('join-order-tracking', (data) => {
+        const { orderId, consumerId } = data;
+        const room = `order-${orderId}`;
+        socket.join(room);
+        console.log(`✅ Consumer ${consumerId} joined tracking room for order ${orderId}`);
     });
 
     // Rider sends location update
@@ -127,9 +141,20 @@ io.on('connection', (socket) => {
 
     // Handle disconnection
     socket.on('disconnect', () => {
+        // Remove consumer from tracking
+        for (const [consumerId, socketId] of consumerSockets.entries()) {
+            if (socketId === socket.id) {
+                consumerSockets.delete(consumerId);
+                console.log(`Consumer ${consumerId} disconnected`);
+                break;
+            }
+        }
         console.log('Client disconnected:', socket.id);
     });
 });
+
+// 🔥 Export io for use in controllers
+module.exports = { io, consumerSockets };
 
 // Start
 const PORT = process.env.PORT || 5000;

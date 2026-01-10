@@ -1,15 +1,22 @@
-// Real-Time Delivery Tracking System with OSRM Road Routing
+// ========================================================================================
+// 🚀🚀🚀 CONSUMER DELIVERY TRACKING SYSTEM - REAL-TIME RIDER LOCATION 🚀🚀🚀
+// ========================================================================================
+// EXACT COPY OF RIDER TRACKING SYSTEM - ADAPTED FOR CONSUMER VIEW
+// ========================================================================================
+
 (function() {
     'use strict';
 
+    console.log('🗺️ Consumer Delivery Tracking System Loading...');
+
     // Get order ID from URL
     const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId');
-    const riderId = sessionStorage.getItem('rider_id') || localStorage.getItem('rider_id');
+    const orderId = urlParams.get('order_id');
+    const consumerId = sessionStorage.getItem('consumer_id') || localStorage.getItem('consumer_id');
 
-    if (!orderId || !riderId) {
-        alert('Missing order or rider information!');
-        window.location.href = 'index.html';
+    if (!orderId) {
+        alert('❌ No order ID provided!');
+        window.location.href = 'khadok.consumer.dashboard.html';
         return;
     }
 
@@ -23,11 +30,17 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', async function() {
+        console.log('🚀 Initializing consumer delivery tracking for order:', orderId);
+        
         await loadMapTileURL();
         await loadOrderData();
         initializeSocket();
         setupEventListeners();
-        startLocationTracking();
+        
+        // Hide loading overlay
+        setTimeout(() => {
+            hideLoading();
+        }, 1500);
     });
 
     // Load tile URL from backend
@@ -36,8 +49,9 @@
             const response = await fetch('/api/map/tile-url');
             const data = await response.json();
             tileURL = data.tileURL;
+            console.log('✅ Map tile URL loaded');
         } catch (error) {
-            console.error('Error loading tile URL:', error);
+            console.error('❌ Error loading tile URL:', error);
             tileURL = 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=YOUR_KEY';
         }
     }
@@ -45,26 +59,30 @@
     // Load order data from backend
     async function loadOrderData() {
         try {
-            const response = await fetch(`/api/rider/tracking/order/${orderId}?rider_id=${riderId}`);
+            console.log('📦 Loading order data for order:', orderId);
+            const response = await fetch(`/api/orders/${orderId}`);
             const data = await response.json();
 
             if (data.success && data.order) {
                 orderData = data.order;
+                console.log('✅ Order data loaded:', orderData);
+                
                 initializeMap();
                 displayOrderInfo();
-                hideLoading();
             } else {
                 throw new Error(data.message || 'Failed to load order data');
             }
         } catch (error) {
-            console.error('Error loading order data:', error);
+            console.error('❌ Error loading order data:', error);
             alert('Failed to load order information: ' + error.message);
-            window.location.href = 'index.html';
+            window.location.href = 'khadok.consumer.dashboard.html';
         }
     }
 
-    // Initialize Leaflet map
+    // Initialize Leaflet map with MapTiler
     function initializeMap() {
+        console.log('🗺️ Initializing map...');
+        
         // Create map centered between restaurant and customer
         const centerLat = (parseFloat(orderData.restaurant_lat) + parseFloat(orderData.delivery_lat)) / 2;
         const centerLng = (parseFloat(orderData.restaurant_lng) + parseFloat(orderData.delivery_lng)) / 2;
@@ -74,6 +92,7 @@
             scrollWheelZoom: true
         }).setView([centerLat, centerLng], 13);
 
+        // Add MapTiler tile layer (SAME AS RIDER)
         L.tileLayer(tileURL, {
             tileSize: 512,
             zoomOffset: -1,
@@ -81,7 +100,7 @@
             crossOrigin: true
         }).addTo(map);
 
-        // Add restaurant marker with BEAUTIFUL icon
+        // Add restaurant marker with BEAUTIFUL custom icon (SAME AS RIDER)
         const restaurantIcon = L.divIcon({
             html: `<div class="restaurant-marker-icon"><i class="fas fa-utensils"></i></div>`,
             iconSize: [50, 50],
@@ -98,13 +117,13 @@
         restaurantMarker.bindPopup(`
             <div style="text-align: center; padding: 12px; min-width: 200px;">
                 <div style="font-size: 2rem; margin-bottom: 8px;">🍴</div>
-                <h3 style="margin: 0 0 8px 0; color: #FF6B6B; font-size: 1.1rem;">Pick Up Location</h3>
+                <h3 style="margin: 0 0 8px 0; color: #FF6B6B; font-size: 1.1rem;">Restaurant</h3>
                 <strong style="color: #333;">${orderData.restaurant_name}</strong><br>
-                <small style="color: #666; line-height: 1.5;">${orderData.restaurant_address}</small>
+                <small style="color: #666; line-height: 1.5;">${orderData.restaurant_address || ''}</small>
             </div>
         `);
 
-        // Add customer marker with BEAUTIFUL icon
+        // Add customer marker with BEAUTIFUL custom icon (SAME AS RIDER)
         const customerIcon = L.divIcon({
             html: `<div class="customer-marker-icon"><i class="fas fa-user"></i></div>`,
             iconSize: [50, 50],
@@ -121,13 +140,19 @@
         customerMarker.bindPopup(`
             <div style="text-align: center; padding: 12px; min-width: 200px;">
                 <div style="font-size: 2rem; margin-bottom: 8px;">🏠</div>
-                <h3 style="margin: 0 0 8px 0; color: #4CAF50; font-size: 1.1rem;">Delivery Location</h3>
-                <strong style="color: #333;">${orderData.consumer_name}</strong><br>
+                <h3 style="margin: 0 0 8px 0; color: #4CAF50; font-size: 1.1rem;">Your Location</h3>
+                <strong style="color: #333;">Delivery Address</strong><br>
                 <small style="color: #666; line-height: 1.5;">${orderData.delivery_address}</small>
             </div>
         `);
 
-        // Draw OSRM route from restaurant to customer
+        // Add initial rider marker (at restaurant if no rider location yet)
+        const initialRiderLat = parseFloat(orderData.rider_lat) || parseFloat(orderData.restaurant_lat);
+        const initialRiderLng = parseFloat(orderData.rider_lng) || parseFloat(orderData.restaurant_lng);
+        
+        updateRiderMarker(initialRiderLat, initialRiderLng);
+
+        // Draw full route from restaurant to customer (gray dashed - SAME AS RIDER)
         drawOSRMRoute(
             parseFloat(orderData.restaurant_lat),
             parseFloat(orderData.restaurant_lng),
@@ -147,6 +172,8 @@
             [parseFloat(orderData.delivery_lat), parseFloat(orderData.delivery_lng)]
         ]);
         map.fitBounds(bounds, { padding: [80, 80] });
+
+        console.log('✅ Map initialized successfully');
     }
 
     // Draw route using OSRM with fallback options
@@ -243,7 +270,7 @@
 
     // Display order information in sidebar
     function displayOrderInfo() {
-        const statusClass = `status-${orderData.delivery_status}`;
+        const statusClass = `status-${orderData.delivery_status || 'pending'}`;
         const itemsHtml = orderData.items?.map(item => 
             `<li><i class="fas fa-check-circle"></i> ${item.quantity}x ${item.item_name}</li>`
         ).join('') || '<li>No items</li>';
@@ -253,14 +280,16 @@
                 <h3><i class="fas fa-receipt"></i> Order Details</h3>
                 <p><strong>Order #${orderData.id}</strong></p>
                 <p><i class="fas fa-store"></i> ${orderData.restaurant_name}</p>
-                <span class="status-badge ${statusClass}">${formatStatus(orderData.delivery_status)}</span>
+                <span class="status-badge ${statusClass}">${formatStatus(orderData.delivery_status || orderData.order_status)}</span>
             </div>
 
             <div class="info-card">
-                <h3><i class="fas fa-user-circle"></i> Customer Information</h3>
-                <p><i class="fas fa-user"></i> ${orderData.consumer_name}</p>
-                <p><i class="fas fa-phone-alt"></i> ${orderData.consumer_phone}</p>
-                <p><i class="fas fa-map-marker-alt"></i> ${orderData.delivery_address}</p>
+                <h3><i class="fas fa-motorcycle"></i> Rider Information</h3>
+                ${orderData.rider_name ? `
+                    <p><i class="fas fa-user"></i> ${orderData.rider_name}</p>
+                    <p><i class="fas fa-phone-alt"></i> ${orderData.rider_phone || 'N/A'}</p>
+                    <p><i class="fas fa-motorcycle"></i> ${orderData.vehicle_type || 'Motorcycle'}</p>
+                ` : '<p><i class="fas fa-clock"></i> Assigning rider...</p>'}
             </div>
 
             <div class="info-card">
@@ -271,80 +300,60 @@
             <div class="info-card">
                 <h3><i class="fas fa-money-bill-wave"></i> Payment</h3>
                 <p class="amount">৳${formatNumber(orderData.total_amount)}</p>
-                <p><i class="fas fa-credit-card"></i> ${orderData.payment_method.toUpperCase()}</p>
+                <p><i class="fas fa-credit-card"></i> ${(orderData.payment_method || 'cash').toUpperCase()}</p>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-home"></i> Delivery Address</h3>
+                <p><i class="fas fa-map-marker-alt"></i> ${orderData.delivery_address}</p>
             </div>
         `;
     }
 
     // Initialize Socket.IO connection
     function initializeSocket() {
+        console.log('🔌 Connecting to Socket.IO...');
+        
         socket = io();
 
         // Join tracking room for this order
-        socket.emit('join-tracking', {
+        socket.emit('join-order-tracking', {
             orderId: orderId,
-            riderId: riderId
+            consumerId: consumerId
         });
 
-        // Listen for rider location updates from server
+        // Listen for rider location updates
         socket.on('rider-location-update', (data) => {
-            if (data.orderId === orderId) {
-                updateRiderLocation(data.lat, data.lng);
+            console.log('📍 Rider location update received:', data);
+            if (data.orderId == orderId) {
+                currentRiderLocation = { lat: data.lat, lng: data.lng };
+                updateRiderMarker(data.lat, data.lng);
+                updateDistanceInfo(data.lat, data.lng);
+            }
+        });
+
+        // Listen for order status updates
+        socket.on('order-status-update', (data) => {
+            console.log('📦 Order status update:', data);
+            if (data.orderId == orderId) {
+                orderData.delivery_status = data.status;
+                displayOrderInfo();
             }
         });
 
         // Connection status
         socket.on('connect', () => {
-            console.log('Socket connected');
+            console.log('✅ Socket connected');
             document.getElementById('locationIndicator').style.display = 'flex';
         });
 
         socket.on('disconnect', () => {
-            console.log('Socket disconnected');
+            console.warn('⚠️ Socket disconnected');
             document.getElementById('locationIndicator').style.display = 'none';
         });
     }
 
-    // Start continuous location tracking
-    function startLocationTracking() {
-        if (!navigator.geolocation) {
-            alert('Geolocation is not supported by your browser');
-            return;
-        }
-
-        // Watch position for continuous updates
-        navigator.geolocation.watchPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                currentRiderLocation = { lat: latitude, lng: longitude };
-
-                // Update rider marker on map
-                updateRiderMarker(latitude, longitude);
-
-                // Send location to server via Socket.IO
-                socket.emit('update-rider-location', {
-                    orderId: orderId,
-                    riderId: riderId,
-                    lat: latitude,
-                    lng: longitude
-                });
-
-                // Update distances and ETA
-                updateDistanceInfo(latitude, longitude);
-            },
-            (error) => {
-                console.error('Geolocation error:', error);
-                alert('Unable to get your location. Please enable GPS.');
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            }
-        );
-    }
-
-    // Update rider marker on map with GORGEOUS animated icon
+    // Update rider marker with GORGEOUS animated icon (SAME AS RIDER)
     function updateRiderMarker(lat, lng) {
         const riderIcon = L.divIcon({
             html: `<div class="rider-marker-icon"><i class="fas fa-motorcycle"></i></div>`,
@@ -361,8 +370,9 @@
             riderMarker.bindPopup(`
                 <div style="text-align: center; padding: 12px;">
                     <div style="font-size: 2rem; margin-bottom: 8px;">🏍️</div>
-                    <h3 style="margin: 0 0 8px 0; color: #2196F3; font-size: 1.1rem;">You Are Here</h3>
-                    <strong style="color: #333;">Rider Location</strong>
+                    <h3 style="margin: 0 0 8px 0; color: #2196F3; font-size: 1.1rem;">Rider Location</h3>
+                    <strong style="color: #333;">${orderData.rider_name || 'Your Rider'}</strong>
+                    <p style="margin: 5px 0;">On the way!</p>
                 </div>
             `);
         }
@@ -371,7 +381,7 @@
         updateRouteLine(lat, lng);
     }
 
-    // Update route line based on delivery status using OSRM
+    // Update route line based on delivery status using OSRM (SAME AS RIDER)
     async function updateRouteLine(riderLat, riderLng) {
         // Remove old route line
         if (routeLine && routeLine.polyline) {
@@ -382,12 +392,12 @@
 
         // Determine destination and color based on order status
         if (orderData.delivery_status === 'assigned' || orderData.delivery_status === 'pending_rider') {
-            // Going to restaurant - use RESTAURANT ICON COLOR (RED)
+            // Rider going to restaurant - use RESTAURANT ICON COLOR (RED)
             destLat = parseFloat(orderData.restaurant_lat);
             destLng = parseFloat(orderData.restaurant_lng);
             color = '#FF6B6B'; // Red - matches restaurant icon
         } else if (orderData.delivery_status === 'picked_up' || orderData.delivery_status === 'out_for_delivery' || orderData.delivery_status === 'arrived') {
-            // Going to customer - use CUSTOMER ICON COLOR (GREEN)
+            // Rider going to customer - use CUSTOMER ICON COLOR (GREEN)
             destLat = parseFloat(orderData.delivery_lat);
             destLng = parseFloat(orderData.delivery_lng);
             color = '#4CAF50'; // Green - matches customer icon
@@ -402,14 +412,14 @@
         routeLine = await drawOSRMRoute(riderLat, riderLng, destLat, destLng, color, 6, 0.9, false);
     }
 
-    // Update distance information
+    // Update distance information using OSRM
     async function updateDistanceInfo(riderLat, riderLng) {
         const restaurantLat = parseFloat(orderData.restaurant_lat);
         const restaurantLng = parseFloat(orderData.restaurant_lng);
         const customerLat = parseFloat(orderData.delivery_lat);
         const customerLng = parseFloat(orderData.delivery_lng);
 
-        // Get OSRM distance to restaurant
+        // Get OSRM distance to restaurant and customer
         const distToRestaurant = await getOSRMDistance(riderLat, riderLng, restaurantLat, restaurantLng);
         const distToCustomer = await getOSRMDistance(riderLat, riderLng, customerLat, customerLng);
 
@@ -423,7 +433,7 @@
         const avgSpeed = 30; // km/h
         let etaMinutes;
 
-        if (orderData.delivery_status === 'assigned' || orderData.delivery_status === 'picked_up') {
+        if (orderData.delivery_status === 'assigned' || orderData.delivery_status === 'pending_rider') {
             etaMinutes = distToRestaurant ? (distToRestaurant / avgSpeed) * 60 : 0;
         } else {
             etaMinutes = distToCustomer ? (distToCustomer / avgSpeed) * 60 : 0;
@@ -431,6 +441,15 @@
 
         document.getElementById('etaInfo').innerHTML = 
             `<i class="fas fa-clock"></i><span>ETA: ${Math.ceil(etaMinutes)} minutes</span>`;
+
+        // Flash location indicator
+        const indicator = document.getElementById('locationIndicator');
+        if (indicator) {
+            indicator.style.animation = 'none';
+            setTimeout(() => {
+                indicator.style.animation = '';
+            }, 10);
+        }
     }
 
     // Get OSRM distance with timeout and fallback
@@ -465,7 +484,7 @@
         }
     }
 
-    // Calculate distance between two points (Haversine formula - fallback)
+    // Calculate distance using Haversine formula (fallback)
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371; // Earth's radius in km
         const dLat = toRad(lat2 - lat1);
@@ -483,31 +502,26 @@
         return degrees * (Math.PI / 180);
     }
 
-    // Update rider location from socket
-    function updateRiderLocation(lat, lng) {
-        updateRiderMarker(lat, lng);
-        updateDistanceInfo(lat, lng);
-    }
-
     // Setup event listeners
     function setupEventListeners() {
-        // Toggle sidebar
         const toggleBtn = document.getElementById('toggleSidebar');
         const sidebar = document.getElementById('sidebar');
         
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-            toggleBtn.classList.toggle('sidebar-hidden');
-        });
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                toggleBtn.classList.toggle('sidebar-hidden');
+            });
+        }
     }
 
     // Center map on rider location
     window.centerOnRider = function() {
         if (currentRiderLocation && map) {
             map.setView([currentRiderLocation.lat, currentRiderLocation.lng], 17);
-            riderMarker.openPopup();
+            if (riderMarker) riderMarker.openPopup();
         } else {
-            alert('Waiting for location...');
+            alert('Waiting for rider location...');
         }
     };
 
@@ -529,17 +543,19 @@
 
     // Go back to dashboard
     window.goBack = function() {
-        if (confirm('Are you sure you want to leave tracking?')) {
-            window.location.href = 'index.html';
+        if (confirm('Are you sure you want to stop tracking?')) {
+            if (socket) socket.disconnect();
+            window.location.href = 'khadok.consumer.dashboard.html';
         }
     };
 
-    // Format status text with icons
+    // Format status text
     function formatStatus(status) {
         const statusMap = {
-            'assigned': '📋 Assigned',
+            'pending_rider': '⏳ Finding Rider',
+            'assigned': '📋 Rider Assigned',
             'picked_up': '📦 Picked Up',
-            'out_for_delivery': '🚚 Out for Delivery',
+            'out_for_delivery': '🚚 On The Way',
             'arrived': '📍 Arrived',
             'delivered': '✅ Delivered'
         };
@@ -554,10 +570,20 @@
     // Hide loading overlay
     function hideLoading() {
         const overlay = document.getElementById('loadingOverlay');
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-            overlay.style.display = 'none';
-        }, 300);
+        if (overlay) {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+        }
     }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        console.log('🧹 Cleaning up...');
+        if (socket) socket.disconnect();
+    });
+
+    console.log('✅ Consumer Delivery Tracking System Loaded Successfully! 🎉');
 
 })();
