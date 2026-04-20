@@ -7,10 +7,10 @@ const config = require('./config');
 
 // Create a MySQL connection pool
 const pool = mysql.createPool({
-    host: 'localhost', // Replace with your DB host
-    user: 'root',      // Replace with your DB user
-    password: '',      // Replace with your DB password
-    database: 'khadok2.0', // Replace with your database name
+    host: process.env.HOST, // Replace with your DB host
+    user: process.env.USER,      // Replace with your DB user
+    password: process.env.PASSWORD,      // Replace with your DB password
+    database: process.env.DATABASE, // Replace with your database name
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
