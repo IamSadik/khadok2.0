@@ -988,14 +988,23 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
           console.log('Received data:', data);
           
-          if (data.success && data.imageUrl) {
-              console.log('Image URL:', data.imageUrl);
+            const resolvedImageSrc = data.imagePath || data.imageUrl;
+
+            if (data.success && resolvedImageSrc) {
+              let panoramaSrc = resolvedImageSrc;
+
+              // Safety net for deployments returning absolute http URLs behind proxies.
+              if (/^http:\/\//i.test(panoramaSrc) && window.location.protocol === 'https:') {
+                panoramaSrc = panoramaSrc.replace(/^http:\/\//i, 'https://');
+              }
+
+              console.log('Image source:', panoramaSrc);
               
               // Clear loading message before creating viewer
               imageContainer.innerHTML = '';
               
               // Use the fetched image URL to load the panorama (same pattern as old working code)
-              const panoramaImage = new PANOLENS.ImagePanorama(data.imageUrl);
+              const panoramaImage = new PANOLENS.ImagePanorama(panoramaSrc);
               const viewer = new PANOLENS.Viewer({
                   container: imageContainer,
                   autoRotate: true,

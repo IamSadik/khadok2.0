@@ -220,11 +220,30 @@ const getInteriorImage = async (req, res) => {
       return res.status(404).json({ success: false, message: 'No interior found' });
     }
 
-    // Construct a full URL for the frontend
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/${image}`;
-    console.log('Returning image URL:', imageUrl);
+    const imagePath = `/uploads/${encodeURIComponent(image)}`;
+    const uploadedFilePath = path.join(__dirname, '..', 'uploads', image);
 
-    res.status(200).json({ success: true, imageUrl });
+    // Helpful diagnostics for production where DB may contain filenames not present on disk.
+    if (!fs.existsSync(uploadedFilePath)) {
+      console.warn('Image file missing on server disk:', uploadedFilePath);
+      return res.status(404).json({
+        success: false,
+        message: 'Image file not found on server. Please upload again.',
+      });
+    }
+
+    // Behind proxies (Render), x-forwarded-* headers are more reliable than req.get('host').
+    const forwardedProto = String(req.headers['x-forwarded-proto'] || req.protocol)
+      .split(',')[0]
+      .trim();
+    const forwardedHost = String(req.headers['x-forwarded-host'] || req.get('host') || '')
+      .split(',')[0]
+      .trim();
+
+    const imageUrl = forwardedHost ? `${forwardedProto}://${forwardedHost}${imagePath}` : imagePath;
+    console.log('Returning image URL:', imageUrl, 'imagePath:', imagePath);
+
+    res.status(200).json({ success: true, imageUrl, imagePath });
   } catch (error) {
     console.error('Error in getInteriorImage:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch image.' });
