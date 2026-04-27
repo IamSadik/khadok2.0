@@ -79,9 +79,36 @@ exports.getOrdersByConsumer = async (consumer_id) => {
     SELECT 
       o.*,
       s.restaurant_name,
-      s.picture as logo_url
+      s.picture as logo_url,
+      rv.review_id,
+      rv.rating AS review_rating,
+      rv.review_text,
+      rv.review_date,
+      DATE_ADD(o.delivered_at, INTERVAL 45 MINUTE) AS review_expires_at,
+      CASE
+        WHEN o.order_type = 'delivery'
+          AND o.order_status = 'completed'
+          AND o.delivery_status = 'delivered'
+          AND o.delivered_at IS NOT NULL
+          AND rv.review_id IS NULL
+          AND NOW() <= DATE_ADD(o.delivered_at, INTERVAL 45 MINUTE)
+        THEN 1 ELSE 0
+      END AS can_review,
+      GREATEST(
+        TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(o.delivered_at, INTERVAL 45 MINUTE)),
+        0
+      ) AS review_minutes_left
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
+    LEFT JOIN (
+      SELECT r.order_id, r.review_id, r.rating, r.review_text, r.review_date
+      FROM review r
+      INNER JOIN (
+        SELECT order_id, MAX(review_id) AS max_review_id
+        FROM review
+        GROUP BY order_id
+      ) latest ON latest.max_review_id = r.review_id
+    ) rv ON rv.order_id = o.id
     WHERE o.consumer_id = ?
     ORDER BY o.created_at DESC
   `;
@@ -127,6 +154,105 @@ exports.getOrdersByConsumer = async (consumer_id) => {
 
         resolve(orders);
       });
+    });
+  });
+};
+
+// Get an order with review eligibility context for one consumer.
+exports.getOrderForReview = async (order_id, consumer_id) => {
+  const sql = `
+    SELECT
+      o.id,
+      o.consumer_id,
+      o.stakeholder_id,
+      o.order_type,
+      o.order_status,
+      o.delivery_status,
+      o.delivered_at,
+      rv.review_id
+    FROM orders o
+    LEFT JOIN (
+      SELECT r.order_id, MAX(r.review_id) AS review_id
+      FROM review r
+      GROUP BY r.order_id
+    ) rv ON rv.order_id = o.id
+    WHERE o.id = ? AND o.consumer_id = ?
+    LIMIT 1
+  `;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, [order_id, consumer_id], (err, results) => {
+      if (err) {
+        console.error('Get order for review error:', err);
+        return reject(err);
+      }
+      resolve(results[0] || null);
+    });
+  });
+};
+
+// Create a review for an order.
+exports.createOrderReview = async ({ order_id, stakeholder_id, consumer_id, rating, review_text }) => {
+  const nextIdSql = 'SELECT COALESCE(MAX(review_id), 0) + 1 AS next_id FROM review';
+  const insertSql = `
+    INSERT INTO review (
+      review_id, order_id, stakeholder_id, consumer_id, rating, review_text, review_date
+    ) VALUES (?, ?, ?, ?, ?, ?, NOW())
+  `;
+
+  return new Promise((resolve, reject) => {
+    db.query(nextIdSql, (idErr, idResults) => {
+      if (idErr) {
+        console.error('Get next review id error:', idErr);
+        return reject(idErr);
+      }
+
+      const nextId = idResults?.[0]?.next_id || 1;
+      const safeText = review_text ? String(review_text).trim().slice(0, 100) : null;
+
+      db.query(
+        insertSql,
+        [nextId, order_id, stakeholder_id, consumer_id, rating, safeText],
+        (insertErr) => {
+          if (insertErr) {
+            console.error('Create order review error:', insertErr);
+            return reject(insertErr);
+          }
+
+          resolve({
+            review_id: nextId,
+            order_id,
+            stakeholder_id,
+            consumer_id,
+            rating,
+            review_text: safeText,
+          });
+        }
+      );
+    });
+  });
+};
+
+// Recalculate and persist stakeholder average rating.
+exports.refreshStakeholderRating = async (stakeholder_id) => {
+  const sql = `
+    UPDATE stakeholder s
+    LEFT JOIN (
+      SELECT stakeholder_id, ROUND(AVG(rating), 2) AS avg_rating
+      FROM review
+      GROUP BY stakeholder_id
+    ) rv ON rv.stakeholder_id = s.stakeholder_id
+    SET s.ratings = rv.avg_rating
+    WHERE s.stakeholder_id = ?
+  `;
+
+  return new Promise((resolve, reject) => {
+    db.query(sql, [stakeholder_id], (err, result) => {
+      if (err) {
+        console.error('Refresh stakeholder rating error:', err);
+        return reject(err);
+      }
+      resolve(result);
     });
   });
 };

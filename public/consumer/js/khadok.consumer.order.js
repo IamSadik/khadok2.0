@@ -8,6 +8,8 @@ let currentFilters = {
     search: ''
 };
 
+const REVIEW_WINDOW_MINUTES = 45;
+
 // DOM Elements
 const ordersGrid = document.getElementById('orders-grid');
 const emptyState = document.getElementById('empty-state');
@@ -145,6 +147,7 @@ function createOrderCard(order) {
     const createdAt = new Date(order.order_date || order.pickup_date || order.created_at);
     const items = order.items || [];
     const restaurantName = order.restaurant_name || 'Restaurant';
+    const reviewInfo = getReviewState(order);
 
     // Get first 3 items for preview
     const itemsPreview = items.slice(0, 3).map(item => item.item_name || item.name).join(', ');
@@ -205,9 +208,16 @@ function createOrderCard(order) {
                 Total:
                 <span class="total-amount">৳${order.total_amount || 0}</span>
             </div>
-            <button class="view-details-btn" onclick="showOrderDetails(${orderId})">
+            <div class="order-actions-inline">
+                ${reviewInfo.showQuickAction ? `
+                    <button class="review-quick-btn" onclick="openReviewFromCard(${orderId})">
+                        <i class='bx bxs-star'></i> Review (${reviewInfo.minutesLeft}m)
+                    </button>
+                ` : ''}
+                <button class="view-details-btn" onclick="showOrderDetails(${orderId})">
                 <i class='bx bx-show'></i> View Details
-            </button>
+                </button>
+            </div>
         </div>
     `;
 
@@ -225,6 +235,7 @@ async function showOrderDetails(orderId) {
     const status = order.order_status || order.status || 'pending';
     const createdAt = new Date(order.order_date || order.pickup_date || order.created_at);
     const items = order.items || [];
+    const reviewSection = renderReviewSection(order, orderId);
 
     modalBody.innerHTML = `
         <div style="padding: 10px 0;">
@@ -344,6 +355,8 @@ async function showOrderDetails(orderId) {
                     </div>
                 </div>
             ` : ''}
+
+            ${reviewSection}
         </div>
     `;
 
@@ -352,6 +365,151 @@ async function showOrderDetails(orderId) {
 
 // Make function global
 window.showOrderDetails = showOrderDetails;
+
+function openReviewFromCard(orderId) {
+    showOrderDetails(orderId);
+}
+
+window.openReviewFromCard = openReviewFromCard;
+
+function getReviewState(order) {
+    const orderType = order.order_type;
+    const hasReview = !!order.review_id;
+    const isDeliveredCompleted =
+        orderType === 'delivery' &&
+        order.order_status === 'completed' &&
+        order.delivery_status === 'delivered' &&
+        !!order.delivered_at;
+
+    const dbCanReview = Number(order.can_review) === 1;
+    let minutesLeft = Number(order.review_minutes_left || 0);
+
+    // Fallback computation if server fields are missing.
+    if (isDeliveredCompleted && !Number.isFinite(minutesLeft)) {
+        const deliveredAt = new Date(order.delivered_at).getTime();
+        const expiresAt = deliveredAt + REVIEW_WINDOW_MINUTES * 60 * 1000;
+        minutesLeft = Math.max(0, Math.ceil((expiresAt - Date.now()) / (60 * 1000)));
+    }
+
+    const canReview = !hasReview && isDeliveredCompleted && (dbCanReview || minutesLeft > 0);
+
+    return {
+        hasReview,
+        canReview,
+        minutesLeft: Math.max(0, Math.floor(minutesLeft || 0)),
+        showQuickAction: canReview
+    };
+}
+
+function renderReviewSection(order, orderId) {
+    const reviewInfo = getReviewState(order);
+
+    if (reviewInfo.hasReview) {
+        return `
+            <div class="detail-section review-section" style="margin-top: 25px;">
+                <h4><i class='bx bxs-star'></i> Your Review</h4>
+                <div class="review-readonly-card">
+                    <div class="review-stars-display">${renderStars(order.review_rating || 0)}</div>
+                    <p class="review-text-display">${escapeHtml(order.review_text || 'No written feedback')}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    if (!reviewInfo.canReview) {
+        return '';
+    }
+
+    return `
+        <div class="detail-section review-section" style="margin-top: 25px;">
+            <h4><i class='bx bxs-star'></i> Rate This Order</h4>
+            <div class="review-window-note">
+                Review window closes in <strong>${reviewInfo.minutesLeft} minute${reviewInfo.minutesLeft === 1 ? '' : 's'}</strong>.
+            </div>
+            <form class="review-form" onsubmit="submitOrderReview(event, ${orderId})">
+                <label for="review-rating-${orderId}">Rating</label>
+                <select id="review-rating-${orderId}" class="review-input" required>
+                    <option value="">Select rating</option>
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Average</option>
+                    <option value="2">2 - Poor</option>
+                    <option value="1">1 - Very Poor</option>
+                </select>
+
+                <label for="review-text-${orderId}">Comment (optional)</label>
+                <textarea id="review-text-${orderId}" class="review-input" maxlength="100" rows="3" placeholder="Share your experience..."></textarea>
+
+                <button type="submit" class="submit-review-btn">
+                    <i class='bx bx-send'></i> Submit Review
+                </button>
+            </form>
+        </div>
+    `;
+}
+
+async function submitOrderReview(event, orderId) {
+    event.preventDefault();
+
+    const consumerId = localStorage.getItem('consumer_id');
+    if (!consumerId) {
+        alert('Please log in again to submit review.');
+        return;
+    }
+
+    const ratingEl = document.getElementById(`review-rating-${orderId}`);
+    const textEl = document.getElementById(`review-text-${orderId}`);
+
+    const rating = Number(ratingEl?.value || 0);
+    const review_text = (textEl?.value || '').trim();
+
+    if (rating < 1 || rating > 5) {
+        alert('Please choose a rating between 1 and 5.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/review`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                consumer_id: Number(consumerId),
+                rating,
+                review_text
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to submit review');
+        }
+
+        alert('Thanks! Your review was submitted successfully.');
+
+        await fetchOrders();
+        showOrderDetails(orderId);
+    } catch (error) {
+        console.error('Submit review error:', error);
+        alert(error.message || 'Failed to submit review.');
+    }
+}
+
+window.submitOrderReview = submitOrderReview;
+
+function renderStars(rating) {
+    const safeRating = Number(rating) || 0;
+    const fullStars = Math.max(0, Math.min(5, Math.round(safeRating)));
+    return '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars) + ` (${safeRating.toFixed(1)})`;
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 function closeModal() {
     orderModal.classList.remove('active');

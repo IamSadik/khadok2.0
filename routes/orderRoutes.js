@@ -26,6 +26,9 @@ router.get('/consumer/:consumer_id/active', orderController.getActiveDeliveryOrd
 // ✅ NEW: Get single order by ID (for tracking page)
 router.get('/:order_id', orderController.getOrderById);
 
+// Submit review for a delivered order within 45 minutes.
+router.post('/:order_id/review', orderController.submitOrderReview);
+
 // Get orders for a consumer (path params - keeping for backward compatibility)
 router.get('/consumer/:consumer_id', orderController.getConsumerOrders);
 

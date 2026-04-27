@@ -1,5 +1,7 @@
 const orderModel = require('../models/orderModel');
 
+const REVIEW_WINDOW_MINUTES = 45;
+
 // 🔥 Get Socket.IO instance for real-time notifications
 let io;
 try {
@@ -724,6 +726,94 @@ exports.linkPaymentToOrder = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to link payment to order',
+      error: error.message
+    });
+  }
+};
+
+// Submit a consumer review for a delivered order within the review window.
+exports.submitOrderReview = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+    const { consumer_id, rating, review_text } = req.body;
+
+    if (!order_id || !consumer_id || rating === undefined || rating === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order ID, consumer ID, and rating are required'
+      });
+    }
+
+    const numericRating = Number(rating);
+    if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rating must be between 1 and 5'
+      });
+    }
+
+    const order = await orderModel.getOrderForReview(order_id, consumer_id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found for this consumer'
+      });
+    }
+
+    if (order.review_id) {
+      return res.status(409).json({
+        success: false,
+        message: 'Review already submitted for this order'
+      });
+    }
+
+    const isDeliveredOrder =
+      order.order_type === 'delivery' &&
+      order.order_status === 'completed' &&
+      order.delivery_status === 'delivered' &&
+      !!order.delivered_at;
+
+    if (!isDeliveredOrder) {
+      return res.status(400).json({
+        success: false,
+        message: 'Review is only available after successful delivery'
+      });
+    }
+
+    const deliveredAt = new Date(order.delivered_at);
+    const now = new Date();
+    const expiresAt = new Date(deliveredAt.getTime() + REVIEW_WINDOW_MINUTES * 60 * 1000);
+
+    if (now > expiresAt) {
+      return res.status(410).json({
+        success: false,
+        message: 'Review window has expired for this order'
+      });
+    }
+
+    const savedReview = await orderModel.createOrderReview({
+      order_id: Number(order_id),
+      stakeholder_id: order.stakeholder_id,
+      consumer_id: Number(consumer_id),
+      rating: numericRating,
+      review_text: review_text || null
+    });
+
+    await orderModel.refreshStakeholderRating(order.stakeholder_id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Review submitted successfully',
+      review: {
+        ...savedReview,
+        review_date: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Submit order review error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit review',
       error: error.message
     });
   }
