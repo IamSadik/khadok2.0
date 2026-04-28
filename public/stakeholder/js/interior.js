@@ -1033,9 +1033,15 @@ document.getElementById("imageUploadForm").addEventListener("submit", async (e) 
   e.preventDefault();
   const fileInput = document.getElementById("interiorImage");
   const formData = new FormData();
+  const maxImageSizeBytes = 1 * 1024 * 1024;
   
   if (!fileInput.files[0]) {
     alert("Please select an image file.");
+    return;
+  }
+
+  if (fileInput.files[0].size > maxImageSizeBytes) {
+    alert("Image is too large. Please upload an image smaller than or equal to 1 MB.");
     return;
   }
   
@@ -1053,7 +1059,14 @@ document.getElementById("imageUploadForm").addEventListener("submit", async (e) 
           method: "POST",
           body: formData,
       });
-      const result = await response.json();
+
+      let result = {};
+      try {
+        result = await response.json();
+      } catch (_parseError) {
+        result = {};
+      }
+
       if (response.ok) {
           alert("Image uploaded successfully!");
           window.location.reload();

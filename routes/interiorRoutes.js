@@ -1,7 +1,26 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const interiorController = require('../controllers/interiorController');
 const upload = require('../utils/imageProcessing');
+
+const uploadInteriorImageMiddleware = (req, res, next) => {
+	upload.single('interiorImage')(req, res, (err) => {
+		if (!err) return next();
+
+		if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+			return res.status(400).json({
+				success: false,
+				message: 'Image is too large. Maximum allowed size is 1 MB.',
+			});
+		}
+
+		return res.status(400).json({
+			success: false,
+			message: err.message || 'Image upload failed.',
+		});
+	});
+};
 
 // Add tables
 router.post('/add-tables', interiorController.addTables);
@@ -13,7 +32,7 @@ router.post('/remove-tables', interiorController.removeTables);
 router.get('/get-tables', interiorController.getTableSummary);
 
 //Upload 360 image
-router.post('/upload-interior-image', upload.single('interiorImage'), interiorController.uploadImage);
+router.post('/upload-interior-image', uploadInteriorImageMiddleware, interiorController.uploadImage);
 
 //Fetch a restaurants 360 image - MOVE THIS BEFORE /:stakeholderId
 router.get('/get-interior-image', interiorController.getInteriorImage);
