@@ -1,69 +1,50 @@
-// /models/consumerModel.js
-const db = require('../config/configdb');
+// models/consumerModel.js
+const pool = require('../config/configdb');
 
-const getConsumerById = (consumer_id) => {
-    return new Promise((resolve, reject) => {
-        db.query(
-            'SELECT number FROM consumer WHERE consumer_id = ?',
-            [consumer_id],
-            (err, results) => {
-                if (err) return reject(err);
-                resolve(results[0]); // First result or undefined
-            }
-        );
-    });
+const getConsumerById = async (consumer_id) => {
+  const { rows } = await pool.query(
+    'SELECT number FROM consumer WHERE consumer_id = $1',
+    [consumer_id]
+  );
+  return rows[0];
 };
 
-const updateConsumerInfo = ({
-    consumer_id,
-    full_name,
-    number,
-    address,
-    gender,
-    age,
-    lat,
-    lng,
-    profile_pic
-  }) => {
-    return new Promise((resolve, reject) => {
-      // Base UPDATE
-      let query = `
-        UPDATE consumer
-        SET
-          name        = ?,
-          number      = ?,
-          address     = ?,
-          gender      = ?,
-          age         = ?,
-          lat         = ?,
-          lng         = ?,
-          flag        = 1,
-          updated_at  = NOW()
-      `;
-      const params = [full_name, number, address, gender, age, lat, lng];
-  
-      // optionally update picture
-      if (profile_pic) {
-        query += `,
-          picture = ?
-        `;
-        params.push(profile_pic);
-      }
-  
-      // finalize WHERE
-      query += `
-        WHERE consumer_id = ?
-      `;
-      params.push(consumer_id);
-  
-      // execute
-      db.query(query, params, (err, result) => {
-        if (err) return reject(err);
-        resolve(result.affectedRows === 1);
-      });
-    });
-  };
-  
-module.exports = {
-    getConsumerById,updateConsumerInfo
+const updateConsumerInfo = async ({
+  consumer_id,
+  full_name,
+  number,
+  address,
+  gender,
+  age,
+  lat,
+  lng,
+  profile_pic,
+}) => {
+  let query = `
+    UPDATE consumer
+    SET
+      name       = $1,
+      number     = $2,
+      address    = $3,
+      gender     = $4,
+      age        = $5,
+      lat        = $6,
+      lng        = $7,
+      flag       = true,
+      updated_at = NOW()
+  `;
+  const params = [full_name, number, address, gender, age, lat, lng];
+
+  if (profile_pic) {
+    query += `, picture = $${params.length + 1}`;
+    params.push(profile_pic);
+  }
+
+  query += ` WHERE consumer_id = $${params.length + 1}`;
+  params.push(consumer_id);
+
+  const { rowCount } = await pool.query(query, params);
+  return rowCount === 1;
 };
+
+module.exports = { getConsumerById, updateConsumerInfo };

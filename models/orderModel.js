@@ -1,4 +1,42 @@
-const db = require('../config/configdb');
+const pool = require('../config/configdb');
+
+const attachOrderItems = async (orders) => {
+  if (!orders || orders.length === 0) {
+    return [];
+  }
+
+  const orderIds = orders.map((order) => order.id);
+  const { rows: items } = await pool.query(
+    'SELECT * FROM order_items WHERE order_id = ANY($1) ORDER BY order_id',
+    [orderIds]
+  );
+
+  const itemsByOrder = {};
+  items.forEach((item) => {
+    if (!itemsByOrder[item.order_id]) {
+      itemsByOrder[item.order_id] = [];
+    }
+    itemsByOrder[item.order_id].push(item);
+  });
+
+  orders.forEach((order) => {
+    order.items = itemsByOrder[order.id] || [];
+  });
+
+  return orders;
+};
+
+const buildBulkInsert = (items, columnCount) => {
+  const values = [];
+  const placeholders = items.map((item, index) => {
+    const offset = index * columnCount;
+    return `(${Array.from({ length: columnCount }, (_, colIndex) => `$${offset + colIndex + 1}`).join(', ')})`;
+  });
+
+  items.forEach((item) => values.push(...item));
+
+  return { placeholders: placeholders.join(', '), values };
+};
 
 // Create a new order
 exports.createOrder = async (orderData) => {
@@ -6,10 +44,14 @@ exports.createOrder = async (orderData) => {
     INSERT INTO orders (
       consumer_id, stakeholder_id, order_type, order_status, payment_status,
       payment_method, subtotal, delivery_fee, service_fee, total_amount,
-      delivery_address, delivery_lat, delivery_lng, 
+      delivery_address, delivery_lat, delivery_lng,
       restaurant_lat, restaurant_lng, delivery_status, estimated_delivery_time,
       pickup_time, notes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+      $11, $12, $13, $14, $15, $16, $17, $18, $19
+    )
+    RETURNING id
   `;
 
   const values = [
@@ -34,49 +76,51 @@ exports.createOrder = async (orderData) => {
     orderData.notes
   ];
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error('Create order error:', err);
-        return reject(err);
-      }
-      resolve(result.insertId);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, values);
+    return rows[0]?.id;
+  } catch (err) {
+    console.error('Create order error:', err);
+    throw err;
+  }
 };
 
 // Create order items
 exports.createOrderItems = async (orderItems) => {
-  const sql = `
-    INSERT INTO order_items (order_id, menu_id, item_name, item_price, quantity, subtotal, category)
-    VALUES ?
-  `;
+  if (!orderItems || orderItems.length === 0) {
+    return { rowCount: 0 };
+  }
 
-  const values = orderItems.map(item => [
+  const columns = 7;
+  const valuesArray = orderItems.map((item) => [
     item.order_id,
     item.menu_id,
     item.item_name,
     item.item_price,
     item.quantity,
     item.subtotal,
-    item.category 
+    item.category
   ]);
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [values], (err, result) => {
-      if (err) {
-        console.error('Create order items error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  const { placeholders, values } = buildBulkInsert(valuesArray, columns);
+  const sql = `
+    INSERT INTO order_items (order_id, menu_id, item_name, item_price, quantity, subtotal, category)
+    VALUES ${placeholders}
+  `;
+
+  try {
+    return await pool.query(sql, values);
+  } catch (err) {
+    console.error('Create order items error:', err);
+    throw err;
+  }
 };
 
 // Get orders by consumer ID
 exports.getOrdersByConsumer = async (consumer_id) => {
+  const reviewExpiresAt = "o.delivered_at + INTERVAL '45 minutes'";
   const sql = `
-    SELECT 
+    SELECT
       o.*,
       s.restaurant_name,
       s.picture as logo_url,
@@ -84,20 +128,20 @@ exports.getOrdersByConsumer = async (consumer_id) => {
       rv.rating AS review_rating,
       rv.review_text,
       rv.review_date,
-      DATE_ADD(o.delivered_at, INTERVAL 45 MINUTE) AS review_expires_at,
+      ${reviewExpiresAt} AS review_expires_at,
       CASE
         WHEN o.order_type = 'delivery'
           AND o.order_status = 'completed'
           AND o.delivery_status = 'delivered'
           AND o.delivered_at IS NOT NULL
           AND rv.review_id IS NULL
-          AND NOW() <= DATE_ADD(o.delivered_at, INTERVAL 45 MINUTE)
+          AND NOW() <= ${reviewExpiresAt}
         THEN 1 ELSE 0
       END AS can_review,
       GREATEST(
-        TIMESTAMPDIFF(MINUTE, NOW(), DATE_ADD(o.delivered_at, INTERVAL 45 MINUTE)),
+        CEIL(EXTRACT(EPOCH FROM (${reviewExpiresAt} - NOW())) / 60.0),
         0
-      ) AS review_minutes_left
+      )::int AS review_minutes_left
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN (
@@ -109,53 +153,17 @@ exports.getOrdersByConsumer = async (consumer_id) => {
         GROUP BY order_id
       ) latest ON latest.max_review_id = r.review_id
     ) rv ON rv.order_id = o.id
-    WHERE o.consumer_id = ?
+    WHERE o.consumer_id = $1
     ORDER BY o.created_at DESC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [consumer_id], (err, orders) => {
-      if (err) {
-        console.error('Get consumer orders error:', err);
-        return reject(err);
-      }
-
-      if (orders.length === 0) {
-        return resolve([]);
-      }
-
-      // Get order items for each order
-      const orderIds = orders.map(o => o.id);
-      const itemsSql = `
-        SELECT * FROM order_items
-        WHERE order_id IN (?)
-        ORDER BY order_id
-      `;
-
-      db.query(itemsSql, [orderIds], (err, items) => {
-        if (err) {
-          console.error('Get order items error:', err);
-          return reject(err);
-        }
-
-        // Group items by order_id
-        const itemsByOrder = {};
-        items.forEach(item => {
-          if (!itemsByOrder[item.order_id]) {
-            itemsByOrder[item.order_id] = [];
-          }
-          itemsByOrder[item.order_id].push(item);
-        });
-
-        // Attach items to orders
-        orders.forEach(order => {
-          order.items = itemsByOrder[order.id] || [];
-        });
-
-        resolve(orders);
-      });
-    });
-  });
+  try {
+    const { rows: orders } = await pool.query(sql, [consumer_id]);
+    return await attachOrderItems(orders);
+  } catch (err) {
+    console.error('Get consumer orders error:', err);
+    throw err;
+  }
 };
 
 // Get an order with review eligibility context for one consumer.
@@ -176,19 +184,17 @@ exports.getOrderForReview = async (order_id, consumer_id) => {
       FROM review r
       GROUP BY r.order_id
     ) rv ON rv.order_id = o.id
-    WHERE o.id = ? AND o.consumer_id = ?
+    WHERE o.id = $1 AND o.consumer_id = $2
     LIMIT 1
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id, consumer_id], (err, results) => {
-      if (err) {
-        console.error('Get order for review error:', err);
-        return reject(err);
-      }
-      resolve(results[0] || null);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [order_id, consumer_id]);
+    return rows[0] || null;
+  } catch (err) {
+    console.error('Get order for review error:', err);
+    throw err;
+  }
 };
 
 // Create a review for an order.
@@ -197,64 +203,53 @@ exports.createOrderReview = async ({ order_id, stakeholder_id, consumer_id, rati
   const insertSql = `
     INSERT INTO review (
       review_id, order_id, stakeholder_id, consumer_id, rating, review_text, review_date
-    ) VALUES (?, ?, ?, ?, ?, ?, NOW())
+    ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(nextIdSql, (idErr, idResults) => {
-      if (idErr) {
-        console.error('Get next review id error:', idErr);
-        return reject(idErr);
-      }
+  try {
+    const { rows: idResults } = await pool.query(nextIdSql);
+    const nextId = idResults?.[0]?.next_id || 1;
+    const safeText = review_text ? String(review_text).trim().slice(0, 100) : null;
 
-      const nextId = idResults?.[0]?.next_id || 1;
-      const safeText = review_text ? String(review_text).trim().slice(0, 100) : null;
+    await pool.query(
+      insertSql,
+      [nextId, order_id, stakeholder_id, consumer_id, rating, safeText]
+    );
 
-      db.query(
-        insertSql,
-        [nextId, order_id, stakeholder_id, consumer_id, rating, safeText],
-        (insertErr) => {
-          if (insertErr) {
-            console.error('Create order review error:', insertErr);
-            return reject(insertErr);
-          }
-
-          resolve({
-            review_id: nextId,
-            order_id,
-            stakeholder_id,
-            consumer_id,
-            rating,
-            review_text: safeText,
-          });
-        }
-      );
-    });
-  });
+    return {
+      review_id: nextId,
+      order_id,
+      stakeholder_id,
+      consumer_id,
+      rating,
+      review_text: safeText,
+    };
+  } catch (err) {
+    console.error('Create order review error:', err);
+    throw err;
+  }
 };
 
 // Recalculate and persist stakeholder average rating.
 exports.refreshStakeholderRating = async (stakeholder_id) => {
   const sql = `
     UPDATE stakeholder s
-    LEFT JOIN (
-      SELECT stakeholder_id, ROUND(AVG(rating), 2) AS avg_rating
+    SET ratings = rv.avg_rating
+    FROM (
+      SELECT stakeholder_id, ROUND(AVG(rating)::numeric, 2) AS avg_rating
       FROM review
       GROUP BY stakeholder_id
-    ) rv ON rv.stakeholder_id = s.stakeholder_id
-    SET s.ratings = rv.avg_rating
-    WHERE s.stakeholder_id = ?
+    ) rv
+    WHERE s.stakeholder_id = rv.stakeholder_id
+      AND s.stakeholder_id = $1
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [stakeholder_id], (err, result) => {
-      if (err) {
-        console.error('Refresh stakeholder rating error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [stakeholder_id]);
+  } catch (err) {
+    console.error('Refresh stakeholder rating error:', err);
+    throw err;
+  }
 };
 
 // Get orders by stakeholder ID
@@ -266,53 +261,17 @@ exports.getOrdersByStakeholder = async (stakeholder_id) => {
       c.number as consumer_phone
     FROM orders o
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
-    WHERE o.stakeholder_id = ?
+    WHERE o.stakeholder_id = $1
     ORDER BY o.created_at DESC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [stakeholder_id], (err, orders) => {
-      if (err) {
-        console.error('Get stakeholder orders error:', err);
-        return reject(err);
-      }
-
-      if (orders.length === 0) {
-        return resolve([]);
-      }
-
-      // Get order items for each order
-      const orderIds = orders.map(o => o.id);
-      const itemsSql = `
-        SELECT * FROM order_items
-        WHERE order_id IN (?)
-        ORDER BY order_id
-      `;
-
-      db.query(itemsSql, [orderIds], (err, items) => {
-        if (err) {
-          console.error('Get order items error:', err);
-          return reject(err);
-        }
-
-        // Group items by order_id
-        const itemsByOrder = {};
-        items.forEach(item => {
-          if (!itemsByOrder[item.order_id]) {
-            itemsByOrder[item.order_id] = [];
-          }
-          itemsByOrder[item.order_id].push(item);
-        });
-
-        // Attach items to orders
-        orders.forEach(order => {
-          order.items = itemsByOrder[order.id] || [];
-        });
-
-        resolve(orders);
-      });
-    });
-  });
+  try {
+    const { rows: orders } = await pool.query(sql, [stakeholder_id]);
+    return await attachOrderItems(orders);
+  } catch (err) {
+    console.error('Get stakeholder orders error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get orders by stakeholder with date filter
@@ -321,20 +280,20 @@ exports.getOrdersByStakeholderWithDate = async (stakeholder_id, dateFilter = 'to
   let dateCondition = '';
   switch(dateFilter) {
     case 'today':
-      dateCondition = 'DATE(o.created_at) = CURDATE()';
+      dateCondition = 'o.created_at::date = CURRENT_DATE';
       break;
     case 'yesterday':
-      dateCondition = 'DATE(o.created_at) = DATE_SUB(CURDATE(), INTERVAL 1 DAY)';
+      dateCondition = "o.created_at::date = (CURRENT_DATE - INTERVAL '1 day')";
       break;
     case 'week':
-      dateCondition = 'o.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)';
+      dateCondition = "o.created_at >= (CURRENT_DATE - INTERVAL '7 day')";
       break;
     case 'month':
-      dateCondition = 'o.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)';
+      dateCondition = "o.created_at >= (CURRENT_DATE - INTERVAL '30 day')";
       break;
     case 'all':
     default:
-      dateCondition = '1=1'; // No date filter
+      dateCondition = '1=1';
       break;
   }
 
@@ -349,119 +308,72 @@ exports.getOrdersByStakeholderWithDate = async (stakeholder_id, dateFilter = 'to
     FROM orders o
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
     LEFT JOIN rider r ON o.rider_id = r.rider_id
-    WHERE o.stakeholder_id = ? 
-      AND o.order_type = ?
+    WHERE o.stakeholder_id = $1
+      AND o.order_type = $2
       AND ${dateCondition}
     ORDER BY o.created_at DESC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [stakeholder_id, orderType], (err, orders) => {
-      if (err) {
-        console.error('Get stakeholder orders with date filter error:', err);
-        return reject(err);
-      }
-
-      if (orders.length === 0) {
-        return resolve([]);
-      }
-
-      // Get order items for each order
-      const orderIds = orders.map(o => o.id);
-      const itemsSql = `
-        SELECT * FROM order_items
-        WHERE order_id IN (?)
-        ORDER BY order_id
-      `;
-
-      db.query(itemsSql, [orderIds], (err, items) => {
-        if (err) {
-          console.error('Get order items error:', err);
-          return reject(err);
-        }
-
-        // Group items by order_id
-        const itemsByOrder = {};
-        items.forEach(item => {
-          if (!itemsByOrder[item.order_id]) {
-            itemsByOrder[item.order_id] = [];
-          }
-          itemsByOrder[item.order_id].push(item);
-        });
-
-        // Attach items to orders
-        orders.forEach(order => {
-          order.items = itemsByOrder[order.id] || [];
-        });
-
-        resolve(orders);
-      });
-    });
-  });
+  try {
+    const { rows: orders } = await pool.query(sql, [stakeholder_id, orderType]);
+    return await attachOrderItems(orders);
+  } catch (err) {
+    console.error('Get stakeholder orders with date filter error:', err);
+    throw err;
+  }
 };
 
 // Update order status
 exports.updateOrderStatus = async (order_id, order_status) => {
-  const sql = `UPDATE orders SET order_status = ? WHERE id = ?`;
+  const sql = `UPDATE orders SET order_status = $1 WHERE id = $2`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_status, order_id], (err, result) => {
-      if (err) {
-        console.error('Update order status error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [order_status, order_id]);
+  } catch (err) {
+    console.error('Update order status error:', err);
+    throw err;
+  }
 };
 
 // Update order payment status
 exports.updateOrderPaymentStatus = async (order_id, payment_status) => {
-  const sql = `UPDATE orders SET payment_status = ? WHERE id = ?`;
+  const sql = `UPDATE orders SET payment_status = $1 WHERE id = $2`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [payment_status, order_id], (err, result) => {
-      if (err) {
-        console.error('Update payment status error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [payment_status, order_id]);
+  } catch (err) {
+    console.error('Update payment status error:', err);
+    throw err;
+  }
 };
 
 // Link payment to order
 exports.linkPaymentToOrder = async (payment_id, order_id, transaction_id) => {
   const sql = `
-    UPDATE payments 
-    SET order_id = ?, bkash_transaction_id = ?
-    WHERE id = ?
+    UPDATE payments
+    SET order_id = $1, bkash_transaction_id = $2
+    WHERE id = $3
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id, transaction_id, payment_id], (err, result) => {
-      if (err) {
-        console.error('Link payment to order error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [order_id, transaction_id, payment_id]);
+  } catch (err) {
+    console.error('Link payment to order error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get restaurant coordinates
 exports.getRestaurantCoordinates = async (stakeholder_id) => {
-  const sql = `SELECT lat, lng FROM stakeholder WHERE stakeholder_id = ?`;
+  const sql = `SELECT lat, lng FROM stakeholder WHERE stakeholder_id = $1`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [stakeholder_id], (err, results) => {
-      if (err) {
-        console.error('Get restaurant coordinates error:', err);
-        return reject(err);
-      }
-      resolve(results[0] || null);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [stakeholder_id]);
+    return rows[0] || null;
+  } catch (err) {
+    console.error('Get restaurant coordinates error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get order by ID
@@ -486,74 +398,64 @@ exports.getOrderById = async (order_id) => {
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
     LEFT JOIN rider r ON o.rider_id = r.rider_id
-    WHERE o.id = ?
+    WHERE o.id = $1
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id], (err, results) => {
-      if (err) {
-        console.error('Get order by ID error:', err);
-        return reject(err);
-      }
-      resolve(results[0] || null);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [order_id]);
+    return rows[0] || null;
+  } catch (err) {
+    console.error('Get order by ID error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get order items by order ID
 exports.getOrderItems = async (order_id) => {
-  const sql = `SELECT * FROM order_items WHERE order_id = ? ORDER BY id`;
+  const sql = `SELECT * FROM order_items WHERE order_id = $1 ORDER BY id`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id], (err, results) => {
-      if (err) {
-        console.error('Get order items error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [order_id]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get order items error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Create delivery tracking entry
 exports.createTrackingEntry = async (order_id, rider_id, status, notes) => {
   const sql = `
     INSERT INTO delivery_tracking (order_id, rider_id, status, notes, latitude, longitude)
-    SELECT ?, ?, ?, ?, current_lat, current_lng
-    FROM rider WHERE rider_id = ?
+    SELECT $1, $2, $3, $4, current_lat, current_lng
+    FROM rider WHERE rider_id = $2
   `;
 
-  // If no rider_id, insert with NULL coordinates
   const simpleSql = `
     INSERT INTO delivery_tracking (order_id, rider_id, status, notes)
-    VALUES (?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4)
   `;
 
-  return new Promise((resolve, reject) => {
+  try {
     if (rider_id) {
-      db.query(sql, [order_id, rider_id, status, notes, rider_id], (err, result) => {
-        if (err) {
-          console.error('Create tracking entry error:', err);
-          return reject(err);
-        }
-        resolve(result);
-      });
-    } else {
-      db.query(simpleSql, [order_id, null, status, notes], (err, result) => {
-        if (err) {
-          console.error('Create tracking entry error:', err);
-          return reject(err);
-        }
-        resolve(result);
-      });
+      return await pool.query(sql, [order_id, rider_id, status, notes]);
     }
-  });
+
+    return await pool.query(simpleSql, [order_id, null, status, notes]);
+  } catch (err) {
+    console.error('Create tracking entry error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get available riders near restaurant
 exports.getAvailableRiders = async (restaurant_lat, restaurant_lng, radius_km) => {
+  const distanceExpr = `(6371 * acos(cos(radians($1)) * cos(radians(COALESCE(current_lat, lat))) *
+    cos(radians(COALESCE(current_lng, lng)) - radians($2)) +
+    sin(radians($1)) * sin(radians(COALESCE(current_lat, lat)))))`;
+
   const sql = `
-    SELECT 
+    SELECT
       rider_id,
       name,
       number,
@@ -566,128 +468,107 @@ exports.getAvailableRiders = async (restaurant_lat, restaurant_lng, radius_km) =
       total_deliveries,
       rating,
       vehicle_type,
-      (6371 * acos(cos(radians(?)) * cos(radians(COALESCE(current_lat, lat))) * 
-       cos(radians(COALESCE(current_lng, lng)) - radians(?)) + 
-       sin(radians(?)) * sin(radians(COALESCE(current_lat, lat))))) AS distance_to_restaurant
+      ${distanceExpr} AS distance_to_restaurant
     FROM rider
-    WHERE status = 'available' 
-      AND is_active = 1 
-      AND is_verified = 1
-    HAVING distance_to_restaurant < ?
+    WHERE status = 'available'
+      AND is_active = true
+      AND is_verified = true
+      AND ${distanceExpr} < $3
     ORDER BY distance_to_restaurant ASC, rating DESC
     LIMIT 10
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [restaurant_lat, restaurant_lng, restaurant_lat, radius_km], (err, results) => {
-      if (err) {
-        console.error('Get available riders error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [restaurant_lat, restaurant_lng, radius_km]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get available riders error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Assign rider to order
 exports.assignRider = async (order_id, rider_id) => {
   const sql = `
-    UPDATE orders 
-    SET rider_id = ?, delivery_status = 'assigned', rider_assigned_at = NOW()
-    WHERE id = ?
+    UPDATE orders
+    SET rider_id = $1, delivery_status = 'assigned', rider_assigned_at = NOW()
+    WHERE id = $2
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id, order_id], (err, result) => {
-      if (err) {
-        console.error('Assign rider error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [rider_id, order_id]);
+  } catch (err) {
+    console.error('Assign rider error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Update rider status
 exports.updateRiderStatus = async (rider_id, status) => {
-  const sql = `UPDATE rider SET status = ? WHERE rider_id = ?`;
+  const sql = `UPDATE rider SET status = $1 WHERE rider_id = $2`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [status, rider_id], (err, result) => {
-      if (err) {
-        console.error('Update rider status error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [status, rider_id]);
+  } catch (err) {
+    console.error('Update rider status error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get rider by ID
 exports.getRiderById = async (rider_id) => {
-  const sql = `SELECT * FROM rider WHERE rider_id = ?`;
+  const sql = `SELECT * FROM rider WHERE rider_id = $1`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id], (err, results) => {
-      if (err) {
-        console.error('Get rider by ID error:', err);
-        return reject(err);
-      }
-      resolve(results[0] || null);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [rider_id]);
+    return rows[0] || null;
+  } catch (err) {
+    console.error('Get rider by ID error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Update delivery status
 exports.updateDeliveryStatus = async (order_id, delivery_status) => {
-  const sql = `UPDATE orders SET delivery_status = ? WHERE id = ?`;
+  const sql = `UPDATE orders SET delivery_status = $1 WHERE id = $2`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [delivery_status, order_id], (err, result) => {
-      if (err) {
-        console.error('Update delivery status error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [delivery_status, order_id]);
+  } catch (err) {
+    console.error('Update delivery status error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Update pickup time
 exports.updatePickupTime = async (order_id) => {
-  const sql = `UPDATE orders SET picked_up_at = NOW() WHERE id = ?`;
+  const sql = `UPDATE orders SET picked_up_at = NOW() WHERE id = $1`;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id], (err, result) => {
-      if (err) {
-        console.error('Update pickup time error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [order_id]);
+  } catch (err) {
+    console.error('Update pickup time error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Complete delivery
 exports.completeDelivery = async (order_id) => {
   const sql = `
-    UPDATE orders 
-    SET delivery_status = 'delivered', 
+    UPDATE orders
+    SET delivery_status = 'delivered',
         delivered_at = NOW(),
         order_status = 'completed',
-        actual_delivery_time = TIMESTAMPDIFF(MINUTE, created_at, NOW())
-    WHERE id = ?
+        actual_delivery_time = FLOOR(EXTRACT(EPOCH FROM (NOW() - created_at)) / 60)
+    WHERE id = $1
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id], (err, result) => {
-      if (err) {
-        console.error('Complete delivery error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [order_id]);
+  } catch (err) {
+    console.error('Complete delivery error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get tracking history
@@ -699,19 +580,17 @@ exports.getTrackingHistory = async (order_id) => {
       r.number as rider_phone
     FROM delivery_tracking dt
     LEFT JOIN rider r ON dt.rider_id = r.rider_id
-    WHERE dt.order_id = ?
+    WHERE dt.order_id = $1
     ORDER BY dt.created_at ASC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [order_id], (err, results) => {
-      if (err) {
-        console.error('Get tracking history error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [order_id]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get tracking history error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Create rider earning
@@ -720,7 +599,7 @@ exports.createRiderEarning = async (earningData) => {
     INSERT INTO rider_earnings (
       rider_id, order_id, delivery_fee, rider_commission, platform_fee,
       bonus_amount, net_earning, delivery_distance, delivery_time
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
   `;
 
   const values = [
@@ -735,39 +614,33 @@ exports.createRiderEarning = async (earningData) => {
     earningData.delivery_time
   ];
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, values, (err, result) => {
-      if (err) {
-        console.error('Create rider earning error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, values);
+  } catch (err) {
+    console.error('Create rider earning error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Update rider statistics
 exports.updateRiderStats = async (rider_id, delivery_time) => {
   const sql = `
-    UPDATE rider 
+    UPDATE rider
     SET total_deliveries = total_deliveries + 1,
         successful_deliveries = successful_deliveries + 1,
         average_delivery_time = (
-          (COALESCE(average_delivery_time, 0) * total_deliveries + ?) / (total_deliveries + 1)
+          (COALESCE(average_delivery_time, 0) * total_deliveries + $1) / (total_deliveries + 1)
         ),
         status = 'available'
-    WHERE rider_id = ?
+    WHERE rider_id = $2
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [delivery_time, rider_id], (err, result) => {
-      if (err) {
-        console.error('Update rider stats error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [delivery_time, rider_id]);
+  } catch (err) {
+    console.error('Update rider stats error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get orders by rider
@@ -784,19 +657,17 @@ exports.getOrdersByRider = async (rider_id) => {
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
-    WHERE o.rider_id = ?
+    WHERE o.rider_id = $1
     ORDER BY o.created_at DESC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id], (err, results) => {
-      if (err) {
-        console.error('Get orders by rider error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [rider_id]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get orders by rider error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get orders by rider and status
@@ -813,19 +684,17 @@ exports.getOrdersByRiderAndStatus = async (rider_id, status) => {
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
-    WHERE o.rider_id = ? AND o.delivery_status = ?
+    WHERE o.rider_id = $1 AND o.delivery_status = $2
     ORDER BY o.created_at DESC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id, status], (err, results) => {
-      if (err) {
-        console.error('Get orders by rider and status error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [rider_id, status]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get orders by rider and status error:', err);
+    throw err;
+  }
 };
 
 // 🔥 DEBUG: Get ALL orders for stakeholder without any filters
@@ -840,20 +709,18 @@ exports.debugGetAllOrdersByStakeholder = async (stakeholder_id) => {
       c.name as consumer_name
     FROM orders o
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
-    WHERE o.stakeholder_id = ?
+    WHERE o.stakeholder_id = $1
     ORDER BY o.created_at DESC
     LIMIT 20
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [stakeholder_id], (err, results) => {
-      if (err) {
-        console.error('Debug get all orders error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [stakeholder_id]);
+    return rows || [];
+  } catch (err) {
+    console.error('Debug get all orders error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get today's orders by rider
@@ -861,39 +728,34 @@ exports.getTodayOrdersByRider = async (rider_id) => {
   const sql = `
     SELECT *
     FROM orders
-    WHERE rider_id = ? 
-      AND DATE(created_at) = CURDATE()
+    WHERE rider_id = $1
+      AND created_at::date = CURRENT_DATE
     ORDER BY created_at DESC
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id], (err, results) => {
-      if (err) {
-        console.error('Get today orders by rider error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [rider_id]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get today orders by rider error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Update order rider assignment
 exports.updateOrderRider = async (order_id, rider_id) => {
   const sql = `
-    UPDATE orders 
-    SET rider_id = ?, delivery_status = 'assigned', rider_assigned_at = NOW()
-    WHERE id = ?
+    UPDATE orders
+    SET rider_id = $1, delivery_status = 'assigned', rider_assigned_at = NOW()
+    WHERE id = $2
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id, order_id], (err, result) => {
-      if (err) {
-        console.error('Update order rider error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [rider_id, order_id]);
+  } catch (err) {
+    console.error('Update order rider error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get delivery history for rider
@@ -907,44 +769,39 @@ exports.getDeliveryHistory = async (rider_id, limit = 50) => {
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
-    WHERE o.rider_id = ? AND o.delivery_status IN ('delivered', 'cancelled')
+    WHERE o.rider_id = $1 AND o.delivery_status IN ('delivered', 'cancelled')
     ORDER BY o.created_at DESC
-    LIMIT ?
+    LIMIT $2
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id, limit], (err, results) => {
-      if (err) {
-        console.error('Get delivery history error:', err);
-        return reject(err);
-      }
-      resolve(results || []);
-    });
-  });
+  try {
+    const { rows } = await pool.query(sql, [rider_id, limit]);
+    return rows || [];
+  } catch (err) {
+    console.error('Get delivery history error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Add order note
 exports.addOrderNote = async (order_id, note) => {
   const sql = `
-    UPDATE orders 
-    SET notes = CONCAT(COALESCE(notes, ''), '\n', ?)
-    WHERE id = ?
+    UPDATE orders
+    SET notes = COALESCE(notes, '') || E'\n' || $1
+    WHERE id = $2
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [note, order_id], (err, result) => {
-      if (err) {
-        console.error('Add order note error:', err);
-        return reject(err);
-      }
-      resolve(result);
-    });
-  });
+  try {
+    return await pool.query(sql, [note, order_id]);
+  } catch (err) {
+    console.error('Add order note error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get recent orders by rider with full details
 exports.getRecentOrdersByRider = async (rider_id, limit = 20, statusFilter = null) => {
-  let whereClause = 'WHERE o.rider_id = ?';
+  let whereClause = 'WHERE o.rider_id = $1';
   
   // Add status filter if provided
   if (statusFilter === 'active') {
@@ -973,52 +830,16 @@ exports.getRecentOrdersByRider = async (rider_id, limit = 20, statusFilter = nul
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
     ${whereClause}
     ORDER BY o.created_at DESC
-    LIMIT ?
+    LIMIT $2
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id, limit], (err, orders) => {
-      if (err) {
-        console.error('Get recent orders by rider error:', err);
-        return reject(err);
-      }
-
-      if (orders.length === 0) {
-        return resolve([]);
-      }
-
-      // Get order items for each order
-      const orderIds = orders.map(o => o.id);
-      const itemsSql = `
-        SELECT * FROM order_items
-        WHERE order_id IN (?)
-        ORDER BY order_id
-      `;
-
-      db.query(itemsSql, [orderIds], (err, items) => {
-        if (err) {
-          console.error('Get order items error:', err);
-          return reject(err);
-        }
-
-        // Group items by order_id
-        const itemsByOrder = {};
-        items.forEach(item => {
-          if (!itemsByOrder[item.order_id]) {
-            itemsByOrder[item.order_id] = [];
-          }
-          itemsByOrder[item.order_id].push(item);
-        });
-
-        // Attach items to orders
-        orders.forEach(order => {
-          order.items = itemsByOrder[order.id] || [];
-        });
-
-        resolve(orders);
-      });
-    });
-  });
+  try {
+    const { rows: orders } = await pool.query(sql, [rider_id, limit]);
+    return await attachOrderItems(orders);
+  } catch (err) {
+    console.error('Get recent orders by rider error:', err);
+    throw err;
+  }
 };
 
 // 🔥 NEW: Get active orders by rider (orders in progress)
@@ -1041,55 +862,16 @@ exports.getActiveOrdersByRider = async (rider_id) => {
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN consumer c ON o.consumer_id = c.consumer_id
-    WHERE o.rider_id = ? 
+    WHERE o.rider_id = $1
       AND o.delivery_status IN ('assigned', 'picked_up', 'out_for_delivery', 'arrived')
       AND o.order_status NOT IN ('cancelled', 'completed')
     ORDER BY o.created_at ASC
   `;
-
-  return new Promise((resolve, reject) => {
-    db.query(sql, [rider_id], (err, orders) => {
-      if (err) {
-        console.error('Get active orders by rider error:', err);
-        return reject(err);
-      }
-
-      if (orders.length === 0) {
-        return resolve([]);
-      }
-
-      // Get order items for each order
-      const orderIds = orders.map(o => o.id);
-      const itemsSql = `
-        SELECT * FROM order_items
-        WHERE order_id IN (?)
-        ORDER BY order_id
-      `;
-
-      db.query(itemsSql, [orderIds], (err, items) => {
-        if (err) {
-          console.error('Get order items error:', err);
-          return reject(err);
-        }
-
-        // Group items by order_id
-        const itemsByOrder = {};
-        items.forEach(item => {
-          if (!itemsByOrder[item.order_id]) {
-            itemsByOrder[item.order_id] = [];
-          }
-          itemsByOrder[item.order_id].push(item);
-        });
-
-        // Attach items to orders
-        orders.forEach(order => {
-          order.items = itemsByOrder[order.id] || [];
-        });
-
-        resolve(orders);
-      });
-    });
-  });
+  try {
+    const { rows: orders } = await pool.query(sql, [rider_id]);
+    return await attachOrderItems(orders);
+  } catch (err) {
+    console.error('Get active orders by rider error:', err);
+    throw err;
+  }
 };
-
-module.exports = exports;

@@ -2,103 +2,67 @@
 const pool = require('../config/configdb');
 
 const PaymentModel = {
-    // Create a new payment record
-    createPayment: (paymentData) => {
-        return new Promise((resolve, reject) => {
-            const query = `
-                INSERT INTO payments 
-                (consumer_id, stakeholder_id, order_id, payment_method, payment_status, 
-                 amount, transaction_id, bkash_payment_id, currency, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-            `;
-            
-            pool.query(
-                query,
-                [
-                    paymentData.consumer_id,
-                    paymentData.stakeholder_id,
-                    paymentData.order_id || null,
-                    paymentData.payment_method,
-                    paymentData.payment_status || 'pending',
-                    paymentData.amount,
-                    paymentData.transaction_id || null,
-                    paymentData.bkash_payment_id || null,
-                    paymentData.currency || 'BDT'
-                ],
-                (err, results) => {
-                    if (err) return reject(err);
-                    resolve({ id: results.insertId, ...paymentData });
-                }
-            );
-        });
-    },
+  createPayment: async (data) => {
+    const { rows } = await pool.query(
+      `INSERT INTO payments
+         (consumer_id, stakeholder_id, order_id, payment_method, payment_status,
+          amount, transaction_id, bkash_payment_id, currency, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+       RETURNING id`,
+      [
+        data.consumer_id,
+        data.stakeholder_id,
+        data.order_id || null,
+        data.payment_method,
+        data.payment_status || 'pending',
+        data.amount,
+        data.transaction_id || null,
+        data.bkash_payment_id || null,
+        data.currency || 'BDT',
+      ]
+    );
+    return { id: rows[0].id, ...data };
+  },
 
-    // Update payment status
-    updatePaymentStatus: (paymentId, statusData) => {
-        return new Promise((resolve, reject) => {
-            const query = `
-                UPDATE payments 
-                SET payment_status = ?, 
-                    transaction_id = ?,
-                    bkash_transaction_id = ?,
-                    updated_at = NOW()
-                WHERE id = ?
-            `;
-            
-            pool.query(
-                query,
-                [
-                    statusData.payment_status,
-                    statusData.transaction_id || null,
-                    statusData.bkash_transaction_id || null,
-                    paymentId
-                ],
-                (err, results) => {
-                    if (err) return reject(err);
-                    resolve(results);
-                }
-            );
-        });
-    },
+  updatePaymentStatus: async (paymentId, statusData) => {
+    const { rows } = await pool.query(
+      `UPDATE payments
+       SET payment_status = $1, transaction_id = $2, bkash_transaction_id = $3, updated_at = NOW()
+       WHERE id = $4`,
+      [
+        statusData.payment_status,
+        statusData.transaction_id || null,
+        statusData.bkash_transaction_id || null,
+        paymentId,
+      ]
+    );
+    return rows;
+  },
 
-    // Get payment by ID
-    getPaymentById: (paymentId) => {
-        return new Promise((resolve, reject) => {
-            const query = 'SELECT * FROM payments WHERE id = ?';
-            pool.query(query, [paymentId], (err, results) => {
-                if (err) return reject(err);
-                resolve(results[0]);
-            });
-        });
-    },
+  getPaymentById: async (paymentId) => {
+    const { rows } = await pool.query('SELECT * FROM payments WHERE id = $1', [paymentId]);
+    return rows[0];
+  },
 
-    // Get payment by bKash payment ID
-    getPaymentByBkashId: (bkashPaymentId) => {
-        return new Promise((resolve, reject) => {
-            const query = 'SELECT * FROM payments WHERE bkash_payment_id = ?';
-            pool.query(query, [bkashPaymentId], (err, results) => {
-                if (err) return reject(err);
-                resolve(results[0]);
-            });
-        });
-    },
+  getPaymentByBkashId: async (bkashPaymentId) => {
+    const { rows } = await pool.query(
+      'SELECT * FROM payments WHERE bkash_payment_id = $1',
+      [bkashPaymentId]
+    );
+    return rows[0];
+  },
 
-    // Get all payments for a consumer
-    getPaymentsByConsumer: (consumerId) => {
-        return new Promise((resolve, reject) => {
-            const query = `
-                SELECT p.*, o.order_type, o.total_amount as order_amount
-                FROM payments p
-                LEFT JOIN orders o ON p.order_id = o.id
-                WHERE p.consumer_id = ?
-                ORDER BY p.created_at DESC
-            `;
-            pool.query(query, [consumerId], (err, results) => {
-                if (err) return reject(err);
-                resolve(results);
-            });
-        });
-    }
+  getPaymentsByConsumer: async (consumerId) => {
+    const { rows } = await pool.query(
+      `SELECT p.*, o.order_type, o.total_amount AS order_amount
+       FROM payments p
+       LEFT JOIN orders o ON p.order_id = o.id
+       WHERE p.consumer_id = $1
+       ORDER BY p.created_at DESC`,
+      [consumerId]
+    );
+    return rows;
+  },
 };
 
 module.exports = PaymentModel;

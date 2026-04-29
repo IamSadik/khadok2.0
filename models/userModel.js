@@ -1,24 +1,44 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/configdb'); // Assuming you have Sequelize connection set up
+const pool = require('../config/configdb');
 
-const User = sequelize.define('User', {
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    email: {
-        type: DataTypes.STRING,
-        unique: true,
-        allowNull: false,
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    role: {
-        type: DataTypes.STRING,
-        allowNull: false,  // 'consumer', 'rider', 'stakeholder'
-    }
-});
+const getUserById = async (user_id) => {
+    const { rows } = await pool.query(
+        'SELECT user_id, name, email, password, role FROM users WHERE user_id = $1',
+        [user_id]
+    );
 
-module.exports = User;
+    return rows[0] || null;
+};
+
+const getUserByEmail = async (email) => {
+    const { rows } = await pool.query(
+        'SELECT user_id, name, email, password, role FROM users WHERE email = $1',
+        [email]
+    );
+
+    return rows[0] || null;
+};
+
+const createUser = async ({ name, email, password, role }) => {
+    const { rows } = await pool.query(
+        `INSERT INTO users (name, email, password, role, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, NOW(), NOW())
+         RETURNING user_id`,
+        [name, email, password, role]
+    );
+
+    return rows[0] || null;
+};
+
+const updateUserPassword = async (user_id, hashedPassword) => {
+    await pool.query(
+        'UPDATE users SET password = $1, updated_at = NOW() WHERE user_id = $2',
+        [hashedPassword, user_id]
+    );
+};
+
+module.exports = {
+    getUserById,
+    getUserByEmail,
+    createUser,
+    updateUserPassword,
+};

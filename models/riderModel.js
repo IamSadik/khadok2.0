@@ -1,188 +1,115 @@
-const db = require('../config/configdb');
+// models/riderModel.js
+const pool = require('../config/configdb');
 
-// Generate unique ID for rider
-const getUniqueRiderId = async () => {
-    const query = 'SELECT rider_id FROM rider ORDER BY rider_id DESC LIMIT 1';
-    return new Promise((resolve, reject) => {
-        db.query(query, [], (err, results) => {
-            if (err) return reject(err);
-            const lastId = results.length > 0 ? parseInt(results[0].rider_id, 10) : -1;
-            resolve(lastId + 1);
-        });
-    });
+const getRiderById = async (riderId) => {
+  const { rows } = await pool.query('SELECT * FROM rider WHERE rider_id = $1', [riderId]);
+  return rows[0];
 };
 
-// Create a new rider
-const createRider = async (riderId, name, email, hashedPassword) => {
-    const query = 'INSERT INTO rider (rider_id, name, email, password, lat, lng) VALUES (?, ?, ?, ?, "", "")';
-    return new Promise((resolve, reject) => {
-        db.query(query, [riderId, name, email, hashedPassword], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
+const getRiderByEmail = async (email) => {
+  const { rows } = await pool.query('SELECT * FROM rider WHERE email = $1', [email]);
+  return rows[0];
 };
 
-// Get rider by ID
-const getRiderById = (riderId) => {
-    return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM rider WHERE rider_id = ?';
-        db.query(query, [riderId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results[0]);
-        });
-    });
+const updateRiderProfile = async (riderId, updates) => {
+  const fields = [];
+  const values = [];
+  for (const [key, value] of Object.entries(updates)) {
+    fields.push(`${key} = $${fields.length + 1}`);
+    values.push(value);
+  }
+  values.push(riderId);
+  const { rows } = await pool.query(
+    `UPDATE rider SET ${fields.join(', ')}, updated_at = NOW() WHERE rider_id = $${values.length}`,
+    values
+  );
+  return rows;
 };
 
-// Get rider by email
-const getRiderByEmail = (email) => {
-    return new Promise((resolve, reject) => {
-        const query = 'SELECT * FROM rider WHERE email = ?';
-        db.query(query, [email], (err, results) => {
-            if (err) return reject(err);
-            resolve(results[0]);
-        });
-    });
+const updateRiderStatus = async (riderId, status) => {
+  const { rows } = await pool.query(
+    'UPDATE rider SET status = $1, updated_at = NOW() WHERE rider_id = $2',
+    [status, riderId]
+  );
+  return rows;
 };
 
-// Update rider profile
-const updateRiderProfile = (riderId, updates) => {
-    return new Promise((resolve, reject) => {
-        const fields = [];
-        const values = [];
-        
-        for (const [key, value] of Object.entries(updates)) {
-            fields.push(`${key} = ?`);
-            values.push(value);
-        }
-        
-        values.push(riderId);
-        const query = `UPDATE rider SET ${fields.join(', ')}, updated_at = NOW() WHERE rider_id = ?`;
-        
-        db.query(query, values, (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
+const updateRiderLocation = async (riderId, lat, lng) => {
+  const { rows } = await pool.query(
+    'UPDATE rider SET current_lat = $1, current_lng = $2, last_location_update = NOW() WHERE rider_id = $3',
+    [lat, lng, riderId]
+  );
+  return rows;
 };
 
-// Update rider status
-const updateRiderStatus = (riderId, status) => {
-    return new Promise((resolve, reject) => {
-        const query = 'UPDATE rider SET status = ?, updated_at = NOW() WHERE rider_id = ?';
-        db.query(query, [status, riderId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
+const getAvailableRidersNearLocation = async (lat, lng, radiusKm = 5) => {
+  const { rows } = await pool.query(
+    `SELECT *,
+       (6371 * acos(cos(radians($1)) * cos(radians(current_lat::float))
+         * cos(radians(current_lng::float) - radians($2))
+         + sin(radians($1)) * sin(radians(current_lat::float)))) AS distance
+     FROM rider
+     WHERE status = 'available'
+       AND is_active = true
+       AND is_verified = true
+       AND current_lat IS NOT NULL
+       AND current_lng IS NOT NULL
+     HAVING (6371 * acos(cos(radians($1)) * cos(radians(current_lat::float))
+         * cos(radians(current_lng::float) - radians($2))
+         + sin(radians($1)) * sin(radians(current_lat::float)))) < $3
+     ORDER BY distance ASC`,
+    [lat, lng, radiusKm]
+  );
+  return rows;
 };
 
-// Update rider location
-const updateRiderLocation = (riderId, lat, lng) => {
-    return new Promise((resolve, reject) => {
-        const query = 'UPDATE rider SET current_lat = ?, current_lng = ?, last_location_update = NOW() WHERE rider_id = ?';
-        db.query(query, [lat, lng, riderId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
+const getRiderStats = async (riderId) => {
+  const { rows } = await pool.query(
+    `SELECT total_deliveries, successful_deliveries, cancelled_deliveries,
+            average_delivery_time, rating, total_ratings
+     FROM rider WHERE rider_id = $1`,
+    [riderId]
+  );
+  return rows[0];
 };
 
-// Get available riders near location
-const getAvailableRidersNearLocation = (lat, lng, radiusKm = 5) => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT *, 
-            (6371 * acos(cos(radians(?)) * cos(radians(CAST(current_lat AS DECIMAL(10,6)))) * 
-            cos(radians(CAST(current_lng AS DECIMAL(10,6))) - radians(?)) + 
-            sin(radians(?)) * sin(radians(CAST(current_lat AS DECIMAL(10,6)))))) AS distance
-            FROM rider 
-            WHERE status = 'available' 
-            AND is_active = 1 
-            AND is_verified = 1
-            AND current_lat IS NOT NULL 
-            AND current_lng IS NOT NULL
-            HAVING distance < ?
-            ORDER BY distance ASC
-        `;
-        db.query(query, [lat, lng, lat, radiusKm], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
+const updateDeliveryStats = async (riderId, deliveryTime, wasSuccessful) => {
+  const successIncrement = wasSuccessful ? 1 : 0;
+  const cancelIncrement  = wasSuccessful ? 0 : 1;
+  const { rows } = await pool.query(
+    `UPDATE rider
+     SET total_deliveries      = total_deliveries + 1,
+         successful_deliveries = successful_deliveries + $1,
+         cancelled_deliveries  = cancelled_deliveries  + $2,
+         average_delivery_time = (
+           (COALESCE(average_delivery_time, 0) * total_deliveries + $3)
+           / (total_deliveries + 1)
+         )
+     WHERE rider_id = $4`,
+    [successIncrement, cancelIncrement, deliveryTime || 0, riderId]
+  );
+  return rows;
 };
 
-// Get rider statistics
-const getRiderStats = (riderId) => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT 
-                total_deliveries,
-                successful_deliveries,
-                cancelled_deliveries,
-                average_delivery_time,
-                rating,
-                total_ratings
-            FROM rider 
-            WHERE rider_id = ?
-        `;
-        db.query(query, [riderId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results[0]);
-        });
-    });
-};
-
-// Update delivery statistics
-const updateDeliveryStats = (riderId, deliveryTime, wasSuccessful) => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            UPDATE rider 
-            SET 
-                total_deliveries = total_deliveries + 1,
-                successful_deliveries = successful_deliveries + ${wasSuccessful ? 1 : 0},
-                cancelled_deliveries = cancelled_deliveries + ${wasSuccessful ? 0 : 1},
-                average_delivery_time = (
-                    (COALESCE(average_delivery_time, 0) * total_deliveries + ?) / (total_deliveries + 1)
-                )
-            WHERE rider_id = ?
-        `;
-        db.query(query, [deliveryTime || 0, riderId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
-};
-
-// Add rating to rider
-const addRiderRating = (riderId, rating) => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            UPDATE rider 
-            SET 
-                total_ratings = total_ratings + 1,
-                rating = (
-                    (COALESCE(rating, 0) * total_ratings + ?) / (total_ratings + 1)
-                )
-            WHERE rider_id = ?
-        `;
-        db.query(query, [rating, riderId], (err, results) => {
-            if (err) return reject(err);
-            resolve(results);
-        });
-    });
+const addRiderRating = async (riderId, rating) => {
+  const { rows } = await pool.query(
+    `UPDATE rider
+     SET total_ratings = total_ratings + 1,
+         rating = (COALESCE(rating, 0) * total_ratings + $1) / (total_ratings + 1)
+     WHERE rider_id = $2`,
+    [rating, riderId]
+  );
+  return rows;
 };
 
 module.exports = {
-    getUniqueRiderId,
-    createRider,
-    getRiderById,
-    getRiderByEmail,
-    updateRiderProfile,
-    updateRiderStatus,
-    updateRiderLocation,
-    getAvailableRidersNearLocation,
-    getRiderStats,
-    updateDeliveryStats,
-    addRiderRating
+  getRiderById,
+  getRiderByEmail,
+  updateRiderProfile,
+  updateRiderStatus,
+  updateRiderLocation,
+  getAvailableRidersNearLocation,
+  getRiderStats,
+  updateDeliveryStats,
+  addRiderRating,
 };

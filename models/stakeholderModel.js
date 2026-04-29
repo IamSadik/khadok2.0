@@ -1,19 +1,15 @@
-const db = require('../config/configdb');
+// models/stakeholderModel.js
+const pool = require('../config/configdb');
 
-const getStakeholderById = (stakeholder_id) => {
-  return new Promise((resolve, reject) => {
-    db.query(
-      'SELECT number FROM stakeholder WHERE stakeholder_id = ?',
-      [stakeholder_id],
-      (err, results) => {
-        if (err) return reject(err);
-        resolve(results[0]);
-      }
-    );
-  });
+const getStakeholderById = async (stakeholder_id) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM stakeholder WHERE stakeholder_id = $1',
+    [stakeholder_id]
+  );
+  return rows[0];
 };
 
-const updateStakeholderInfo = ({
+const updateStakeholderInfo = async ({
   stakeholder_id,
   restaurant_name,
   number,
@@ -23,49 +19,33 @@ const updateStakeholderInfo = ({
   closes_at,
   lat,
   lng,
-  picture
+  picture,
 }) => {
-  return new Promise((resolve, reject) => {
-    let query = `
-      UPDATE stakeholder
-      SET
-        restaurant_name = ?,
-        number          = ?,
-        address         = ?,
-        type            = ?,
-        opens_at        = ?,
-        closes_at       = ?,
-        lat             = ?,
-        lng             = ?,
-        updated_at      = NOW()
-    `;
-    const params = [
-      restaurant_name,
-      number,
-      address,
-      type,
-      opens_at,
-      closes_at,
-      lat,
-      lng
-    ];
+  let query = `
+    UPDATE stakeholder
+    SET
+      restaurant_name = $1,
+      number          = $2,
+      address         = $3,
+      type            = $4,
+      opens_at        = $5,
+      closes_at       = $6,
+      lat             = $7,
+      lng             = $8,
+      updated_at      = NOW()
+  `;
+  const params = [restaurant_name, number, address, type, opens_at, closes_at, lat, lng];
 
-    if (picture) {
-      query += `, picture = ?`;
-      params.push(picture);
-    }
+  if (picture) {
+    query += `, picture = $${params.length + 1}`;
+    params.push(picture);
+  }
 
-    query += ` WHERE stakeholder_id = ?`;
-    params.push(stakeholder_id);
+  query += ` WHERE stakeholder_id = $${params.length + 1}`;
+  params.push(stakeholder_id);
 
-    db.query(query, params, (err, result) => {
-      if (err) return reject(err);
-      resolve(result.affectedRows === 1);
-    });
-  });
+  const { rowCount } = await pool.query(query, params);
+  return rowCount === 1;
 };
 
-module.exports = {
-  getStakeholderById,
-  updateStakeholderInfo
-};
+module.exports = { getStakeholderById, updateStakeholderInfo };

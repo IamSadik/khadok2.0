@@ -194,13 +194,13 @@ const editMenuItemById = (req, res) => {
 
     // If cuisines are provided, fetch the category name
     if (cuisines.length > 0) {
-      db.query('SELECT name FROM cuisine WHERE id = ?', [cuisines[0]], (err, results) => {
+      db.query('SELECT name FROM cuisine WHERE id = $1', [cuisines[0]], (err, results) => {
         if (err) {
           console.error("DB error fetching cuisine name:", err);
           return res.status(500).json({ message: 'Server error fetching cuisine' });
         }
-        
-        const category = results.length > 0 ? results[0].name : null;
+
+        const category = results?.rows?.length ? results.rows[0].name : null;
 
         // 1) update the main row with category
         menuModel.updateMenuItemById(

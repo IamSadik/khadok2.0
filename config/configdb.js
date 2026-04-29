@@ -1,21 +1,58 @@
 // config/configdb.js
-const mysql = require('mysql');
-const config = require('./config');
-//const mysql2 = require('mysql2/promise');
-// /config/configdb.js
+// PostgreSQL pool using node-postgres (pg)
+const { Pool } = require('pg');
+require('dotenv').config();
 
+const sslConfig = process.env.NODE_ENV === 'production'
+  ? { rejectUnauthorized: false }
+  : false;
 
-// Create a MySQL connection pool
-const pool = mysql.createPool({
-    host: process.env.HOST, // Replace with your DB host
-    user: process.env.USER,      // Replace with your DB user
-    password: process.env.PASSWORD,      // Replace with your DB password
-    database: process.env.DATABASE, // Replace with your database name
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+const normalizeUrl = (value) => {
+  if (!value) return null;
+  const trimmed = String(value).trim().replace(/^['"]|['"]$/g, '');
+  if (!/^postgres(?:ql)?:\/\//i.test(trimmed)) return null;
+  return trimmed;
+};
+
+const buildPoolConfig = () => {
+  const dbHost = process.env.DB_HOST && process.env.DB_HOST.trim();
+  const dbUser = process.env.DB_USER && process.env.DB_USER.trim();
+  const dbPassword = process.env.DB_PASSWORD ?? undefined;
+  const dbName = process.env.DB_NAME && process.env.DB_NAME.trim();
+  const dbPort = process.env.DB_PORT ? Number.parseInt(process.env.DB_PORT, 10) : 5432;
+
+  if (dbHost && dbUser && dbName) {
+    return {
+      host: dbHost,
+      user: dbUser,
+      password: dbPassword,
+      database: dbName,
+      port: Number.isFinite(dbPort) ? dbPort : 5432,
+      ssl: sslConfig,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    };
+  }
+
+  const connectionString = normalizeUrl(process.env.DATABASE_URL);
+  if (connectionString) {
+    return {
+      connectionString,
+      ssl: sslConfig,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    };
+  }
+
+  throw new Error('Missing valid PostgreSQL connection settings. Set DATABASE_URL or DB_HOST/DB_USER/DB_PASSWORD/DB_NAME in .env.');
+};
+
+const pool = new Pool(buildPoolConfig());
+
+pool.on('error', (err) => {
+  console.error('Unexpected PostgreSQL pool error:', err);
 });
 
-// Export the pool
 module.exports = pool;
-

@@ -5,3 +5,6 @@
 
 
 /migrations 
+
+#Mcp 
+.vscode/mcp.json

@@ -1,9 +1,6 @@
 const authModel = require('../models/authModel');
 const bcrypt = require('bcrypt');
-const pool = require('../config/configdb')
-const util = require('util');
-// Promisify pool.query so we can await it
-const dbQuery = util.promisify(pool.query).bind(pool);
+const pool = require('../config/configdb');
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
@@ -84,7 +81,7 @@ exports.login = async (req, res) => {
 
 
 // controllers/authController.js
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
     // Get the current session ID from Express (this will only work if user is logged in)
     const sessionId = req.sessionID;
 
@@ -96,28 +93,28 @@ exports.logout = (req, res) => {
         return res.status(400).json({ message: 'No session ID provided' });
     }
 
-    // 1. Delete the session from MySQL using the session ID retrieved from localStorage
-    const deleteSessionQuery = 'DELETE FROM sessions WHERE session_id = ?';
+    // 1. Delete the session row from PostgreSQL (connect-pg-simple table)
+    const deleteSessionQuery = 'DELETE FROM session WHERE sid = $1';
 
-    pool.query(deleteSessionQuery, [sessionIdFromLocalStorage], (err, result) => {
+    try {
+        await pool.query(deleteSessionQuery, [sessionIdFromLocalStorage]);
+    } catch (err) {
+        console.error('Database error while deleting session:', err);
+        return res.status(500).json({ message: 'Logout failed (DB error)' });
+    }
+
+    // 2. Destroy the session in memory (Express session)
+    req.session.destroy((err) => {
         if (err) {
-            console.error('Database error while deleting session:', err);
-            return res.status(500).json({ message: 'Logout failed (DB error)' });
+            console.error('Session destroy error:', err);
+            return res.status(500).json({ message: 'Logout failed (Session destroy error)' });
         }
 
-        // 2. Destroy the session in memory (Express session)
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Session destroy error:', err);
-                return res.status(500).json({ message: 'Logout failed (Session destroy error)' });
-            }
+        // 3. Clear the session cookie from the client
+        res.clearCookie(process.env.SESSION_NAME);
 
-            // 3. Clear the session cookie from the client
-            res.clearCookie(process.env.SESSION_NAME);
-
-            // 4. Respond with success
-            return res.status(200).json({ message: 'Logged out successfully' });
-        });
+        // 4. Respond with success
+        return res.status(200).json({ message: 'Logged out successfully' });
     });
 };
 

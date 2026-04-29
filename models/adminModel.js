@@ -1,93 +1,50 @@
-const pool = require("../config/configdb");
+// models/adminModel.js
+const pool = require('../config/configdb');
 
-// Fetch admin by email
-const getAdminByEmail = (email) => {
-    return new Promise((resolve, reject) => {
-        pool.query('SELECT * FROM admin WHERE email = ?', [email], (err, results) => {
-            if (err) return reject(err);
-            resolve(results[0]); // Assuming the 'admin' table exists and contains an email column
-        });
-    });
+const getAdminByEmail = async (email) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM admin WHERE email = $1',
+    [email]
+  );
+  return rows[0];
 };
 
-
-// Model to fetch consumers
-const fetchConsumers = () => {
-    return new Promise((resolve, reject) => {
-        const query = 'SELECT consumer_id,name, email,phone_number FROM consumer WHERE flag=0'; // Query to fetch name and email
-        pool.query(query, (err, results) => {
-            if (err) {
-                console.error('Error fetching consumers from DB:', err);
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
-    });
+const fetchConsumers = async () => {
+  const { rows } = await pool.query(
+    'SELECT consumer_id, name, email, number FROM consumer WHERE flag = false'
+  );
+  return rows;
 };
 
-
-
-// Mark consumer as deleted
-const markConsumerAsDeleted = (consumerId) => {
-    return new Promise((resolve, reject) => {
-        const query = "UPDATE consumer SET flag = 1, email = 'abc@gmail.com' WHERE consumer_id = ?";
-        pool.query(query, [consumerId], (err, results) => {
-            if (err) {
-                console.error("Error updating consumer:", err);
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
-    });
+const markConsumerAsDeleted = async (consumerId) => {
+  const { rows } = await pool.query(
+    "UPDATE consumer SET flag = true, email = 'abc@gmail.com' WHERE consumer_id = $1",
+    [consumerId]
+  );
+  return rows;
 };
 
-
-
-// Fetch stakeholders
-const fetchStakeholders = () => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            SELECT 
-                stakeholder_id, 
-                name, 
-                email, 
-                restaurant_name, 
-                ratings,area
-                
-            FROM stakeholder 
-            WHERE flag IS NULL OR flag = 0
-        `;
-        pool.query(query, (err, results) => {
-            if (err) {
-                console.error("Error fetching stakeholders from DB:", err);
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
-    });
+const fetchStakeholders = async () => {
+  const { rows } = await pool.query(`
+    SELECT stakeholder_id, name, email, restaurant_name, ratings, address
+    FROM stakeholder
+    WHERE flag IS NULL OR flag = false
+  `);
+  return rows;
 };
 
-// Mark stakeholder as deleted
-const markStakeholderAsDeleted = (stakeholderId) => {
-    return new Promise((resolve, reject) => {
-        const query = `
-            UPDATE stakeholder 
-            SET flag = 1, email = 'abc@gmail.com' 
-            WHERE stakeholder_id = ?
-        `;
-        pool.query(query, [stakeholderId], (err, results) => {
-            if (err) {
-                console.error("Error updating stakeholder:", err);
-                reject(err);
-            } else {
-                resolve(results);
-            }
-        });
-    });
+const markStakeholderAsDeleted = async (stakeholderId) => {
+  const { rows } = await pool.query(
+    "UPDATE stakeholder SET flag = true, email = 'abc@gmail.com' WHERE stakeholder_id = $1",
+    [stakeholderId]
+  );
+  return rows;
 };
 
-module.exports = { fetchConsumers, markConsumerAsDeleted, fetchStakeholders, markStakeholderAsDeleted,getAdminByEmail };
-
+module.exports = {
+  getAdminByEmail,
+  fetchConsumers,
+  markConsumerAsDeleted,
+  fetchStakeholders,
+  markStakeholderAsDeleted,
+};

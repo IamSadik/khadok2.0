@@ -54,7 +54,7 @@ Khadok streamlines every step of the ordering journey:
   - Automated emailing of invoices via SMTP (e.g. SendGrid).
 
 ### 5. AI-Driven Recommendations & Search
-- **Full-Text Search (MySQL InnoDB + Hit-Highlighting)**  
+- **Full-Text Search (PostgreSQL tsvector + Highlighting)**  
   - Fast search across restaurant names, menu items, and reviews.  
   - Autocomplete suggestions as you type.
 - **Cache Layer (Redis)**  
@@ -72,11 +72,11 @@ Khadok streamlines every step of the ordering journey:
   - Session management: per-session logout, session expiry controls.
 
 ### 7. Security & Compliance
-- **MySQL with TLS** for encrypted in-transit data.  
+- **PostgreSQL with TLS** for encrypted in-transit data.  
 - **bcrypt** for password hashing.  
 - **Helmet.js + CSP headers** to mitigate XSS, clickjacking, and other attacks.  
 - **Session Management**  
-  - Per-session tracking stored in MySQL sessions table.  
+  - Per-session tracking stored in PostgreSQL sessions table.  
   - Individual-session logout endpoint for greater security.  
 
 ---
@@ -91,7 +91,7 @@ Khadok streamlines every step of the ordering journey:
 | **Backend**   | Node.js, Express.js                              |
 | **Real-Time** | Socket.io                                        |
 | **Payments**  | bKash API                                        |
-| **Database**  | MySQL (primary), Redis (cache)                   |
+| **Database**  | PostgreSQL (primary), Redis (cache)              |
 | **Authentication** | express-session                             |
 | **File Uploads**  | Multer                                       |
 | **Environment**   | dotenv                                       |
@@ -117,11 +117,12 @@ Khadok streamlines every step of the ordering journey:
    Create a `.env` file in the root directory and add the following variables:
     ```env
     PORT=3000
-    HOST=your_database_host
-    USER=your_database_user
-    PASSWORD=your_database_password
-    DB_PORT=your_database_port
-    DATABASE=your_database_name
+    DATABASE_URL=postgres://user:password@host:5432/database
+    DB_HOST=your_database_host
+    DB_USER=your_database_user
+    DB_PASSWORD=your_database_password
+    DB_PORT=5432
+    DB_NAME=your_database_name
     SESSION_SECRET=your_session_secret
     SESSION_NAME=your_session_name
     SESSION_LIFETIME=your_session_lifetime_in_ms

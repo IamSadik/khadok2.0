@@ -1,6 +1,7 @@
 const stakeholderModel = require('../models/stakeholderModel');
 const orderModel = require('../models/orderModel');
 const dineInModel = require('../models/dineInModel');
+const pool = require('../config/configdb');
 
 const checkFirstTimeLogin = async (req, res) => {
   const { stakeholder_id } = req.query;
@@ -240,31 +241,24 @@ const getPopularItems = async (req, res) => {
   }
 
   try {
-    // Use direct query for better performance
-    const popularItems = await new Promise((resolve, reject) => {
-      const db = require('../config/configdb');
-      
-      const query = `
-        SELECT 
-          oi.item_name,
-          oi.category,
-          SUM(oi.quantity) as total_orders,
-          COUNT(DISTINCT oi.order_id) as order_count
-        FROM order_items oi
-        INNER JOIN orders o ON oi.order_id = o.id
-        WHERE o.stakeholder_id = ?
-          AND o.order_status != 'cancelled'
-          AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY oi.item_name, oi.category
-        ORDER BY total_orders DESC
-        LIMIT ?
-      `;
+    const parsedLimit = Number.parseInt(limit, 10) || 5;
+    const query = `
+      SELECT
+        oi.item_name,
+        oi.category,
+        SUM(oi.quantity) as total_orders,
+        COUNT(DISTINCT oi.order_id) as order_count
+      FROM order_items oi
+      INNER JOIN orders o ON oi.order_id = o.id
+      WHERE o.stakeholder_id = $1
+        AND o.order_status != 'cancelled'
+        AND o.created_at >= NOW() - INTERVAL '30 days'
+      GROUP BY oi.item_name, oi.category
+      ORDER BY total_orders DESC
+      LIMIT $2
+    `;
 
-      db.query(query, [stakeholder_id, parseInt(limit)], (err, results) => {
-        if (err) return reject(err);
-        resolve(results || []);
-      });
-    });
+    const { rows: popularItems } = await pool.query(query, [stakeholder_id, parsedLimit]);
 
     const labels = popularItems.map(item => item.item_name);
     const values = popularItems.map(item => parseInt(item.total_orders));
@@ -285,61 +279,48 @@ const getDashboardStats = async (req, res) => {
   }
 
   try {
-    const db = require('../config/configdb');
-    
-    // Execute all queries in parallel for maximum speed
-    const [orderStats, hourlyStats, dineInCount] = await Promise.all([
-      // Get order distribution counts (delivery vs pickup)
-      new Promise((resolve, reject) => {
-        const query = `
-          SELECT 
+    const [orderStatsResult, hourlyStatsResult, dineInCountResult] = await Promise.all([
+      pool.query(
+        `
+          SELECT
             order_type,
-            COUNT(*) as count
+            COUNT(*)::int as count
           FROM orders
-          WHERE stakeholder_id = ?
-            AND DATE(created_at) = CURDATE()
+          WHERE stakeholder_id = $1
+            AND created_at::date = CURRENT_DATE
             AND order_status != 'cancelled'
           GROUP BY order_type
-        `;
-        db.query(query, [stakeholder_id], (err, results) => {
-          if (err) return reject(err);
-          resolve(results || []);
-        });
-      }),
-      
-      // Get hourly order counts for today
-      new Promise((resolve, reject) => {
-        const query = `
-          SELECT 
-            HOUR(created_at) as hour,
-            COUNT(*) as count
+        `,
+        [stakeholder_id]
+      ),
+      pool.query(
+        `
+          SELECT
+            EXTRACT(HOUR FROM created_at)::int as hour,
+            COUNT(*)::int as count
           FROM orders
-          WHERE stakeholder_id = ?
-            AND DATE(created_at) = CURDATE()
+          WHERE stakeholder_id = $1
+            AND created_at::date = CURRENT_DATE
             AND order_status != 'cancelled'
-          GROUP BY HOUR(created_at)
-        `;
-        db.query(query, [stakeholder_id], (err, results) => {
-          if (err) return reject(err);
-          resolve(results || []);
-        });
-      }),
-      
-      // Get completed dine-in count for today
-      new Promise((resolve, reject) => {
-        const query = `
-          SELECT COUNT(*) as count
+          GROUP BY EXTRACT(HOUR FROM created_at)
+        `,
+        [stakeholder_id]
+      ),
+      pool.query(
+        `
+          SELECT COUNT(*)::int as count
           FROM dine_in
-          WHERE stakeholder_id = ?
-            AND DATE(created_at) = CURDATE()
+          WHERE stakeholder_id = $1
+            AND created_at::date = CURRENT_DATE
             AND status = 'completed'
-        `;
-        db.query(query, [stakeholder_id], (err, results) => {
-          if (err) return reject(err);
-          resolve(results && results[0] ? results[0].count : 0);
-        });
-      })
+        `,
+        [stakeholder_id]
+      )
     ]);
+
+    const orderStats = orderStatsResult.rows || [];
+    const hourlyStats = hourlyStatsResult.rows || [];
+    const dineInCount = dineInCountResult.rows?.[0]?.count || 0;
 
     // Process order distribution
     const orderDistribution = {

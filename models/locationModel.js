@@ -1,16 +1,12 @@
-// models/consumerModel.js
-const db = require("../config/configdb");
+// models/locationModel.js
+const pool = require('../config/configdb');
 
-// get consumer location (lat & lng)
-const getConsumerLocation = (consumerId) => {
-  return new Promise((resolve, reject) => {
-    const query = "SELECT lat, lng FROM consumer WHERE consumer_id = ?";
-    db.query(query, [consumerId], (err, results) => {
-      if (err) return reject(err);
-      if (results.length === 0) return resolve(null);
-      resolve(results[0]);
-    });
-  });
+const getConsumerLocation = async (consumerId) => {
+  const { rows } = await pool.query(
+    'SELECT lat, lng FROM consumer WHERE consumer_id = $1',
+    [consumerId]
+  );
+  return rows[0] || null;
 };
 
 module.exports = { getConsumerLocation };

@@ -5,7 +5,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
-const MySQLStore = require('express-mysql-session')(session);
+const PgSession = require('connect-pg-simple')(session);
 const http = require('http');
 const socketio = require('socket.io');
 
@@ -24,7 +24,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({ origin: true, credentials: true }));
 
 // Session store
-const sessionStore = new MySQLStore({}, pool);
+const sessionStore = new PgSession({
+    pool,
+    tableName: 'session',
+    createTableIfMissing: true
+});
 app.use(session({
   name: process.env.SESSION_NAME,
   secret: process.env.SESSION_SECRET,

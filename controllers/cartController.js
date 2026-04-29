@@ -18,51 +18,39 @@ const addToCart = async (req, res) => {
     // Convert type to JSON format for database storage
     const jsonType = JSON.stringify(type);
 
-    // Check if item already exists in cart with same type
-    const checkQuery = `SELECT * FROM cart WHERE consumer_id = ? AND menu_id = ? AND type = ?`;
-    
-    db.query(checkQuery, [consumer_id, menu_id, jsonType], (err, results) => {
-      if (err) {
-        console.error("Error checking cart:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
+    const checkQuery = `SELECT cart_id FROM cart WHERE consumer_id = $1 AND menu_id = $2 AND type = $3`;
+    const { rows: existing } = await db.query(checkQuery, [consumer_id, menu_id, jsonType]);
 
-      if (results.length > 0) {
-        // Update quantity if item exists
-        const updateQuery = `UPDATE cart SET quatity = quatity + ? WHERE consumer_id = ? AND menu_id = ? AND type = ?`;
-        db.query(updateQuery, [quantity || 1, consumer_id, menu_id, jsonType], (err) => {
-          if (err) {
-            console.error("Error updating cart:", err);
-            return res.status(500).json({ error: "Failed to update cart" });
-          }
-          return res.status(200).json({ message: "Cart updated successfully" });
-        });
-      } else {
-        // Fetch category from menu table
-        const categoryQuery = `SELECT category FROM menu WHERE menu_id = ?`;
-        db.query(categoryQuery, [menu_id], (err, menuResults) => {
-          if (err) {
-            console.error("Error fetching category:", err);
-            return res.status(500).json({ error: "Database error" });
-          }
+    if (existing.length > 0) {
+      const updateQuery = `
+        UPDATE cart
+        SET quatity = quatity + $1
+        WHERE consumer_id = $2 AND menu_id = $3 AND type = $4
+      `;
+      await db.query(updateQuery, [quantity || 1, consumer_id, menu_id, jsonType]);
+      return res.status(200).json({ message: "Cart updated successfully" });
+    }
 
-          const category = menuResults.length > 0 ? menuResults[0].category : null;
+    const categoryQuery = `SELECT category FROM menu WHERE menu_id = $1`;
+    const { rows: menuResults } = await db.query(categoryQuery, [menu_id]);
+    const category = menuResults.length > 0 ? menuResults[0].category : null;
 
-          // Insert new item with category
-          const insertQuery = `
-            INSERT INTO cart (consumer_id, menu_id, quatity, stakeholder_id, item_name, item_price, item_picture, type, category)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `;
-          db.query(insertQuery, [consumer_id, menu_id, quantity || 1, stakeholder_id, item_name, item_price, item_picture, jsonType, category], (err) => {
-            if (err) {
-              console.error("Error adding to cart:", err);
-              return res.status(500).json({ error: "Failed to add to cart" });
-            }
-            return res.status(201).json({ message: "Item added to cart successfully" });
-          });
-        });
-      }
-    });
+    const insertQuery = `
+      INSERT INTO cart (consumer_id, menu_id, quatity, stakeholder_id, item_name, item_price, item_picture, type, category)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    `;
+    await db.query(insertQuery, [
+      consumer_id,
+      menu_id,
+      quantity || 1,
+      stakeholder_id,
+      item_name,
+      item_price,
+      item_picture,
+      jsonType,
+      category
+    ]);
+    return res.status(201).json({ message: "Item added to cart successfully" });
   } catch (error) {
     console.error("Error in addToCart:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -81,37 +69,31 @@ const getCartItems = async (req, res) => {
       return res.status(400).json({ error: "Consumer ID is required" });
     }
 
-    let query = `SELECT * FROM cart WHERE consumer_id = ?`;
+    let query = `SELECT * FROM cart WHERE consumer_id = $1`;
     let params = [consumer_id];
 
     // Filter by stakeholder_id if provided
     if (stakeholder_id) {
-      query += ` AND stakeholder_id = ?`;
       params.push(stakeholder_id);
+      query += ` AND stakeholder_id = $${params.length}`;
     }
 
     // Filter by type if provided (convert to JSON format)
     if (type) {
-      query += ` AND type = ?`;
       params.push(JSON.stringify(type));
+      query += ` AND type = $${params.length}`;
     }
 
     query += ` ORDER BY added_at DESC`;
-    
-    db.query(query, params, (err, results) => {
-      if (err) {
-        console.error("Error fetching cart:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
-      
-      // Parse JSON type back to string for response
-      const cartItems = results.map(item => ({
-        ...item,
-        type: item.type ? JSON.parse(item.type) : null
-      }));
-      
-      return res.status(200).json({ cartItems });
-    });
+
+    const { rows } = await db.query(query, params);
+
+    const cartItems = rows.map(item => ({
+      ...item,
+      type: item.type ? JSON.parse(item.type) : null
+    }));
+
+    return res.status(200).json({ cartItems });
   } catch (error) {
     console.error("Error in getCartItems:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -132,15 +114,9 @@ const updateCartItem = async (req, res) => {
       return res.status(400).json({ error: "Quantity must be greater than 0" });
     }
 
-    const query = `UPDATE cart SET quatity = ? WHERE cart_id = ?`;
-    
-    db.query(query, [quantity, cart_id], (err) => {
-      if (err) {
-        console.error("Error updating cart item:", err);
-        return res.status(500).json({ error: "Failed to update cart item" });
-      }
-      return res.status(200).json({ message: "Cart item updated successfully" });
-    });
+    const query = `UPDATE cart SET quatity = $1 WHERE cart_id = $2`;
+    await db.query(query, [quantity, cart_id]);
+    return res.status(200).json({ message: "Cart item updated successfully" });
   } catch (error) {
     console.error("Error in updateCartItem:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -156,15 +132,9 @@ const removeFromCart = async (req, res) => {
       return res.status(400).json({ error: "Cart ID is required" });
     }
 
-    const query = `DELETE FROM cart WHERE cart_id = ?`;
-    
-    db.query(query, [cart_id], (err) => {
-      if (err) {
-        console.error("Error removing from cart:", err);
-        return res.status(500).json({ error: "Failed to remove from cart" });
-      }
-      return res.status(200).json({ message: "Item removed from cart successfully" });
-    });
+    const query = `DELETE FROM cart WHERE cart_id = $1`;
+    await db.query(query, [cart_id]);
+    return res.status(200).json({ message: "Item removed from cart successfully" });
   } catch (error) {
     console.error("Error in removeFromCart:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -181,21 +151,16 @@ const clearCart = async (req, res) => {
       return res.status(400).json({ error: "Consumer ID is required" });
     }
 
-    let query = `DELETE FROM cart WHERE consumer_id = ?`;
+    let query = `DELETE FROM cart WHERE consumer_id = $1`;
     let params = [consumer_id];
 
     if (type) {
-      query += ` AND type = ?`;
       params.push(JSON.stringify(type));
+      query += ` AND type = $${params.length}`;
     }
-    
-    db.query(query, params, (err) => {
-      if (err) {
-        console.error("Error clearing cart:", err);
-        return res.status(500).json({ error: "Failed to clear cart" });
-      }
-      return res.status(200).json({ message: "Cart cleared successfully" });
-    });
+
+    await db.query(query, params);
+    return res.status(200).json({ message: "Cart cleared successfully" });
   } catch (error) {
     console.error("Error in clearCart:", error);
     return res.status(500).json({ error: "Internal server error" });
@@ -212,59 +177,43 @@ const canSwitchType = async (req, res) => {
     }
 
     // Get all cart items for the consumer
-    const cartQuery = `SELECT DISTINCT stakeholder_id FROM cart WHERE consumer_id = ?`;
-    
-    db.query(cartQuery, [consumer_id], (err, cartResults) => {
-      if (err) {
-        console.error("Error fetching cart:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
+    const cartQuery = `SELECT DISTINCT stakeholder_id FROM cart WHERE consumer_id = $1`;
+    const { rows: cartResults } = await db.query(cartQuery, [consumer_id]);
 
-      // If cart is empty, switching is allowed
-      if (cartResults.length === 0) {
-        return res.status(200).json({ 
-          canSwitch: true, 
-          message: "Cart is empty, switching allowed" 
-        });
-      }
-
-      // Get stakeholder IDs from cart
-      const stakeholderIds = cartResults.map(row => row.stakeholder_id);
-
-      // Check if all stakeholders support the target type
-      const stakeholderQuery = `SELECT stakeholder_id, type FROM stakeholder WHERE stakeholder_id IN (?)`;
-      
-      db.query(stakeholderQuery, [stakeholderIds], (err, stakeholderResults) => {
-        if (err) {
-          console.error("Error fetching stakeholder types:", err);
-          return res.status(500).json({ error: "Database error" });
-        }
-
-        // Check if all restaurants support the target type
-        const unsupportedRestaurants = [];
-        
-        for (const stakeholder of stakeholderResults) {
-          const types = stakeholder.type ? stakeholder.type.toLowerCase().split(',').map(t => t.trim()) : [];
-          
-          // Check if restaurant supports the target type
-          if (!types.includes(to_type.toLowerCase())) {
-            unsupportedRestaurants.push(stakeholder.stakeholder_id);
-          }
-        }
-
-        if (unsupportedRestaurants.length > 0) {
-          return res.status(200).json({ 
-            canSwitch: false, 
-            message: `Some restaurants in your cart don't support ${to_type}`,
-            unsupportedRestaurants 
-          });
-        }
-
-        return res.status(200).json({ 
-          canSwitch: true, 
-          message: "All restaurants support the target type" 
-        });
+    if (cartResults.length === 0) {
+      return res.status(200).json({
+        canSwitch: true,
+        message: "Cart is empty, switching allowed"
       });
+    }
+
+    const stakeholderIds = cartResults.map(row => row.stakeholder_id);
+    const stakeholderQuery = `
+      SELECT stakeholder_id, type
+      FROM stakeholder
+      WHERE stakeholder_id = ANY($1)
+    `;
+    const { rows: stakeholderResults } = await db.query(stakeholderQuery, [stakeholderIds]);
+
+    const unsupportedRestaurants = [];
+    for (const stakeholder of stakeholderResults) {
+      const types = stakeholder.type ? stakeholder.type.toLowerCase().split(',').map(t => t.trim()) : [];
+      if (!types.includes(to_type.toLowerCase())) {
+        unsupportedRestaurants.push(stakeholder.stakeholder_id);
+      }
+    }
+
+    if (unsupportedRestaurants.length > 0) {
+      return res.status(200).json({
+        canSwitch: false,
+        message: `Some restaurants in your cart don't support ${to_type}`,
+        unsupportedRestaurants
+      });
+    }
+
+    return res.status(200).json({
+      canSwitch: true,
+      message: "All restaurants support the target type"
     });
   } catch (error) {
     console.error("Error in canSwitchType:", error);
@@ -282,17 +231,16 @@ const switchCartType = async (req, res) => {
     }
 
     // Update all cart items from one type to another (convert to JSON format)
-    const updateQuery = `UPDATE cart SET type = ? WHERE consumer_id = ? AND type = ?`;
-    
-    db.query(updateQuery, [JSON.stringify(to_type), consumer_id, JSON.stringify(from_type)], (err, result) => {
-      if (err) {
-        console.error("Error switching cart type:", err);
-        return res.status(500).json({ error: "Failed to switch cart type" });
-      }
-      return res.status(200).json({ 
-        message: "Cart type switched successfully",
-        rowsAffected: result.affectedRows 
-      });
+    const updateQuery = `
+      UPDATE cart
+      SET type = $1
+      WHERE consumer_id = $2 AND type = $3
+    `;
+
+    const result = await db.query(updateQuery, [JSON.stringify(to_type), consumer_id, JSON.stringify(from_type)]);
+    return res.status(200).json({
+      message: "Cart type switched successfully",
+      rowsAffected: result.rowCount
     });
   } catch (error) {
     console.error("Error in switchCartType:", error);
@@ -313,103 +261,75 @@ const validateSwitch = async (req, res) => {
     }
 
     // Check if restaurant supports the target type
-    const stakeholderQuery = `SELECT type FROM stakeholder WHERE stakeholder_id = ?`;
-    
-    db.query(stakeholderQuery, [stakeholder_id], (err, results) => {
-      if (err) {
-        console.error("Error fetching stakeholder:", err);
-        return res.status(500).json({ 
-          canSwitch: false,
-          error: "Database error" 
-        });
-      }
+    const stakeholderQuery = `SELECT type FROM stakeholder WHERE stakeholder_id = $1`;
+    const { rows: results } = await db.query(stakeholderQuery, [stakeholder_id]);
 
-      if (results.length === 0) {
-        return res.status(404).json({ 
-          canSwitch: false,
-          error: "Restaurant not found" 
-        });
-      }
-
-      const restaurantTypes = results[0].type ? 
-        results[0].type.toLowerCase().split(',').map(t => t.trim()) : [];
-
-      const supportsTargetType = restaurantTypes.includes(target_type.toLowerCase());
-
-      if (!supportsTargetType) {
-        return res.status(200).json({ 
-          canSwitch: false,
-          message: `This restaurant doesn't support ${target_type}`,
-          restaurantTypes
-        });
-      }
-
-      // Check if there are items in the cart with current_type from other restaurants (convert to JSON)
-      const cartQuery = `
-        SELECT DISTINCT stakeholder_id 
-        FROM cart 
-        WHERE consumer_id = ? AND type = ? AND stakeholder_id != ?
-      `;
-      
-      db.query(cartQuery, [consumer_id, JSON.stringify(current_type), stakeholder_id], (err, cartResults) => {
-        if (err) {
-          console.error("Error checking cart:", err);
-          return res.status(500).json({ 
-            canSwitch: false,
-            error: "Database error" 
-          });
-        }
-
-        if (cartResults.length > 0) {
-          const otherStakeholderIds = cartResults.map(row => row.stakeholder_id);
-          
-          const otherStakeholdersQuery = `
-            SELECT stakeholder_id, type 
-            FROM stakeholder 
-            WHERE stakeholder_id IN (?)
-          `;
-          
-          db.query(otherStakeholdersQuery, [otherStakeholderIds], (err, otherResults) => {
-            if (err) {
-              console.error("Error fetching other stakeholders:", err);
-              return res.status(500).json({ 
-                canSwitch: false,
-                error: "Database error" 
-              });
-            }
-
-            const unsupportedRestaurants = [];
-            
-            for (const stakeholder of otherResults) {
-              const types = stakeholder.type ? 
-                stakeholder.type.toLowerCase().split(',').map(t => t.trim()) : [];
-              
-              if (!types.includes(target_type.toLowerCase())) {
-                unsupportedRestaurants.push(stakeholder.stakeholder_id);
-              }
-            }
-
-            if (unsupportedRestaurants.length > 0) {
-              return res.status(200).json({ 
-                canSwitch: false,
-                needsClear: true,
-                message: `Some restaurants in your ${current_type} cart don't support ${target_type}. Clear your ${current_type} cart to continue.`,
-                unsupportedRestaurants
-              });
-            }
-
-            return res.status(200).json({ 
-              canSwitch: true,
-              message: "You can switch to this tab" 
-            });
-          });
-        } else {
-          return res.status(200).json({ 
-            canSwitch: true,
-            message: "You can switch to this tab" 
-          });
-        }
+    if (results.length === 0) {
+      return res.status(404).json({
+        canSwitch: false,
+        error: "Restaurant not found"
       });
+    }
+
+    const restaurantTypes = results[0].type
+      ? results[0].type.toLowerCase().split(',').map(t => t.trim())
+      : [];
+
+    const supportsTargetType = restaurantTypes.includes(target_type.toLowerCase());
+
+    if (!supportsTargetType) {
+      return res.status(200).json({
+        canSwitch: false,
+        message: `This restaurant doesn't support ${target_type}`,
+        restaurantTypes
+      });
+    }
+
+    const cartQuery = `
+      SELECT DISTINCT stakeholder_id
+      FROM cart
+      WHERE consumer_id = $1 AND type = $2 AND stakeholder_id != $3
+    `;
+
+    const { rows: cartResults } = await db.query(cartQuery, [
+      consumer_id,
+      JSON.stringify(current_type),
+      stakeholder_id
+    ]);
+
+    if (cartResults.length > 0) {
+      const otherStakeholderIds = cartResults.map(row => row.stakeholder_id);
+      const otherStakeholdersQuery = `
+        SELECT stakeholder_id, type
+        FROM stakeholder
+        WHERE stakeholder_id = ANY($1)
+      `;
+
+      const { rows: otherResults } = await db.query(otherStakeholdersQuery, [otherStakeholderIds]);
+
+      const unsupportedRestaurants = [];
+      for (const stakeholder of otherResults) {
+        const types = stakeholder.type
+          ? stakeholder.type.toLowerCase().split(',').map(t => t.trim())
+          : [];
+        if (!types.includes(target_type.toLowerCase())) {
+          unsupportedRestaurants.push(stakeholder.stakeholder_id);
+        }
+      }
+
+      if (unsupportedRestaurants.length > 0) {
+        return res.status(200).json({
+          canSwitch: false,
+          needsClear: true,
+          message: `Some restaurants in your ${current_type} cart don't support ${target_type}. Clear your ${current_type} cart to continue.`,
+          unsupportedRestaurants
+        });
+      }
+    }
+
+    return res.status(200).json({
+      canSwitch: true,
+      message: "You can switch to this tab"
     });
   } catch (error) {
     console.error("Error in validateSwitch:", error);
