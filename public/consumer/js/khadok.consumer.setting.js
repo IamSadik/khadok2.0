@@ -1,8 +1,58 @@
 // Form submission handlers with simple alerts
-document.getElementById('profileForm').addEventListener('submit', function(e) {
+const populateProfile = (profile) => {
+    const username = document.getElementById('username');
+    const email = document.getElementById('email');
+    const phone = document.getElementById('phone');
+    const city = document.getElementById('city');
+
+    if (!profile) return;
+    username.value = profile.name || '';
+    email.value = profile.email || '';
+    phone.value = profile.number || '';
+    city.value = profile.address || '';
+};
+
+const loadProfile = async () => {
+    try {
+        const res = await fetch('/api/consumer/profile', { credentials: 'include' });
+        if (res.status === 401) {
+            window.location.replace('../login.html');
+            return;
+        }
+        const data = await res.json();
+        populateProfile(data.profile);
+    } catch (error) {
+        console.error('Failed to load profile:', error);
+    }
+};
+
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    // Perform AJAX or other validation if necessary
-    alert('Profile changes saved!');
+    const username = document.getElementById('username').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const address = document.getElementById('city').value.trim();
+
+    const formData = new FormData();
+    formData.append('name', username);
+    if (phone) formData.append('number', phone);
+    if (address) formData.append('address', address);
+
+    try {
+        const res = await fetch('/api/consumer/profile', {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.error || 'Failed to update profile.');
+            return;
+        }
+        alert('Profile changes saved!');
+    } catch (error) {
+        console.error('Profile update failed:', error);
+        alert('Something went wrong.');
+    }
 });
 
 document.getElementById('passwordForm').addEventListener('submit', function(e) {
@@ -23,11 +73,6 @@ document.getElementById('privacyForm').addEventListener('submit', function(e) {
     alert('Privacy settings updated!');
 });
 
-document.getElementById('otherSettingsForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    alert('Other settings saved!');
-});
-
 
 (function checkAuthOnLoad() {
     const sessionId = localStorage.getItem("sessionId");
@@ -37,3 +82,5 @@ document.getElementById('otherSettingsForm').addEventListener('submit', function
       window.location.replace("../login.html");
     }
   })();
+
+loadProfile();

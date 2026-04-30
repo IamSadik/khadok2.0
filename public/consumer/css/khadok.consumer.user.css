@@ -1,10 +1,52 @@
-/* Ensuring the home_content fills the page properly */
+:root {
+    --sand: #f4efe6;
+    --sand-deep: #efe6d6;
+    --ink: #1c1a14;
+    --muted: #6f675c;
+    --accent: #8f6f3f;
+    --accent-soft: rgba(143, 111, 63, 0.18);
+    --card: #ffffff;
+    --border: rgba(35, 30, 24, 0.1);
+    --shadow: 0 20px 40px rgba(30, 27, 20, 0.15);
+}
+
 .home_content {
     margin-left: 78px;
     width: calc(100% - 78px);
-    padding: 40px 30px 30px 40px; /* Consistent padding: 40px top/left, 30px right/bottom */
+    padding: 40px 30px 60px 40px;
     min-height: 100vh;
     transition: all 0.5s ease;
+    background: #F9FAFB;
+    font-family: "Space Grotesk", sans-serif;
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+}
+
+.home_content::before,
+.home_content::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.home_content::before {
+    width: 320px;
+    height: 320px;
+    background: rgba(143, 111, 63, 0.08);
+    top: -120px;
+    right: 10%;
+}
+
+.home_content::after {
+    width: 240px;
+    height: 240px;
+    background: rgba(122, 164, 129, 0.12);
+    bottom: -120px;
+    left: 5%;
 }
 
 .sidebar.active ~ .home_content {
@@ -12,158 +54,463 @@
     width: calc(100% - 240px);
 }
 
-/* Profile card spanning both rows in Column 1 */
-.profile-full {
-    grid-column: 1; /* Stretches across column 1 */
-    grid-row: 1 / span 2; /* Covers both rows */
-    height: 100%;
+.page-shell {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
 }
 
-/* Styling each card to take the full width */
-.card {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    transition: transform 0.2s ease;
-    gap: 8px;
-    height: 100%;
+.profile-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr);
+    gap: 24px;
 }
 
-.card:hover {
-    transform: scale(1.01);
-}
-
-/* Adjusting specific cards for a better look */
 .profile-card {
-    display: flex;
-    top: 0px;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    
+    position: relative;
+    padding: 28px;
+    border-radius: 24px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 24px;
+    overflow: hidden;
 }
-/* Styling for the map container */
-.map-container {
-    margin-top: 50px;
+
+.profile-glow {
+    position: absolute;
+    inset: auto -20% -40% -10%;
+    height: 140px;
+    background: linear-gradient(120deg, rgba(143, 111, 63, 0.25), rgba(255, 255, 255, 0));
+    pointer-events: none;
+}
+
+.avatar-wrap {
+    width: 140px;
+    height: 140px;
+    border-radius: 24px;
+    background: var(--accent-soft);
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    box-shadow: 2px 1px 4px 2px  rgba(0, 0, 0, 0.1);;
+    position: relative;
+    overflow: hidden;
 }
 
-#userMap {
-    height: 90%;
+.avatar-image {
     width: 100%;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    margin-top: 10px;
-    border: .5px solid gray;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 24px;
 }
 
-.profile-card button{
-    margin-top: 12px;
+.avatar-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--accent);
+    background: #fdf7ea;
+}
+
+.avatar-action {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
     color: #fff;
-    background: #3498DB;
-    border: 3px solid #3498DB;
-    border-radius: 5px;
-    size: auto;
-    text-align: center;
+    box-shadow: 0 8px 16px rgba(40, 30, 20, 0.2);
+    cursor: pointer;
 }
 
-.profile-card h3 {
-    font-size: 24px;
-    margin-bottom: 10px;
+.profile-summary h1 {
+    font-family: "Playfair Display", serif;
+    font-size: 2rem;
+    margin: 8px 0 6px;
 }
 
-.card-icon {
-    font-size: 48px;
-    color: #4CAF50; /* Green for profile icon */
-    margin-bottom: 10px;
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: #fdf7ea;
+    color: var(--accent);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.order-insights {
-    
+.muted {
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin: 14px 0 22px;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.btn.primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(143, 111, 63, 0.25);
+}
+
+.btn.ghost {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: transparent;
+}
+
+.btn.text {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    padding: 0;
+}
+
+.spotlight {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 18px;
 }
 
-.card.wallet-balance{
-    top: 0cap;
+.spotlight-card {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 24px rgba(30, 27, 20, 0.1);
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.wallet-balance,
-.last-order {
-    
+.spotlight-card canvas {
+    width: 100% !important;
+    height: 140px !important;
+    max-height: 140px;
+}
+
+.card-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
 }
 
-.wallet-balance span,
-.last-order span {
-    font-weight: bold;
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
 }
 
-/* Making layout responsive */
-@media (min-width: 768px) {
-    .home_content {
-        grid-template-columns: repeat(2, 1fr); /* Two-column layout for larger screens */
-    }
-}
-
-@media (min-width: 1024px) {
-    .home_content {
-        grid-template-columns: repeat(3, 1fr); /* Three-column layout for extra-large screens */
-    }
-}
-
-
-
-
-/* Reviews Section */
-.user-reviews {
+.stat-tile {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 24px rgba(30, 27, 20, 0.1);
     display: flex;
     flex-direction: column;
-    gap:20px;
-    padding: 15px;
-    height: 100%;
-    width: 100%;
-    overflow-y: auto;
+    gap: 8px;
 }
 
-.user-reviews .review-item {
-    display: flex;
-    align-items: flex-start;
+.stat-label {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.stat-sub {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 12px 24px rgba(30, 27, 20, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.details-list {
+    display: grid;
+    gap: 14px;
+}
+
+.detail-label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.detail-value {
+    font-weight: 600;
+}
+
+.orders-list,
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.order-row {
+    display: grid;
+    grid-template-columns: 1.4fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.order-row:last-child {
+    border-bottom: none;
+}
+
+.order-title {
+    font-weight: 600;
+}
+
+.order-meta {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.order-status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.order-amount {
+    font-weight: 600;
+}
+
+.review-row {
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+}
+
+.review-row:last-child {
+    border-bottom: none;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.review-rating {
+    color: #d08f1a;
+}
+
+.review-text {
+    color: var(--muted);
+    margin: 6px 0 8px;
+}
+
+.map-shell {
     width: 100%;
+    min-height: 220px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
 }
 
-.review-icon {
-    font-size: 36px;
-    color: #3498DB;
-}
-
-.review-content p {
-    margin: 5px 0;
-}
-
-.user-reviews h3 {
+.map-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--muted);
+    background: #f8f4ec;
+    padding: 20px;
     text-align: center;
-    font-size: 24px;
-    margin-bottom: 15px;
-    color: #333;
 }
 
-.user-reviews .card-icon {
-    font-size: 36px;
-    margin-bottom: 5px;
-    color: #FFD700; /* Gold for reviews */
+.favorite-restaurant {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.favorite-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.empty-state {
+    color: var(--muted);
+    background: #f8f4ec;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 16, 12, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 18px;
+    padding: 24px;
+    width: min(520px, 92vw);
+    box-shadow: var(--shadow);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.icon-btn {
+    border: none;
+    background: transparent;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group input,
+.input-group select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+@media (max-width: 1100px) {
+    .profile-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 720px) {
+    .profile-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .profile-meta {
+        justify-content: center;
+    }
+
+    .profile-actions {
+        justify-content: center;
+    }
+
+    .avatar-wrap {
+        margin: 0 auto;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
 }

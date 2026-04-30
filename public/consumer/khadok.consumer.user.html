@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="css/khadok.consumer.user.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j7kCk7Wb0P5h2j0eN0n0uP2a2p+h9v+4G8y+UE4=" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     
 </head>
 <body>
@@ -39,7 +41,7 @@
                 <span class="tooltip">Dashboard</span>
             </li>
             <li>
-                <a href="khadok.consumer.user.html">
+                <a href="khadok.consumer.user.html" class="active">
                     <i class='bx bxs-user-circle'></i>
                     <span class="links_name">User</span>
                 </a>
@@ -62,7 +64,7 @@
             </li>
             
             <li>
-                <a href="khadok.consumer.reservation.html" class="active">
+                <a href="khadok.consumer.reservation.html">
                     <i class='bx bxs-calendar-check'></i>
                     <span class="links_name">Reservations</span>
                 </a>
@@ -101,76 +103,178 @@
     </div>
 
 <div class="home_content">
-    <!-- Column 1: Profile Card -->
-    <div class="card profile-card profile-full">
-        <i class="fas fa-user-circle card-icon"></i>
-        <h3>My Profile</h3>
-        <p><strong>Name:</strong> John Doe</p>
-        <p><strong>Email:</strong> johndoe@example.com</p>
-        <p><strong>Phone:</strong> +1234567890</p>
-        <button class="btn btn-edit-profile">Edit Profile</button>
-        <!-- Map Section -->
-        <div class="card map-container">
-            <i class="fas fa-map-marker-alt card-icon"></i>
-            <h3>My Location</h3>
-            <div id="userMap" style="height: 300px; width: 100%;"></div>
-        </div>
-
-    </div>
-
-    <!-- Column 2 and 3: Total Orders -->
-    <div class="card order-insights">
-        <i class="fas fa-shopping-bag card-icon"></i>
-        <h3>Total Orders</h3>
-        <span>25</span>
-        <p><strong>Last Order:</strong></p>
-        <ul>
-            <li><strong>Item:</strong> Pepperoni Pizza</li>
-            <li><strong>Restaurant:</strong> Pizza Palace</li>
-        </ul>
-    </div>
-
-    <!-- Column 2 and 3: Insights -->
-    <div class="card order-insights">
-        <i class="fas fa-chart-line card-icon"></i>
-        <h3>Insights</h3>
-        <canvas id="orderHistory"></canvas>
-    </div>
-
-    <!-- Column 2 and 3: Wallet Balance -->
-    <div class="card wallet-balance">
-        <i class="fas fa-wallet"></i>
-        <span>Wallet Balance</span>
-        <span>$120.00</span>
-    </div>
-    <div class="card user-reviews">
-        <i class="fas fa-star card-icon"></i>
-        <h3>User Reviews</h3>
-        <div class="review-item">
-            <i class="fas fa-user-circle review-icon"></i>
-            <div class="review-content">
-                <p><strong>Restaurant:</strong> Example Restaurant</p>
-                <p><strong>Review:</strong> The food was amazing! Loved the ambiance and service.</p>
-                <p><strong>Rating:</strong> ⭐⭐⭐⭐⭐</p>
+    <div class="page-shell">
+        <section class="profile-hero">
+            <div class="profile-card">
+                <div class="avatar-wrap">
+                    <img id="profileAvatar" alt="Profile avatar" class="avatar-image" />
+                    <div id="avatarFallback" class="avatar-fallback">U</div>
+                    <button class="avatar-action" id="changeAvatarBtn" type="button" aria-label="Change profile photo">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+                <div class="profile-summary">
+                    <div class="pill" id="memberSince">Member since --</div>
+                    <h1 id="profileName">Loading...</h1>
+                    <p id="profileEmail" class="muted">--</p>
+                    <div class="profile-meta">
+                        <span id="profilePhone">Phone: --</span>
+                        <span id="profileGender">Gender: --</span>
+                        <span id="profileAge">Age: --</span>
+                    </div>
+                    <div class="profile-actions">
+                        <button class="btn primary" id="editProfileBtn" type="button">Edit profile</button>
+                        <a class="btn ghost" href="khadok.consumer.order.html">View orders</a>
+                    </div>
+                </div>
+                <div class="profile-glow"></div>
             </div>
-        </div>
-        <div class="review-item">
-            <i class="fas fa-user-circle review-icon"></i>
-            <div class="review-content">
-                <p><strong>Restaurant:</strong> Another Restaurant</p>
-                <p><strong>Review:</strong> Great experience! The pizza was delicious.</p>
-                <p><strong>Rating:</strong> ⭐⭐⭐⭐</p>
+
+            <div class="spotlight">
+                <div class="spotlight-card">
+                    <div class="card-title">
+                        <h3>Order cadence</h3>
+                        <span class="muted" id="orderCadenceLabel">Last 6 months</span>
+                    </div>
+                    <canvas id="orderCadenceChart" height="140"></canvas>
+                </div>
+                <div class="spotlight-card">
+                    <div class="card-title">
+                        <h3>Favorite restaurant</h3>
+                        <span class="muted">Based on repeat orders</span>
+                    </div>
+                    <div id="favoriteRestaurant" class="favorite-restaurant">--</div>
+                </div>
             </div>
-        </div>
-        <div class="review-item">
-            <i class="fas fa-user-circle review-icon"></i>
-            <div class="review-content">
-                <p><strong>Restaurant:</strong> Example Restaurant</p>
-                <p><strong>Review:</strong> The food was amazing! Loved the ambiance and service.</p>
-                <p><strong>Rating:</strong> ⭐⭐⭐⭐⭐</p>
+        </section>
+
+        <section class="stats-grid">
+            <div class="stat-tile">
+                <div class="stat-label">Total orders</div>
+                <div class="stat-value" id="totalOrders">--</div>
             </div>
+            <div class="stat-tile">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" id="completedOrders">--</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Total spend</div>
+                <div class="stat-value" id="totalSpend">--</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Last order</div>
+                <div class="stat-value" id="lastOrderStatus">--</div>
+                <div class="stat-sub" id="lastOrderMeta">--</div>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <div class="card details-card">
+                <div class="card-title">
+                    <h3>Account details</h3>
+                    <button class="btn text" id="editProfileInline" type="button">Edit</button>
+                </div>
+                <div class="details-list">
+                    <div>
+                        <span class="detail-label">Full name</span>
+                        <span class="detail-value" id="detailName">--</span>
+                    </div>
+                    <div>
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value" id="detailPhone">--</span>
+                    </div>
+                    <div>
+                        <span class="detail-label">Address</span>
+                        <span class="detail-value" id="detailAddress">--</span>
+                    </div>
+                    <div>
+                        <span class="detail-label">Location</span>
+                        <span class="detail-value" id="detailLocation">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card orders-card">
+                <div class="card-title">
+                    <h3>Recent orders</h3>
+                    <a class="btn text" href="khadok.consumer.order.html">View all</a>
+                </div>
+                <div id="recentOrders" class="orders-list"></div>
+            </div>
+
+            <div class="card reviews-card">
+                <div class="card-title">
+                    <h3>Recent reviews</h3>
+                    <span class="muted">What you shared</span>
+                </div>
+                <div id="recentReviews" class="reviews-list"></div>
+            </div>
+
+            <div class="card location-card">
+                <div class="card-title">
+                    <h3>Saved location</h3>
+                    <button class="btn text" id="updateLocationBtn" type="button">Use current location</button>
+                </div>
+                <p class="muted" id="locationAddress">--</p>
+                <div id="profileMap" class="map-shell"></div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="modal" id="profileModal" aria-hidden="true">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit profile</h3>
+            <button class="icon-btn" id="closeModal" type="button" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <!-- Add more reviews dynamically later -->
+        <form id="profileForm" class="modal-body">
+            <div class="input-group">
+                <label for="inputName">Full name</label>
+                <input type="text" id="inputName" name="name" placeholder="Enter your name" required>
+            </div>
+            <div class="input-group">
+                <label for="inputPhone">Phone</label>
+                <input type="text" id="inputPhone" name="number" placeholder="01XXXXXXXXX">
+            </div>
+            <div class="input-group">
+                <label for="inputAddress">Address</label>
+                <input type="text" id="inputAddress" name="address" placeholder="Your delivery address">
+            </div>
+            <div class="grid-two">
+                <div class="input-group">
+                    <label for="inputGender">Gender</label>
+                    <select id="inputGender" name="gender">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="inputAge">Age</label>
+                    <input type="number" id="inputAge" name="age" min="10" max="120" placeholder="--">
+                </div>
+            </div>
+            <div class="grid-two">
+                <div class="input-group">
+                    <label for="inputLat">Latitude</label>
+                    <input type="text" id="inputLat" name="lat" placeholder="--">
+                </div>
+                <div class="input-group">
+                    <label for="inputLng">Longitude</label>
+                    <input type="text" id="inputLng" name="lng" placeholder="--">
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="inputAvatar">Profile photo</label>
+                <input type="file" id="inputAvatar" name="profile_pic" accept="image/*">
+            </div>
+            <div class="modal-actions">
+                <button class="btn ghost" type="button" id="cancelEdit">Cancel</button>
+                <button class="btn primary" type="submit">Save changes</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -178,31 +282,7 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Sample Chart for Order Insights
-    const ctx = document.getElementById('orderHistory').getContext('2d');
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'Orders',
-                data: [5, 10, 7, 12, 8, 15],
-                borderColor: '#4CAF50',
-                fill: false,
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    });
-</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kCk7Wb0P5h2j0eN0n0uP2a2p+h9v+4G8y+UE4=" crossorigin=""></script>
 <script>
     let btn = document.querySelector("#btn"); 
     let sidebar = document.querySelector(".sidebar");
@@ -214,6 +294,366 @@
     searchBtn.onclick = function(){
         sidebar.classList.toggle("active");
     }
+</script>
+
+<script>
+    const state = {
+        profile: null,
+        chart: null,
+        map: null,
+        marker: null
+    };
+
+    const elements = {
+        avatar: document.getElementById("profileAvatar"),
+        avatarFallback: document.getElementById("avatarFallback"),
+        profileName: document.getElementById("profileName"),
+        profileEmail: document.getElementById("profileEmail"),
+        profilePhone: document.getElementById("profilePhone"),
+        profileGender: document.getElementById("profileGender"),
+        profileAge: document.getElementById("profileAge"),
+        memberSince: document.getElementById("memberSince"),
+        totalOrders: document.getElementById("totalOrders"),
+        completedOrders: document.getElementById("completedOrders"),
+        totalSpend: document.getElementById("totalSpend"),
+        lastOrderStatus: document.getElementById("lastOrderStatus"),
+        lastOrderMeta: document.getElementById("lastOrderMeta"),
+        favoriteRestaurant: document.getElementById("favoriteRestaurant"),
+        recentOrders: document.getElementById("recentOrders"),
+        recentReviews: document.getElementById("recentReviews"),
+        detailName: document.getElementById("detailName"),
+        detailPhone: document.getElementById("detailPhone"),
+        detailAddress: document.getElementById("detailAddress"),
+        detailLocation: document.getElementById("detailLocation"),
+        locationAddress: document.getElementById("locationAddress"),
+        orderChart: document.getElementById("orderCadenceChart")
+    };
+
+    const modal = document.getElementById("profileModal");
+    const editProfileBtn = document.getElementById("editProfileBtn");
+    const editProfileInline = document.getElementById("editProfileInline");
+    const closeModalBtn = document.getElementById("closeModal");
+    const cancelEditBtn = document.getElementById("cancelEdit");
+    const profileForm = document.getElementById("profileForm");
+    const changeAvatarBtn = document.getElementById("changeAvatarBtn");
+    const updateLocationBtn = document.getElementById("updateLocationBtn");
+
+    const inputName = document.getElementById("inputName");
+    const inputPhone = document.getElementById("inputPhone");
+    const inputAddress = document.getElementById("inputAddress");
+    const inputGender = document.getElementById("inputGender");
+    const inputAge = document.getElementById("inputAge");
+    const inputLat = document.getElementById("inputLat");
+    const inputLng = document.getElementById("inputLng");
+    const inputAvatar = document.getElementById("inputAvatar");
+
+    const formatDate = (value) => {
+        if (!value) return "--";
+        const date = new Date(value);
+        return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    };
+
+    const formatCurrency = (value) => {
+        if (value === null || value === undefined) return "BDT 0.00";
+        const amount = Number(value) || 0;
+        return `BDT ${amount.toFixed(2)}`;
+    };
+
+    const escapeHtml = (value) => {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+
+    const getInitials = (name) => {
+        if (!name) return "U";
+        const parts = name.trim().split(/\s+/);
+        const first = parts[0]?.[0] || "";
+        const second = parts.length > 1 ? parts[parts.length - 1][0] : "";
+        return `${first}${second}`.toUpperCase();
+    };
+
+    const setAvatar = (url, name) => {
+        if (url) {
+            elements.avatar.src = url;
+            elements.avatar.style.display = "block";
+            elements.avatarFallback.style.display = "none";
+        } else {
+            elements.avatar.style.display = "none";
+            elements.avatarFallback.textContent = getInitials(name);
+            elements.avatarFallback.style.display = "flex";
+        }
+    };
+
+    const updateChart = (series) => {
+        if (!elements.orderChart) return;
+        if (state.chart) {
+            state.chart.destroy();
+        }
+
+        state.chart = new Chart(elements.orderChart.getContext("2d"), {
+            type: "line",
+            data: {
+                labels: series.labels,
+                datasets: [{
+                    label: "Orders",
+                    data: series.data,
+                    borderColor: "#8f6f3f",
+                    backgroundColor: "rgba(143, 111, 63, 0.15)",
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { ticks: { precision: 0 }, beginAtZero: true }
+                }
+            }
+        });
+    };
+
+    const ensureMap = (lat, lng) => {
+        const mapShell = document.getElementById("profileMap");
+        if (!mapShell) {
+            return;
+        }
+
+        if (!lat || !lng) {
+            mapShell.innerHTML = "<div class=\"map-empty\">Add your location to see the map.</div>";
+            return;
+        }
+
+        const coordinates = [Number(lat), Number(lng)];
+        if (!state.map) {
+            mapShell.innerHTML = "";
+            state.map = L.map(mapShell, {
+                zoomControl: false,
+                attributionControl: false
+            }).setView(coordinates, 14);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19
+            }).addTo(state.map);
+        } else {
+            state.map.setView(coordinates, 14);
+        }
+
+        if (!state.marker) {
+            state.marker = L.marker(coordinates).addTo(state.map);
+        } else {
+            state.marker.setLatLng(coordinates);
+        }
+    };
+
+    const renderOrders = (orders) => {
+        if (!orders || orders.length === 0) {
+            elements.recentOrders.innerHTML = "<div class=\"empty-state\">No orders yet. Your next meal will show up here.</div>";
+            return;
+        }
+
+        elements.recentOrders.innerHTML = orders.map((order) => {
+            const restaurantName = escapeHtml(order.restaurant_name || "Restaurant");
+            const items = Array.isArray(order.items)
+                ? order.items.map((item) => escapeHtml(item.item_name)).join(", ")
+                : "";
+            return `
+                <div class=\"order-row\">
+                    <div>
+                        <div class=\"order-title\">${restaurantName}</div>
+                        <div class=\"order-meta\">${items || "Order items"} · ${formatDate(order.created_at)}</div>
+                    </div>
+                    <div class=\"order-status\">${escapeHtml(order.order_status || "--")}</div>
+                    <div class=\"order-amount\">${formatCurrency(order.total_amount)}</div>
+                </div>
+            `;
+        }).join("");
+    };
+
+    const renderReviews = (reviews) => {
+        if (!reviews || reviews.length === 0) {
+            elements.recentReviews.innerHTML = "<div class=\"empty-state\">No reviews yet. Share feedback after your next delivery.</div>";
+            return;
+        }
+
+        elements.recentReviews.innerHTML = reviews.map((review) => {
+            const rating = review.rating !== null && review.rating !== undefined
+                ? Number(review.rating).toFixed(1)
+                : "--";
+            const restaurantName = escapeHtml(review.restaurant_name || "Restaurant");
+            const reviewText = escapeHtml(review.review_text || "No comment");
+            return `
+                <div class=\"review-row\">
+                    <div class=\"review-header\">
+                        <span>${restaurantName}</span>
+                        <span class=\"review-rating\">Rating ${rating}/5</span>
+                    </div>
+                    <p class=\"review-text\">${reviewText}</p>
+                    <span class=\"muted\">${formatDate(review.review_date)}</span>
+                </div>
+            `;
+        }).join("");
+    };
+
+    const openModal = () => {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+    };
+
+    const closeModal = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+
+    const populateForm = (profile) => {
+        inputName.value = profile?.name || "";
+        inputPhone.value = profile?.number || "";
+        inputAddress.value = profile?.address || "";
+        inputGender.value = profile?.gender || "";
+        inputAge.value = profile?.age || "";
+        inputLat.value = profile?.lat || "";
+        inputLng.value = profile?.lng || "";
+        inputAvatar.value = "";
+    };
+
+    const renderProfile = (data) => {
+        const { profile, stats, last_order: lastOrder, favorite_restaurant: favoriteRestaurant, monthly_orders: monthlyOrders, recent_orders: recentOrders, reviews } = data;
+        state.profile = profile;
+
+        setAvatar(profile.picture_url, profile.name);
+        elements.profileName.textContent = profile.name || "--";
+        elements.profileEmail.textContent = profile.email || "--";
+        elements.profilePhone.textContent = `Phone: ${profile.number || "--"}`;
+        elements.profileGender.textContent = `Gender: ${profile.gender || "--"}`;
+        elements.profileAge.textContent = `Age: ${profile.age || "--"}`;
+        elements.memberSince.textContent = profile.created_at ? `Member since ${formatDate(profile.created_at)}` : "Member since --";
+
+        elements.totalOrders.textContent = stats.total_orders ?? "0";
+        elements.completedOrders.textContent = stats.completed_orders ?? "0";
+        elements.totalSpend.textContent = formatCurrency(stats.total_spend);
+
+        if (lastOrder) {
+            elements.lastOrderStatus.textContent = lastOrder.order_status || "--";
+            elements.lastOrderMeta.textContent = `${lastOrder.restaurant_name || "--"} · ${formatDate(lastOrder.created_at)}`;
+        } else {
+            elements.lastOrderStatus.textContent = "--";
+            elements.lastOrderMeta.textContent = "No orders yet";
+        }
+
+        if (favoriteRestaurant) {
+            const favoriteName = escapeHtml(favoriteRestaurant.restaurant_name || "Restaurant");
+            elements.favoriteRestaurant.innerHTML = `
+                <div class=\"favorite-name\">${favoriteName}</div>
+                <div class=\"muted\">${favoriteRestaurant.order_count} orders</div>
+            `;
+        } else {
+            elements.favoriteRestaurant.textContent = "No favorites yet";
+        }
+
+        elements.detailName.textContent = profile.name || "--";
+        elements.detailPhone.textContent = profile.number || "--";
+        elements.detailAddress.textContent = profile.address || "--";
+        elements.detailLocation.textContent = profile.lat && profile.lng ? `${profile.lat}, ${profile.lng}` : "--";
+        elements.locationAddress.textContent = profile.address || "Add an address to unlock delivery.";
+
+        updateChart(monthlyOrders);
+        renderOrders(recentOrders);
+        renderReviews(reviews);
+        ensureMap(profile.lat, profile.lng);
+        populateForm(profile);
+    };
+
+    const fetchProfile = async () => {
+        try {
+            const res = await fetch("/api/consumer/profile", { credentials: "include" });
+            if (res.status === 401) {
+                window.location.href = "../login.html";
+                return;
+            }
+            const data = await res.json();
+            renderProfile(data);
+        } catch (error) {
+            console.error("Failed to load profile:", error);
+        }
+    };
+
+    const submitProfile = async (event) => {
+        event.preventDefault();
+        const formData = new FormData();
+
+        formData.append("name", inputName.value.trim());
+        if (inputPhone.value.trim()) formData.append("number", inputPhone.value.trim());
+        if (inputAddress.value.trim()) formData.append("address", inputAddress.value.trim());
+        if (inputGender.value) formData.append("gender", inputGender.value);
+        if (inputAge.value) formData.append("age", inputAge.value);
+        if (inputLat.value.trim()) formData.append("lat", inputLat.value.trim());
+        if (inputLng.value.trim()) formData.append("lng", inputLng.value.trim());
+        if (inputAvatar.files[0]) formData.append("profile_pic", inputAvatar.files[0]);
+
+        try {
+            const res = await fetch("/api/consumer/profile", {
+                method: "POST",
+                body: formData,
+                credentials: "include"
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || "Failed to update profile.");
+                return;
+            }
+
+            closeModal();
+            await fetchProfile();
+        } catch (error) {
+            console.error("Profile update failed:", error);
+            alert("Something went wrong.");
+        }
+    };
+
+    const requestLocation = () => {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported on this device.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                inputLat.value = position.coords.latitude.toFixed(6);
+                inputLng.value = position.coords.longitude.toFixed(6);
+                ensureMap(inputLat.value, inputLng.value);
+            },
+            () => {
+                alert("Unable to retrieve your location.");
+            }
+        );
+    };
+
+    editProfileBtn.addEventListener("click", openModal);
+    editProfileInline.addEventListener("click", openModal);
+    closeModalBtn.addEventListener("click", closeModal);
+    cancelEditBtn.addEventListener("click", closeModal);
+    profileForm.addEventListener("submit", submitProfile);
+
+    changeAvatarBtn.addEventListener("click", () => {
+        openModal();
+        inputAvatar.click();
+    });
+
+    updateLocationBtn.addEventListener("click", () => {
+        openModal();
+        requestLocation();
+    });
+
+    fetchProfile();
 </script>
 
 <script>

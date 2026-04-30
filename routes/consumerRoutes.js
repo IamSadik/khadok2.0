@@ -15,6 +15,16 @@ router.post(
     consumerController.updateConsumerInfo
   );
 
+// Profile overview for consumer dashboard
+router.get('/profile', consumerController.getConsumerProfile);
+
+// Update consumer profile (supports avatar upload)
+router.post(
+  '/profile',
+  upload.single('profile_pic'),
+  consumerController.updateConsumerProfile
+);
+
 
   
 

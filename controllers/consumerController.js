@@ -1,5 +1,6 @@
 // /controllers/consumerController.js
 const consumerModel = require('../models/consumerModel');
+const orderModel = require('../models/orderModel');
 const checkFirstTimeLogin = async (req, res) => {
     const { consumer_id } = req.query;
 
@@ -72,9 +73,154 @@ const updateConsumerInfo = async (req, res) => {
   }
 };
 
+const buildMonthlySeries = (rows) => {
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const now = new Date();
+  const map = new Map();
+
+  rows.forEach((row) => {
+    const monthDate = new Date(row.month);
+    const key = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+    map.set(key, row.order_count);
+  });
+
+  const labels = [];
+  const data = [];
+
+  for (let i = 5; i >= 0; i -= 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    labels.push(monthNames[d.getMonth()]);
+    data.push(map.get(key) || 0);
+  }
+
+  return { labels, data };
+};
+
+const toUploadUrl = (filename) => (filename ? `/uploads/${filename}` : null);
+
+const getConsumerProfile = async (req, res) => {
+  const consumer_id = req.session?.userId;
+
+  if (!consumer_id) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const [profile, stats, lastOrder, favoriteRestaurant, monthlyOrders, reviews, orders] = await Promise.all([
+      consumerModel.getConsumerProfile(consumer_id),
+      consumerModel.getConsumerStats(consumer_id),
+      consumerModel.getConsumerLastOrder(consumer_id),
+      consumerModel.getConsumerFavoriteRestaurant(consumer_id),
+      consumerModel.getConsumerMonthlyOrders(consumer_id),
+      consumerModel.getConsumerRecentReviews(consumer_id, 4),
+      orderModel.getOrdersByConsumer(consumer_id),
+    ]);
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Consumer not found' });
+    }
+
+    const recentOrders = (orders || []).slice(0, 5).map((order) => ({
+      id: order.id,
+      restaurant_name: order.restaurant_name,
+      restaurant_logo: toUploadUrl(order.logo_url),
+      order_status: order.order_status,
+      order_type: order.order_type,
+      total_amount: Number(order.total_amount || 0),
+      created_at: order.created_at,
+      item_count: Array.isArray(order.items) ? order.items.reduce((sum, item) => sum + Number(item.quantity || 0), 0) : 0,
+      items: Array.isArray(order.items) ? order.items.slice(0, 3) : [],
+    }));
+
+    const monthlySeries = buildMonthlySeries(monthlyOrders || []);
+
+    return res.json({
+      profile: {
+        ...profile,
+        picture_url: toUploadUrl(profile.picture),
+      },
+      stats: {
+        total_orders: Number(stats.total_orders || 0),
+        completed_orders: Number(stats.completed_orders || 0),
+        total_spend: Number(stats.total_spend || 0),
+      },
+      last_order: lastOrder
+        ? {
+            ...lastOrder,
+            total_amount: Number(lastOrder.total_amount || 0),
+            restaurant_logo: toUploadUrl(lastOrder.restaurant_logo),
+          }
+        : null,
+      favorite_restaurant: favoriteRestaurant
+        ? {
+            ...favoriteRestaurant,
+            restaurant_logo: toUploadUrl(favoriteRestaurant.restaurant_logo),
+          }
+        : null,
+      monthly_orders: monthlySeries,
+      recent_orders: recentOrders,
+      reviews: (reviews || []).map((review) => ({
+        ...review,
+        restaurant_logo: toUploadUrl(review.restaurant_logo),
+      })),
+    });
+  } catch (error) {
+    console.error('Error fetching consumer profile:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+const updateConsumerProfile = async (req, res) => {
+  const consumer_id = req.session?.userId;
+
+  if (!consumer_id) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const { name, number, address, gender, age, lat, lng } = req.body;
+    const profilePic = req.file ? req.file.filename : null;
+
+    const parsedAge = age !== undefined && age !== '' ? Number(age) : undefined;
+
+    const payload = {
+      consumer_id,
+      name: name !== undefined ? String(name).trim() : undefined,
+      number: number !== undefined ? String(number).trim() : undefined,
+      address: address !== undefined ? String(address).trim() : undefined,
+      gender: gender !== undefined ? String(gender).trim() : undefined,
+      age: Number.isFinite(parsedAge) ? parsedAge : undefined,
+      lat: lat !== undefined && lat !== '' ? String(lat).trim() : undefined,
+      lng: lng !== undefined && lng !== '' ? String(lng).trim() : undefined,
+      picture: profilePic,
+    };
+
+    const updated = await consumerModel.updateConsumerProfile(payload);
+    if (!updated) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
+    const profile = await consumerModel.getConsumerProfile(consumer_id);
+    return res.json({
+      success: true,
+      profile: {
+        ...profile,
+        picture_url: toUploadUrl(profile?.picture),
+      },
+    });
+  } catch (error) {
+    console.error('Error updating consumer profile:', error);
+    return res.status(500).json({ error: 'Server error' });
+  }
+};
+
 
 
 
 module.exports = {
-    checkFirstTimeLogin, updateConsumerInfo
+  checkFirstTimeLogin,
+  updateConsumerInfo,
+  getConsumerProfile,
+  updateConsumerProfile,
 };
