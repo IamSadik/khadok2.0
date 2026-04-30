@@ -9,7 +9,7 @@
     <title>Admin Dashboard</title>
 </head>
 
-<body>
+<body data-page="dashboard">
 
     <div class="container">
         <!-- Sidebar Section -->
@@ -44,6 +44,36 @@
                         receipt_long
                     </span>
                     <h3>Stakeholder</h3>
+                </a>
+                <a href="adminriders.html">
+                    <span class="material-icons-sharp">
+                        delivery_dining
+                    </span>
+                    <h3>Riders</h3>
+                </a>
+                <a href="adminorders.html">
+                    <span class="material-icons-sharp">
+                        shopping_bag
+                    </span>
+                    <h3>Orders</h3>
+                </a>
+                <a href="adminpayments.html">
+                    <span class="material-icons-sharp">
+                        payments
+                    </span>
+                    <h3>Payments</h3>
+                </a>
+                <a href="adminreservations.html">
+                    <span class="material-icons-sharp">
+                        event
+                    </span>
+                    <h3>Reservations</h3>
+                </a>
+                <a href="adminmenus.html">
+                    <span class="material-icons-sharp">
+                        restaurant_menu
+                    </span>
+                    <h3>Menus</h3>
                 </a>
                 <a href="admininsights.html" >
                     <span class="material-icons-sharp">
@@ -83,58 +113,70 @@
         <!-- Main Content -->
         <main>
             <h1>Overview</h1>
-            <!-- Analyses -->
             <div class="analyse">
                 <div class="sales">
                     <div class="status">
                         <div class="info">
-                            <h3>Total Consumer</h3>
-                            <h1>24</h1>
-                        </div>
-                        <div class="progresss">
-                            <svg>
-                                <circle cx="38" cy="38" r="36"></circle>
-                            </svg>
-                            <div class="percentage">
-                                <p>+81%</p>
-                            </div>
+                            <h3>Total Consumers</h3>
+                            <h1 id="countConsumers">--</h1>
                         </div>
                     </div>
                 </div>
                 <div class="visits">
                     <div class="status">
                         <div class="info">
-                            <h3>Total Stakeholder</h3>
-                            <h1>21</h1>
-                        </div>
-                        <div class="progresss">
-                            <svg>
-                                <circle cx="38" cy="38" r="36"></circle>
-                            </svg>
-                            <div class="percentage">
-                                <p>-48%</p>
-                            </div>
+                            <h3>Total Stakeholders</h3>
+                            <h1 id="countStakeholders">--</h1>
                         </div>
                     </div>
                 </div>
                 <div class="searches">
                     <div class="status">
                         <div class="info">
-                            <h3>Orders</h3>
-                            <h1>17</h1>
-                        </div>
-                        <div class="progresss">
-                            <svg>
-                                <circle cx="38" cy="38" r="36"></circle>
-                            </svg>
-                            <div class="percentage">
-                                <p>+21%</p>
-                            </div>
+                            <h3>Total Riders</h3>
+                            <h1 id="countRiders">--</h1>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- End of Analyses -->
+
+            <div class="analyse">
+                <div class="sales">
+                    <div class="status">
+                        <div class="info">
+                            <h3>Total Orders</h3>
+                            <h1 id="countOrders">--</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="visits">
+                    <div class="status">
+                        <div class="info">
+                            <h3>Total Payments</h3>
+                            <h1 id="countPayments">--</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="searches">
+                    <div class="status">
+                        <div class="info">
+                            <h3>Total Reservations</h3>
+                            <h1 id="countReservations">--</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analyse">
+                <div class="sales">
+                    <div class="status">
+                        <div class="info">
+                            <h3>Open Tickets</h3>
+                            <h1 id="countTickets">--</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
            
 
@@ -146,13 +188,15 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone Number</th>
-                                <th>Action</th>
+                                <th>Consumer</th>
+                                <th>Restaurant</th>
+                                <th>Order Status</th>
+                                <th>Delivery Status</th>
+                                <th>Payment Status</th>
+                                <th>Total</th>
                             </tr>
                         </thead>
-                        <tbody id="consumers-table">
+                        <tbody id="recent-orders-body">
                             <!-- Data will be dynamically injected here -->
                         </tbody>
                     </table>
@@ -263,8 +307,8 @@
 
     </div>
 
-    <script src="orders.js"></script>
     <script src="index.js"></script>
+    <script src="adminPanel.js"></script>
 </body>
 
 </html>

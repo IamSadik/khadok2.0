@@ -9,7 +9,7 @@
     <title>Stakeholder</title>
 </head>
 
-<body>
+<body data-page="stakeholders">
 
     <div class="container">
         <!-- Sidebar Section -->
@@ -44,6 +44,36 @@
                         receipt_long
                     </span>
                     <h3>Stakeholder</h3>
+                </a>
+                <a href="adminriders.html">
+                    <span class="material-icons-sharp">
+                        delivery_dining
+                    </span>
+                    <h3>Riders</h3>
+                </a>
+                <a href="adminorders.html">
+                    <span class="material-icons-sharp">
+                        shopping_bag
+                    </span>
+                    <h3>Orders</h3>
+                </a>
+                <a href="adminpayments.html">
+                    <span class="material-icons-sharp">
+                        payments
+                    </span>
+                    <h3>Payments</h3>
+                </a>
+                <a href="adminreservations.html">
+                    <span class="material-icons-sharp">
+                        event
+                    </span>
+                    <h3>Reservations</h3>
+                </a>
+                <a href="adminmenus.html">
+                    <span class="material-icons-sharp">
+                        restaurant_menu
+                    </span>
+                    <h3>Menus</h3>
                 </a>
                 <a href="admininsights.html" >
                     <span class="material-icons-sharp">
@@ -81,7 +111,7 @@
         <!-- End of Sidebar Section -->
 
         <main>
-            <h1>Stakeholder Details</h1>
+            <h1>Stakeholders</h1>
             <div id="table-container">
                 <table>
                     <thead>
@@ -89,10 +119,10 @@
                             <th>ID</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Area</th>
                             <th>Restaurant Name</th>
+                            <th>Address</th>
                             <th>Ratings</th>
-                            <th>Action</th>
+                            <th>Created</th>
                         </tr>
                     </thead>
                     <tbody id="stakeholders-table">
@@ -130,48 +160,6 @@
 
             </div>
             <!-- End of Nav -->
-    <!-- Reviews Section -->
-    <div class="reviews-section">
-        <h2>Customer Reviews</h2>
-    
-        <!-- Review 1 -->
-        <div class="review-card">
-            <div class="review-header">
-                <span class="reviewer-name">sorol alam</span>
-                <span class="reviewer-resname">Chill </span>
-                <span class="review-rating">⭐⭐⭐⭐⭐</span>
-            </div>
-            <p class="review-text">
-                "Great food and excellent service! Will definitely order again."
-            </p>
-        </div>
-    
-        <!-- Review 2 -->
-        <div class="review-card">
-            <div class="review-header">
-                <span class="reviewer-name">fayes alam</span>
-                <span class="reviewer-resname">Khanas </span>
-                <span class="review-rating">⭐⭐</span>
-            </div>
-            <p class="review-text">
-                "Food was good, but delivery took a little longer than expected."
-            </p>
-        </div>
-    
-        <!-- Review 3 -->
-        <div class="review-card">
-            <div class="review-header">
-                <span class="reviewer-name">Tuba Hai </span>
-                <span class="reviewer-resname">Chillox </span>
-                <span class="review-rating">⭐⭐⭐</span>
-            </div>
-            <p class="review-text">
-                "Absolutely amazing experience! Highly recommend this place."
-            </p>
-        </div>
-    
-        <!-- Add more reviews here -->
-    </div>
            
 
 
@@ -184,8 +172,8 @@
 
     
 
-    <script src="stakeholderScript.js"></script>
     <script src="index.js"></script>
+    <script src="adminPanel.js"></script>
 </body>
 
 </html>

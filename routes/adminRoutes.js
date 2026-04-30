@@ -1,26 +1,39 @@
 const express = require("express");
 const router = express.Router();
-const { 
-    loginAdmin, 
-    getConsumers, 
-    deleteConsumer, 
-    getStakeholders, 
-    deleteStakeholder 
+const {
+    getOverview,
+    getConsumers,
+    getStakeholders,
+    getRiders,
+    updateRider,
+    getOrders,
+    updateOrderStatus,
+    updateDeliveryStatus,
+    updateOrderRider,
+    getPayments,
+    updatePaymentStatus,
+    getReservations,
+    updateReservationStatus,
+    getMenus,
+    getTickets,
+    updateDeliveryIssueStatus,
 } = require("../controllers/adminController");
 
-// Admin login route
-router.post("/login", loginAdmin);
-
-// Route to fetch all consumers
+router.get("/overview", getOverview);
 router.get("/consumers", getConsumers);
-
-// Route to delete a consumer
-router.delete("/consumers/:id", deleteConsumer);
-
-// Route to fetch all stakeholders
 router.get("/stakeholders", getStakeholders);
-
-// Route to delete a stakeholder
-router.delete("/stakeholders/:id", deleteStakeholder);
+router.get("/riders", getRiders);
+router.patch("/riders/:rider_id", updateRider);
+router.get("/orders", getOrders);
+router.patch("/orders/:id/status", updateOrderStatus);
+router.patch("/orders/:id/delivery-status", updateDeliveryStatus);
+router.patch("/orders/:id/rider", updateOrderRider);
+router.get("/payments", getPayments);
+router.patch("/payments/:id/status", updatePaymentStatus);
+router.get("/reservations", getReservations);
+router.patch("/reservations/:id/status", updateReservationStatus);
+router.get("/menus", getMenus);
+router.get("/tickets", getTickets);
+router.patch("/tickets/delivery/:id/status", updateDeliveryIssueStatus);
 
 module.exports = router;

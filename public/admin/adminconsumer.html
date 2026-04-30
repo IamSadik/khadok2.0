@@ -10,7 +10,7 @@
     <title>Consumer</title>
 </head>
 
-<body>
+<body data-page="consumers">
 
     <div class="container">
         <!-- Sidebar Section -->
@@ -45,6 +45,36 @@
                         receipt_long
                     </span>
                     <h3>Stakeholder</h3>
+                </a>
+                <a href="adminriders.html">
+                    <span class="material-icons-sharp">
+                        delivery_dining
+                    </span>
+                    <h3>Riders</h3>
+                </a>
+                <a href="adminorders.html">
+                    <span class="material-icons-sharp">
+                        shopping_bag
+                    </span>
+                    <h3>Orders</h3>
+                </a>
+                <a href="adminpayments.html">
+                    <span class="material-icons-sharp">
+                        payments
+                    </span>
+                    <h3>Payments</h3>
+                </a>
+                <a href="adminreservations.html">
+                    <span class="material-icons-sharp">
+                        event
+                    </span>
+                    <h3>Reservations</h3>
+                </a>
+                <a href="adminmenus.html">
+                    <span class="material-icons-sharp">
+                        restaurant_menu
+                    </span>
+                    <h3>Menus</h3>
                 </a>
                 <a href="admininsights.html" >
                     <span class="material-icons-sharp">
@@ -82,7 +112,7 @@
         <!-- End of Sidebar Section -->
 
         <main>
-            <h1>Consumer Details</h1>
+            <h1>Consumers</h1>
             <div id="table-container">
                 <table>
                     <thead>
@@ -91,7 +121,8 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Phone Number</th>
-                            <th>Action</th>
+                            <th>Address</th>
+                            <th>Created</th>
                         </tr>
                     </thead>
                     <tbody id="consumers-table">
@@ -144,8 +175,8 @@
 
     
 
-    <script src="orders.js"></script>
     <script src="index.js"></script>
+    <script src="adminPanel.js"></script>
 </body>
 
 </html>

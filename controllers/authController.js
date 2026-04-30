@@ -45,7 +45,8 @@ exports.login = async (req, res) => {
             const redirectMap = {
                 consumer:    '/consumer/khadok.consumer.dashboard.html',
                 stakeholder: '/stakeholder/khadok.stakeholder.index.html',
-                rider:       '/rider/index.html'
+                rider:       '/rider/index.html',
+                admin:       '/admin/index.html'
             };
 
             const redirectUrl = redirectMap[user.role];

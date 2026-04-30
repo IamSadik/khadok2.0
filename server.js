@@ -46,6 +46,7 @@ app.use(session({
 // Protect routes by role first
 app.use('/api/consumer', requireLogin('consumer'));
 app.use('/api/stakeholder', requireLogin('stakeholder'));
+app.use('/api/admin', requireLogin('admin'));
 // Remove session authentication for rider routes - using simple rider_id validation instead
 // app.use('/api/rider', requireLogin('rider'));
 
@@ -76,6 +77,9 @@ const orderRoutes = require('./routes/orderRoutes');
 app.use('/api/orders', orderRoutes);
 const riderRoutes = require('./routes/riderRoutes');
 app.use('/api/rider', riderRoutes);
+
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));

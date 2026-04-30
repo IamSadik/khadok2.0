@@ -3,13 +3,29 @@ const populateProfile = (profile) => {
     const username = document.getElementById('username');
     const email = document.getElementById('email');
     const phone = document.getElementById('phone');
+    const addressLine = document.getElementById('addressLine');
     const city = document.getElementById('city');
 
     if (!profile) return;
     username.value = profile.name || '';
     email.value = profile.email || '';
     phone.value = profile.number || '';
-    city.value = profile.address || '';
+
+    const address = profile.address || '';
+    if (!address) {
+        addressLine.value = '';
+        city.value = '';
+        return;
+    }
+
+    const parts = address.split(',').map((part) => part.trim()).filter(Boolean);
+    if (parts.length > 1) {
+        city.value = parts.pop();
+        addressLine.value = parts.join(', ');
+    } else {
+        addressLine.value = address;
+        city.value = '';
+    }
 };
 
 const loadProfile = async () => {
@@ -30,7 +46,13 @@ document.getElementById('profileForm').addEventListener('submit', async function
     e.preventDefault();
     const username = document.getElementById('username').value.trim();
     const phone = document.getElementById('phone').value.trim();
-    const address = document.getElementById('city').value.trim();
+    const addressLine = document.getElementById('addressLine').value.trim();
+    const city = document.getElementById('city').value.trim();
+
+    let address = addressLine;
+    if (city) {
+        address = addressLine ? `${addressLine}, ${city}` : city;
+    }
 
     const formData = new FormData();
     formData.append('name', username);
