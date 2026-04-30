@@ -83,22 +83,17 @@ exports.login = async (req, res) => {
 
 // controllers/authController.js
 exports.logout = async (req, res) => {
-    // Get the current session ID from Express (this will only work if user is logged in)
-    const sessionId = req.sessionID;
-
-    // Retrieve session ID from the client's localStorage (sent in request body)
-    const sessionIdFromLocalStorage = req.body.sessionId;
-
-    // If no session ID is found, respond with an error
-    if (!sessionIdFromLocalStorage) {
-        return res.status(400).json({ message: 'No session ID provided' });
-    }
+    const sessionIdFromCookie = req.sessionID;
+    const sessionIdFromBody = req.body && req.body.sessionId;
+    const sessionIdToDelete = sessionIdFromCookie || sessionIdFromBody;
 
     // 1. Delete the session row from PostgreSQL (connect-pg-simple table)
     const deleteSessionQuery = 'DELETE FROM session WHERE sid = $1';
 
     try {
-        await pool.query(deleteSessionQuery, [sessionIdFromLocalStorage]);
+        if (sessionIdToDelete) {
+            await pool.query(deleteSessionQuery, [sessionIdToDelete]);
+        }
     } catch (err) {
         console.error('Database error while deleting session:', err);
         return res.status(500).json({ message: 'Logout failed (DB error)' });

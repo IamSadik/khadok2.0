@@ -9,7 +9,7 @@
     <title>Insights</title>
 </head>
 
-<body>
+<body data-page="insights">
 
     <div class="container">
         <!-- Sidebar Section -->
@@ -100,7 +100,7 @@
                     </span>
                     <h3>Settings</h3>
                 </a>
-                <a href="#">
+                <a href="../index.html">
                     <span class="material-icons-sharp">
                         logout
                     </span>
@@ -112,6 +112,20 @@
 
  <main>
         <h1>Insights</h1>
+        <p id="admin-message"></p>
+        <div class="analyse">
+            <div class="sales"><div class="status"><div class="info"><h3>Total Orders</h3><h1 id="insight-total-orders">--</h1></div></div></div>
+            <div class="visits"><div class="status"><div class="info"><h3>Completed Orders</h3><h1 id="insight-completed-orders">--</h1></div></div></div>
+            <div class="searches"><div class="status"><div class="info"><h3>Cancelled Orders</h3><h1 id="insight-cancelled-orders">--</h1></div></div></div>
+        </div>
+        <div class="analyse">
+            <div class="sales"><div class="status"><div class="info"><h3>Delivered Orders</h3><h1 id="insight-delivered-orders">--</h1></div></div></div>
+            <div class="visits"><div class="status"><div class="info"><h3>Open Tickets</h3><h1 id="insight-open-tickets">--</h1></div></div></div>
+            <div class="searches"><div class="status"><div class="info"><h3>Completion Rate</h3><h1 id="insight-completion-rate">--</h1></div></div></div>
+        </div>
+        <div class="analyse">
+            <div class="sales"><div class="status"><div class="info"><h3>Revenue (Completed Payments)</h3><h1 id="insight-revenue">--</h1></div></div></div>
+        </div>
     </main>
         <!-- Right Section -->
         <div class="right-section">
@@ -155,8 +169,8 @@
 
     
 
-    <script src="orders.js"></script>
     <script src="index.js"></script>
+    <script src="adminPanel.js"></script>
 </body>
 
 </html>

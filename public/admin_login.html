@@ -259,7 +259,7 @@
 			<img src="images/bg.svg">
 		</div>
 		<div class="login-content">
-			<form action="/admin/login" method="POST">
+			<form id="admin-login-form">
                 <img src="images/avatar.svg">
                 <h2 class="title">Welcome</h2>
                 <div class="input-div one">
@@ -268,7 +268,7 @@
                     </div>
                     <div class="div">
                         <h5>Username</h5>
-                        <input type="email" name="email" class="input">
+                        <input type="email" name="email" class="input" required>
                     </div>
                 </div>
                 <div class="input-div pass">
@@ -277,10 +277,11 @@
                     </div>
                     <div class="div">
                         <h5>Password</h5>
-                        <input type="password" name="password" class="input">
+                        <input type="password" name="password" class="input" required>
                     </div>
                 </div>
                 <a href="#">Forgot Password?</a>
+                <p id="login-error" style="color:#d9534f; min-height:18px; text-align:left;"></p>
                 <input type="submit" class="btn" value="Login">
             </form>
             
@@ -305,6 +306,45 @@
         inputs.forEach(input => {
             input.addEventListener("focus", addcl);
             input.addEventListener("blur", remcl);
-        });</script>
+        });
+
+        const loginForm = document.getElementById('admin-login-form');
+        const loginError = document.getElementById('login-error');
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loginError.textContent = '';
+
+            const formData = new FormData(loginForm);
+            const email = formData.get('email');
+            const password = formData.get('password');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || 'Login failed');
+                }
+
+                if (payload?.user?.role !== 'admin') {
+                    throw new Error('Only admin accounts can access this panel');
+                }
+
+                if (payload.sessionId) {
+                    localStorage.setItem('sessionId', payload.sessionId);
+                }
+
+                window.location.href = payload.redirect || '/admin/index.html';
+            } catch (error) {
+                loginError.textContent = error.message;
+            }
+        });
+    </script>
 </body>
 </html>

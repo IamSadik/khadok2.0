@@ -9,7 +9,7 @@
     <title>Settings</title>
 </head>
 
-<body>
+<body data-page="settings">
 
     <div class="container">
         <!-- Sidebar Section -->
@@ -70,7 +70,7 @@
                     </span>
                     <h3>Settings</h3>
                 </a>
-                <a href="#">
+                <a href="../index.html">
                     <span class="material-icons-sharp">
                         logout
                     </span>
@@ -82,6 +82,20 @@
 
  <main>
         <h1>Settings</h1>
+        <p id="admin-message"></p>
+        <div class="recent-orders">
+            <h2>Session Details</h2>
+            <table>
+                <tbody>
+                    <tr><th>Role</th><td id="setting-role">--</td></tr>
+                    <tr><th>User ID</th><td id="setting-user-id">--</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="recent-orders">
+            <h2>Security</h2>
+            <p>Use the sidebar logout to end the current admin session securely.</p>
+        </div>
     </main>
         <!-- Right Section -->
         <div class="right-section">
@@ -125,8 +139,8 @@
 
     
 
-    <script src="orders.js"></script>
     <script src="index.js"></script>
+    <script src="adminPanel.js"></script>
 </body>
 
 </html>

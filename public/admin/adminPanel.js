@@ -51,6 +51,43 @@ const renderEmptyRow = (tbody, colCount, message) => {
     tbody.innerHTML = `<tr><td colspan="${colCount}">${message}</td></tr>`;
 };
 
+const showGlobalMessage = (message, type = 'error') => {
+    const el = document.getElementById('admin-message');
+    if (!el) return;
+    el.textContent = message;
+    el.style.color = type === 'error' ? '#d9534f' : '#198754';
+};
+
+const bindLogout = () => {
+    const logoutLinks = Array.from(document.querySelectorAll('a'))
+        .filter((link) => (link.textContent || '').trim().toLowerCase() === 'logout');
+
+    logoutLinks.forEach((link) => {
+        link.addEventListener('click', async (event) => {
+            event.preventDefault();
+            try {
+                await fetchJSON('/api/auth/logout', {
+                    method: 'POST',
+                    body: JSON.stringify({ sessionId: localStorage.getItem('sessionId') || null }),
+                });
+            } catch (error) {
+                console.warn('Logout warning:', error.message);
+            } finally {
+                localStorage.removeItem('sessionId');
+                window.location.href = '/admin_login.html';
+            }
+        });
+    });
+};
+
+const ensureAdminSession = async () => {
+    const session = await fetchJSON('/api/auth/session-check');
+    if (session.role !== 'admin') {
+        throw new Error('Admin access required');
+    }
+    return session;
+};
+
 const loadDashboard = async () => {
     const { summary, recentOrders } = await fetchJSON(`${apiBase}/overview`);
 
@@ -282,6 +319,108 @@ const loadTickets = async () => {
     `).join('');
 };
 
+const loadInsights = async () => {
+    const [overviewData, ordersData, paymentsData, ticketsData] = await Promise.all([
+        fetchJSON(`${apiBase}/overview`),
+        fetchJSON(`${apiBase}/orders`),
+        fetchJSON(`${apiBase}/payments`),
+        fetchJSON(`${apiBase}/tickets`),
+    ]);
+
+    const orders = ordersData.orders || [];
+    const payments = paymentsData.payments || [];
+    const tickets = ticketsData.tickets || [];
+    const summary = overviewData.summary || {};
+
+    const completedOrders = orders.filter((order) => order.order_status === 'completed').length;
+    const cancelledOrders = orders.filter((order) => order.order_status === 'cancelled').length;
+    const deliveredOrders = orders.filter((order) => order.delivery_status === 'delivered').length;
+    const revenue = payments
+        .filter((payment) => payment.payment_status === 'completed')
+        .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const openTickets = tickets.filter((ticket) => ticket.resolution_status !== 'resolved').length;
+    const completionRate = orders.length ? ((completedOrders / orders.length) * 100).toFixed(1) : '0.0';
+
+    setText('insight-total-orders', summary.orders ?? orders.length);
+    setText('insight-completed-orders', completedOrders);
+    setText('insight-cancelled-orders', cancelledOrders);
+    setText('insight-delivered-orders', deliveredOrders);
+    setText('insight-open-tickets', openTickets);
+    setText('insight-completion-rate', `${completionRate}%`);
+    setText('insight-revenue', formatCurrency(revenue));
+};
+
+const toCSV = (rows, headers) => {
+    const csvRows = [headers.join(',')];
+    rows.forEach((row) => {
+        const values = headers.map((key) => {
+            const raw = row[key] ?? '';
+            const value = String(raw).replace(/"/g, '""');
+            return `"${value}"`;
+        });
+        csvRows.push(values.join(','));
+    });
+    return csvRows.join('\n');
+};
+
+const downloadCSV = (filename, content) => {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+const loadReport = async () => {
+    const [ordersData, paymentsData, ticketsData] = await Promise.all([
+        fetchJSON(`${apiBase}/orders`),
+        fetchJSON(`${apiBase}/payments`),
+        fetchJSON(`${apiBase}/tickets`),
+    ]);
+
+    const orders = ordersData.orders || [];
+    const payments = paymentsData.payments || [];
+    const tickets = ticketsData.tickets || [];
+
+    setText('report-orders-count', orders.length);
+    setText('report-payments-count', payments.length);
+    setText('report-tickets-count', tickets.length);
+
+    const exportOrdersBtn = document.getElementById('export-orders-csv');
+    if (exportOrdersBtn) {
+        exportOrdersBtn.onclick = () => {
+            const csv = toCSV(orders, ['id', 'order_type', 'order_status', 'delivery_status', 'payment_status', 'total_amount', 'created_at', 'consumer_name', 'restaurant_name', 'rider_id']);
+            downloadCSV(`admin-orders-${Date.now()}.csv`, csv);
+        };
+    }
+
+    const exportPaymentsBtn = document.getElementById('export-payments-csv');
+    if (exportPaymentsBtn) {
+        exportPaymentsBtn.onclick = () => {
+            const csv = toCSV(payments, ['id', 'order_id', 'payment_method', 'payment_status', 'amount', 'currency', 'created_at', 'consumer_name', 'restaurant_name']);
+            downloadCSV(`admin-payments-${Date.now()}.csv`, csv);
+        };
+    }
+
+    const exportTicketsBtn = document.getElementById('export-tickets-csv');
+    if (exportTicketsBtn) {
+        exportTicketsBtn.onclick = () => {
+            const csv = toCSV(tickets, ['id', 'type', 'order_id', 'consumer_name', 'issue_type', 'description', 'resolution_status', 'reported_at']);
+            downloadCSV(`admin-tickets-${Date.now()}.csv`, csv);
+        };
+    }
+};
+
+const loadSettings = async () => {
+    const session = await ensureAdminSession();
+    setText('setting-role', session.role || '--');
+    setText('setting-user-id', session.userId || '--');
+};
+
 const openPrompt = (title, options, current) => {
     const choice = window.prompt(`${title}\n${options.join(', ')}`, current || options[0]);
     if (!choice || !options.includes(choice)) return null;
@@ -381,17 +520,28 @@ const handleAction = async (event) => {
 };
 
 const initPage = () => {
+    bindLogout();
     const page = document.body.dataset.page;
+    const loaders = {
+        dashboard: loadDashboard,
+        consumers: loadConsumers,
+        stakeholders: loadStakeholders,
+        riders: loadRiders,
+        orders: loadOrders,
+        payments: loadPayments,
+        reservations: loadReservations,
+        menus: loadMenus,
+        tickets: loadTickets,
+        insights: loadInsights,
+        report: loadReport,
+        settings: loadSettings,
+    };
 
-    if (page === 'dashboard') loadDashboard();
-    if (page === 'consumers') loadConsumers();
-    if (page === 'stakeholders') loadStakeholders();
-    if (page === 'riders') loadRiders();
-    if (page === 'orders') loadOrders();
-    if (page === 'payments') loadPayments();
-    if (page === 'reservations') loadReservations();
-    if (page === 'menus') loadMenus();
-    if (page === 'tickets') loadTickets();
+    ensureAdminSession()
+        .then(() => (loaders[page] ? loaders[page]() : null))
+        .catch(() => {
+            window.location.href = '/admin_login.html';
+        });
 
     document.addEventListener('click', handleAction);
 };

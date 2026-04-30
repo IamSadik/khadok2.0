@@ -9,7 +9,7 @@
     <title>Report/Feedback</title>
 </head>
 
-<body>
+<body data-page="report">
 
     <div class="container">
         <!-- Sidebar Section -->
@@ -70,7 +70,7 @@
                     </span>
                     <h3>Settings</h3>
                 </a>
-                <a href="#">
+                <a href="../index.html">
                     <span class="material-icons-sharp">
                         logout
                     </span>
@@ -82,6 +82,20 @@
 
  <main>
         <h1>Report/Feedback</h1>
+        <p id="admin-message"></p>
+        <div class="analyse">
+            <div class="sales"><div class="status"><div class="info"><h3>Total Orders</h3><h1 id="report-orders-count">--</h1></div></div></div>
+            <div class="visits"><div class="status"><div class="info"><h3>Total Payments</h3><h1 id="report-payments-count">--</h1></div></div></div>
+            <div class="searches"><div class="status"><div class="info"><h3>Total Tickets</h3><h1 id="report-tickets-count">--</h1></div></div></div>
+        </div>
+        <div class="recent-orders">
+            <h2>Export Reports</h2>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="primary" id="export-orders-csv">Export Orders CSV</button>
+                <button class="primary" id="export-payments-csv">Export Payments CSV</button>
+                <button class="primary" id="export-tickets-csv">Export Tickets CSV</button>
+            </div>
+        </div>
     </main>
         <!-- Right Section -->
         <div class="right-section">
@@ -125,8 +139,8 @@
 
     
 
-    <script src="orders.js"></script>
     <script src="index.js"></script>
+    <script src="adminPanel.js"></script>
 </body>
 
 </html>
