@@ -46,7 +46,6 @@ app.use(session({
 // Protect routes by role first
 app.use('/api/consumer', requireLogin('consumer'));
 app.use('/api/stakeholder', requireLogin('stakeholder'));
-app.use('/api/admin', requireLogin('admin'));
 // Remove session authentication for rider routes - using simple rider_id validation instead
 // app.use('/api/rider', requireLogin('rider'));
 

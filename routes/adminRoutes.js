@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const { requireLogin } = require('../middlewares/authMiddleware');
 const {
+    loginAdmin,
+    signupAdmin,
     getOverview,
     getConsumers,
     getStakeholders,
@@ -18,6 +21,11 @@ const {
     getTickets,
     updateDeliveryIssueStatus,
 } = require("../controllers/adminController");
+
+router.post('/login', loginAdmin);
+router.post('/signup', signupAdmin);
+
+router.use(requireLogin('admin'));
 
 router.get("/overview", getOverview);
 router.get("/consumers", getConsumers);

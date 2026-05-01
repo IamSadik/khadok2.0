@@ -1,4 +1,88 @@
 const adminModel = require('../models/adminModel');
+const bcrypt = require('bcrypt');
+
+const loginAdmin = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    try {
+        const admin = await adminModel.findAdminAuthByEmail(email);
+
+        if (!admin) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
+
+        const storedPassword = String(admin.password || '');
+        const isBcryptHash = storedPassword.startsWith('$2a$') || storedPassword.startsWith('$2b$') || storedPassword.startsWith('$2y$');
+        const passwordMatches = isBcryptHash
+            ? await bcrypt.compare(password, storedPassword)
+            : password === storedPassword;
+
+        if (!passwordMatches) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
+
+        return req.session.regenerate((err) => {
+            if (err) {
+                console.error('Admin session regeneration error:', err);
+                return res.status(500).json({ success: false, message: 'Session error' });
+            }
+
+            req.session.userId = admin.user_id || admin.admin_id;
+            req.session.role = 'admin';
+
+            return res.status(200).json({
+                success: true,
+                message: 'Admin login successful',
+                sessionId: req.sessionID,
+                user: {
+                    id: admin.user_id || admin.admin_id,
+                    role: 'admin',
+                    name: admin.name,
+                    email: admin.email,
+                },
+                redirect: '/admin/index.html',
+            });
+        });
+    } catch (error) {
+        console.error('Admin login error:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+const signupAdmin = async (req, res) => {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+        return res.status(400).json({ success: false, message: 'name, email and password are required' });
+    }
+
+    try {
+        const existing = await adminModel.findAdminAuthByEmail(email);
+        if (existing) {
+            return res.status(409).json({ success: false, message: 'Admin already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const created = await adminModel.createAdminAccount({
+            name: String(name).trim(),
+            email: String(email).trim().toLowerCase(),
+            password: hashedPassword,
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: 'Admin created successfully',
+            admin: created,
+        });
+    } catch (error) {
+        console.error('Admin signup error:', error);
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
 
 const getOverview = async (req, res) => {
     try {
@@ -234,6 +318,8 @@ const updateDeliveryIssueStatus = async (req, res) => {
 };
 
 module.exports = {
+    loginAdmin,
+    signupAdmin,
     getOverview,
     getConsumers,
     getStakeholders,

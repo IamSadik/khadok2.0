@@ -1,6 +1,72 @@
 // models/adminModel.js
 const pool = require('../config/configdb');
 
+const findAdminAuthByEmail = async (email) => {
+  const usersSql = `
+    SELECT user_id, name, email, password, role
+    FROM users
+    WHERE email = $1
+    LIMIT 1
+  `;
+
+  const { rows: userRows } = await pool.query(usersSql, [email]);
+  if (userRows[0]) {
+    return { ...userRows[0], source: 'users' };
+  }
+
+  const adminSql = `
+    SELECT admin_id, name, email, password
+    FROM admin
+    WHERE email = $1
+    LIMIT 1
+  `;
+
+  const { rows: adminRows } = await pool.query(adminSql, [email]);
+  if (adminRows[0]) {
+    return { ...adminRows[0], role: 'admin', source: 'admin' };
+  }
+
+  return null;
+};
+
+const createAdminAccount = async ({ name, email, password }) => {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const userInsert = `
+      INSERT INTO users (name, email, password, role, created_at, updated_at)
+      VALUES ($1, $2, $3, 'admin', NOW(), NOW())
+      RETURNING user_id
+    `;
+    const { rows: userRows } = await client.query(userInsert, [name, email, password]);
+    const userId = userRows[0].user_id;
+
+    const adminInsert = `
+      INSERT INTO admin (name, email, password)
+      VALUES ($1, $2, $3)
+      RETURNING admin_id
+    `;
+    const { rows: adminRows } = await client.query(adminInsert, [name, email, password]);
+
+    await client.query('COMMIT');
+
+    return {
+      user_id: userId,
+      admin_id: adminRows[0].admin_id,
+      name,
+      email,
+      role: 'admin',
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const getOverview = async () => {
   const sql = `
     SELECT
@@ -259,6 +325,8 @@ const updateDeliveryIssueStatus = async (issue_id, resolution_status) => {
 };
 
 module.exports = {
+  findAdminAuthByEmail,
+  createAdminAccount,
   getOverview,
   fetchRecentOrders,
   fetchConsumers,

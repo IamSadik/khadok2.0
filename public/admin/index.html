@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin-modern.css">
     <title>Admin Dashboard</title>
 </head>
 
@@ -112,7 +113,19 @@
 
         <!-- Main Content -->
         <main>
-            <h1>Overview</h1>
+            <div class="dashboard-hero">
+                <div class="hero-copy">
+                    <div class="eyebrow">Command center</div>
+                    <h1>Operate Khadok from one place.</h1>
+                    <p>Monitor consumers, vendors, riders, orders, payments, reservations, and support activity in real time.</p>
+                </div>
+                <div class="hero-actions">
+                    <a class="btn-soft" href="adminorders.html">Manage orders</a>
+                    <a class="btn-soft" href="admininsights.html">View analytics</a>
+                    <a class="btn-soft" href="adminreport.html">Export reports</a>
+                </div>
+            </div>
+            <h1 style="margin-top:18px;">Overview</h1>
             <div class="analyse">
                 <div class="sales">
                     <div class="status">
@@ -210,100 +223,77 @@
         <!-- Right Section -->
         <div class="right-section">
             <div class="nav">
-                <button id="menu-btn">
-                    <span class="material-icons-sharp">
-                        menu
-                    </span>
+                <button id="menu-btn" aria-label="Open sidebar">
+                    <span class="material-icons-sharp">menu</span>
                 </button>
-                <div class="dark-mode">
-                    <span class="material-icons-sharp active">
-                        light_mode
-                    </span>
-                    <span class="material-icons-sharp">
-                        dark_mode
-                    </span>
+                <div class="dark-mode" aria-label="Toggle theme">
+                    <span class="material-icons-sharp active">light_mode</span>
+                    <span class="material-icons-sharp">dark_mode</span>
                 </div>
-
-                <div class="profile">
-                    <div class="info">
-                        <p>Hey, <b>Reza</b></p>
-                        <small class="text-muted">Admin</small>
-                    </div>
-                    <div class="profile-photo">
-                        <img src="images/profile-1.jpg">
-                    </div>
-                </div>
-
             </div>
             <!-- End of Nav -->
 
             <div class="user-profile">
                 <div class="logo">
-                    <img src="images/logo.png">
-                    <h2>AsmrProg</h2>
-                    <p>Fullstack Web Developer</p>
+                    <img src="images/logo.png" alt="Khadok logo">
+                    <h2>Operations hub</h2>
+                    <p>Live control for service, support, and fulfillment</p>
                 </div>
             </div>
 
             <div class="reminders">
                 <div class="header">
-                    <h2>Reminders</h2>
-                    <span class="material-icons-sharp">
-                        notifications_none
-                    </span>
+                    <h2>Quick actions</h2>
+                    <span class="material-icons-sharp">notifications_none</span>
                 </div>
 
                 <div class="notification">
                     <div class="icon">
-                        <span class="material-icons-sharp">
-                            volume_up
-                        </span>
+                        <span class="material-icons-sharp">shopping_bag</span>
                     </div>
                     <div class="content">
                         <div class="info">
-                            <h3>Workshop</h3>
-                            <small class="text_muted">
-                                08:00 AM - 12:00 PM
-                            </small>
+                            <h3>Review live orders</h3>
+                            <small class="text_muted">Update order, rider, and delivery statuses</small>
                         </div>
-                        <span class="material-icons-sharp">
-                            more_vert
-                        </span>
+                        <span class="material-icons-sharp">more_vert</span>
                     </div>
                 </div>
 
                 <div class="notification deactive">
                     <div class="icon">
-                        <span class="material-icons-sharp">
-                            edit
-                        </span>
+                        <span class="material-icons-sharp">support_agent</span>
                     </div>
                     <div class="content">
                         <div class="info">
-                            <h3>Workshop</h3>
-                            <small class="text_muted">
-                                08:00 AM - 12:00 PM
-                            </small>
+                            <h3>Resolve support tickets</h3>
+                            <small class="text_muted">Triage open issues and close resolved cases</small>
                         </div>
-                        <span class="material-icons-sharp">
-                            more_vert
-                        </span>
+                        <span class="material-icons-sharp">more_vert</span>
+                    </div>
+                </div>
+
+                <div class="notification deactive">
+                    <div class="icon">
+                        <span class="material-icons-sharp">payments</span>
+                    </div>
+                    <div class="content">
+                        <div class="info">
+                            <h3>Verify payments</h3>
+                            <small class="text_muted">Confirm pending payment records and exceptions</small>
+                        </div>
+                        <span class="material-icons-sharp">more_vert</span>
                     </div>
                 </div>
 
                 <div class="notification add-reminder">
                     <div>
-                        <span class="material-icons-sharp">
-                            add
-                        </span>
-                        <h3>Add Reminder</h3>
+                        <span class="material-icons-sharp">add</span>
+                        <h3>Open a task</h3>
                     </div>
                 </div>
-
             </div>
-
         </div>
-
 
     </div>
 
