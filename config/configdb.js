@@ -35,7 +35,7 @@ const buildPoolConfig = () => {
     };
   }
 
-  const connectionString = normalizeUrl(process.env.DATABASE_URL);
+  const connectionString = normalizeUrl(process.env.DB_POOLER_URL || process.env.DATABASE_URL);
   if (connectionString) {
     return {
       connectionString,
@@ -46,7 +46,7 @@ const buildPoolConfig = () => {
     };
   }
 
-  throw new Error('Missing valid PostgreSQL connection settings. Set DATABASE_URL or DB_HOST/DB_USER/DB_PASSWORD/DB_NAME in .env.');
+  throw new Error('Missing valid PostgreSQL connection settings. Set DATABASE_URL or DB_POOLER_URL in .env.');
 };
 
 const pool = new Pool(buildPoolConfig());
