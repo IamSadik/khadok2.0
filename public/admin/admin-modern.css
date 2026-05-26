@@ -99,14 +99,12 @@ small {
 .admin-shell {
   width: min(100%, 1680px);
   margin: 0 auto;
+  position: relative;
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "sidebar topbar"
-    "sidebar main";
+  grid-template-areas: "sidebar main";
   gap: 22px;
-  padding: 22px;
+  padding: 22px 18px 22px 24px;
 }
 
 aside {
@@ -144,12 +142,13 @@ aside .toggle .close {
   display: none;
 }
 
+
 aside .sidebar {
   height: calc(100vh - 118px);
-  padding: 16px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   overflow: auto;
   background: var(--panel);
   border: 1px solid var(--line);
@@ -157,34 +156,81 @@ aside .sidebar {
   box-shadow: var(--shadow);
 }
 
+/* Sidebar link layout: consistent height, padding and icon sizing */
 aside .sidebar a {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 52px;
-  padding: 0 16px;
+  gap: 14px;
+  min-height: 56px;
+  padding: 0 14px;
   color: var(--muted);
-  border-radius: 18px;
-  transition: all 0.2s ease;
+  border-radius: 14px;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.12s ease;
 }
 
-aside .sidebar a span {
+/* ensure icon column is fixed width and vertically centered */
+aside .sidebar a .material-icons-sharp {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
   font-size: 1.25rem;
+  color: inherit;
+}
+
+aside .sidebar a h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
 aside .sidebar a:hover {
   background: var(--accent-soft);
   color: var(--accent);
+  transform: translateY(-1px);
 }
 
 aside .sidebar a.active {
+  color: var(--muted);
+  background: transparent;
+  box-shadow: none;
+}
+
+aside .sidebar a.active::before {
+  display: none;
+}
+
+body[data-page="dashboard"] .sidebar a[href="index.html"],
+body[data-page="consumers"] .sidebar a[href="adminconsumer.html"],
+body[data-page="stakeholders"] .sidebar a[href="adminstakeholder.html"],
+body[data-page="riders"] .sidebar a[href="adminriders.html"],
+body[data-page="orders"] .sidebar a[href="adminorders.html"],
+body[data-page="payments"] .sidebar a[href="adminpayments.html"],
+body[data-page="reservations"] .sidebar a[href="adminreservations.html"],
+body[data-page="menus"] .sidebar a[href="adminmenus.html"],
+body[data-page="insights"] .sidebar a[href="admininsights.html"],
+body[data-page="tickets"] .sidebar a[href="admintickets.html"],
+body[data-page="report"] .sidebar a[href="adminreport.html"],
+body[data-page="settings"] .sidebar a[href="adminsettings.html"] {
   color: var(--accent);
   background: linear-gradient(135deg, rgba(240, 109, 58, 0.18), rgba(255, 255, 255, 0.7));
   box-shadow: inset 0 0 0 1px rgba(240, 109, 58, 0.18);
 }
 
-aside .sidebar a.active::before {
+body[data-page="dashboard"] .sidebar a[href="index.html"]::before,
+body[data-page="consumers"] .sidebar a[href="adminconsumer.html"]::before,
+body[data-page="stakeholders"] .sidebar a[href="adminstakeholder.html"]::before,
+body[data-page="riders"] .sidebar a[href="adminriders.html"]::before,
+body[data-page="orders"] .sidebar a[href="adminorders.html"]::before,
+body[data-page="payments"] .sidebar a[href="adminpayments.html"]::before,
+body[data-page="reservations"] .sidebar a[href="adminreservations.html"]::before,
+body[data-page="menus"] .sidebar a[href="adminmenus.html"]::before,
+body[data-page="insights"] .sidebar a[href="admininsights.html"]::before,
+body[data-page="tickets"] .sidebar a[href="admintickets.html"]::before,
+body[data-page="report"] .sidebar a[href="adminreport.html"]::before,
+body[data-page="settings"] .sidebar a[href="adminsettings.html"]::before {
   content: '';
   position: absolute;
   left: 0;
@@ -193,6 +239,7 @@ aside .sidebar a.active::before {
   width: 4px;
   border-radius: 999px;
   background: var(--accent);
+  display: block;
 }
 
 aside .sidebar .message-count {
@@ -200,7 +247,7 @@ aside .sidebar .message-count {
   min-width: 24px;
   height: 24px;
   padding: 0 8px;
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -212,6 +259,7 @@ aside .sidebar .message-count {
 main {
   grid-area: main;
   min-width: 0;
+  padding-top: 32px;
 }
 
 main > h1 {
@@ -241,7 +289,7 @@ main > .dashboard-subtitle {
 }
 
 .dashboard-hero {
-  margin-top: 18px;
+  margin-top: 48px;
   padding: 26px;
   display: flex;
   align-items: center;
@@ -421,36 +469,45 @@ main .recent-orders a {
   color: var(--accent);
 }
 
+
 .right-section {
-  grid-area: topbar;
-  margin-top: 0;
+  position: fixed;
+  top: 26px;
+  right: 10px;
+  z-index: 30;
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  align-items: flex-start;
+  justify-content: flex-end;
 }
 
 .right-section .nav {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 10px;
+  padding: 8px 10px;
   background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
+  
+  border-radius: 999px;
   box-shadow: var(--shadow);
 }
 
 .right-section .nav button {
   display: none;
+  border: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(31, 27, 22, 0.08);
+  color: var(--muted);
+  cursor: pointer;
 }
 
 .dark-mode {
   background: rgba(31, 27, 22, 0.08);
   display: flex;
   align-items: center;
-  width: 4.75rem;
-  height: 2.4rem;
+  width: 4.6rem;
+  height: 2.2rem;
   border-radius: 999px;
   cursor: pointer;
   overflow: hidden;
@@ -472,9 +529,94 @@ main .recent-orders a {
 }
 
 .profile,
-.user-profile,
-.reminders {
+.user-profile {
   display: none;
+}
+
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 2.2rem;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 22px rgba(240, 109, 58, 0.26);
+}
+
+.logout-btn .material-icons-sharp {
+  font-size: 1.05rem;
+}
+
+.reminders {
+  margin-top: 18px;
+  padding: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+}
+
+.reminders .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.notification {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid var(--line);
+  margin-top: 12px;
+}
+
+.notification.deactive {
+  opacity: 0.65;
+}
+
+.notification .icon,
+.notification .content > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.notification .content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.notification .content .info h3 {
+  font-size: 0.9rem;
+}
+
+.notification.add-reminder {
+  justify-content: center;
+}
+
+.notification.add-reminder > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
 }
 
 .page-grid-2 {
@@ -560,9 +702,7 @@ button.primary.action-btn,
   .container,
   .admin-shell {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      "topbar"
-      "main";
+    grid-template-areas: "main";
   }
 
   aside {
@@ -584,6 +724,17 @@ button.primary.action-btn,
 
   .page-grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .right-section {
+    top: 16px;
+    right: 10px;
+  }
+
+  .right-section .nav button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -611,4 +762,13 @@ button.primary.action-btn,
   .right-section .nav {
     flex-wrap: wrap;
   }
+
+  .right-section {
+    top: 12px;
+    right: 8px;
+  }
+}
+
+body[data-page="dashboard"] .container {
+  padding-left: 26px;
 }

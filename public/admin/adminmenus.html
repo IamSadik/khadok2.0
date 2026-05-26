@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="admin-modern.css">
     <title>Menus</title>
 </head>
@@ -13,6 +12,7 @@
 <body data-page="menus">
 
     <div class="container">
+  <!-- Sidebar Section -->
         <aside>
             <div class="toggle">
                 <div class="logo">
@@ -20,58 +20,89 @@
                     <h2>K H A D O K</h2>
                 </div>
                 <div class="close" id="close-btn">
-                    <span class="material-icons-sharp">close</span>
+                    <span class="material-icons-sharp">
+                        close
+                    </span>
                 </div>
             </div>
 
             <div class="sidebar">
                 <a href="index.html">
-                    <span class="material-icons-sharp">dashboard</span>
+                    <span class="material-icons-sharp">
+                        dashboard
+                    </span>
                     <h3>Dashboard</h3>
                 </a>
                 <a href="adminconsumer.html">
-                    <span class="material-icons-sharp">person_outline</span>
+                    <span class="material-icons-sharp">
+                        person_outline
+                    </span>
                     <h3>Consumer</h3>
                 </a>
                 <a href="adminstakeholder.html">
-                    <span class="material-icons-sharp">receipt_long</span>
+                    <span class="material-icons-sharp">
+                        receipt_long
+                    </span>
                     <h3>Stakeholder</h3>
                 </a>
                 <a href="adminriders.html">
-                    <span class="material-icons-sharp">delivery_dining</span>
+                    <span class="material-icons-sharp">
+                        delivery_dining
+                    </span>
                     <h3>Riders</h3>
                 </a>
                 <a href="adminorders.html">
-                    <span class="material-icons-sharp">shopping_bag</span>
+                    <span class="material-icons-sharp">
+                        shopping_bag
+                    </span>
                     <h3>Orders</h3>
                 </a>
                 <a href="adminpayments.html">
-                    <span class="material-icons-sharp">payments</span>
+                    <span class="material-icons-sharp">
+                        payments
+                    </span>
                     <h3>Payments</h3>
                 </a>
                 <a href="adminreservations.html">
-                    <span class="material-icons-sharp">event</span>
+                    <span class="material-icons-sharp">
+                        event
+                    </span>
                     <h3>Reservations</h3>
                 </a>
-                <a href="#" class="active">
-                    <span class="material-icons-sharp">restaurant_menu</span>
+                <a href="adminmenus.html" class="active">
+                    <span class="material-icons-sharp">
+                        restaurant_menu
+                    </span>
                     <h3>Menus</h3>
                 </a>
+                <a href="admininsights.html" >
+                    <span class="material-icons-sharp">
+                        insights
+                    </span>
+                    <h3>Insights</h3>
+                </a>
                 <a href="admintickets.html">
-                    <span class="material-icons-sharp">mail_outline</span>
+                    <span class="material-icons-sharp">
+                        mail_outline
+                    </span>
                     <h3>Tickets</h3>
+                    <span class="message-count">27</span>
+                </a>
+                <a href="adminreport.html">
+                    <span class="material-icons-sharp">
+                        report_gmailerrorred
+                    </span>
+                    <h3>Report</h3>
                 </a>
                 <a href="adminsettings.html">
-                    <span class="material-icons-sharp">settings</span>
+                    <span class="material-icons-sharp">
+                        settings
+                    </span>
                     <h3>Settings</h3>
-                </a>
-                <a href="../index.html">
-                    <span class="material-icons-sharp">logout</span>
-                    <h3>Logout</h3>
                 </a>
             </div>
         </aside>
-
+        <!-- End of Sidebar Section -->
         <main>
             <h1>Menus</h1>
             <div id="table-container">
@@ -92,7 +123,18 @@
         </main>
 
         <div class="right-section">
-           
+            <div class="nav utility-bar">
+                <button id="menu-btn" aria-label="Open sidebar">
+                    <span class="material-icons-sharp">menu</span>
+                </button>
+                <div class="dark-mode" aria-label="Toggle theme">
+                    <span class="material-icons-sharp active">light_mode</span>
+                    <span class="material-icons-sharp">dark_mode</span>
+                </div>
+                <a class="logout-btn" href="../index.html">
+                    <span class="material-icons-sharp">logout</span>
+                    <span>Logout</span>
+                </a>
             </div>
         </div>
     </div>

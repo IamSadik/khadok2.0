@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+   
     <link rel="stylesheet" href="admin-modern.css">
     <title>Report/Feedback</title>
 </head>
@@ -13,7 +13,7 @@
 <body data-page="report">
 
     <div class="container">
-        <!-- Sidebar Section -->
+    <!-- Sidebar Section -->
         <aside>
             <div class="toggle">
                 <div class="logo">
@@ -28,13 +28,13 @@
             </div>
 
             <div class="sidebar">
-                <a href="index.html" >
+                <a href="index.html">
                     <span class="material-icons-sharp">
                         dashboard
                     </span>
                     <h3>Dashboard</h3>
                 </a>
-                <a href="adminconsumer.html" >
+                <a href="adminconsumer.html">
                     <span class="material-icons-sharp">
                         person_outline
                     </span>
@@ -45,6 +45,36 @@
                         receipt_long
                     </span>
                     <h3>Stakeholder</h3>
+                </a>
+                <a href="adminriders.html">
+                    <span class="material-icons-sharp">
+                        delivery_dining
+                    </span>
+                    <h3>Riders</h3>
+                </a>
+                <a href="adminorders.html">
+                    <span class="material-icons-sharp">
+                        shopping_bag
+                    </span>
+                    <h3>Orders</h3>
+                </a>
+                <a href="adminpayments.html">
+                    <span class="material-icons-sharp">
+                        payments
+                    </span>
+                    <h3>Payments</h3>
+                </a>
+                <a href="adminreservations.html">
+                    <span class="material-icons-sharp">
+                        event
+                    </span>
+                    <h3>Reservations</h3>
+                </a>
+                <a href="adminmenus.html">
+                    <span class="material-icons-sharp">
+                        restaurant_menu
+                    </span>
+                    <h3>Menus</h3>
                 </a>
                 <a href="admininsights.html" >
                     <span class="material-icons-sharp">
@@ -59,7 +89,7 @@
                     <h3>Tickets</h3>
                     <span class="message-count">27</span>
                 </a>
-                <a href="#" class="active">
+                <a href="adminreport.html" class="active">
                     <span class="material-icons-sharp">
                         report_gmailerrorred
                     </span>
@@ -70,12 +100,6 @@
                         settings
                     </span>
                     <h3>Settings</h3>
-                </a>
-                <a href="../index.html">
-                    <span class="material-icons-sharp">
-                        logout
-                    </span>
-                    <h3>Logout</h3>
                 </a>
             </div>
         </aside>
@@ -98,24 +122,24 @@
             </div>
         </div>
     </main>
-        <!-- Right Section -->
         <div class="right-section">
-            
-
+            <div class="nav utility-bar">
+                <button id="menu-btn" aria-label="Open sidebar">
+                    <span class="material-icons-sharp">menu</span>
+                </button>
+                <div class="dark-mode" aria-label="Toggle theme">
+                    <span class="material-icons-sharp active">light_mode</span>
+                    <span class="material-icons-sharp">dark_mode</span>
+                </div>
+                <a class="logout-btn" href="../index.html">
+                    <span class="material-icons-sharp">logout</span>
+                    <span>Logout</span>
+                </a>
             </div>
-            <!-- End of Nav -->
-
-           
-
-
-
-
-            </div>
-
         </div>
 
+    </div>
 
-    
 
     <script src="index.js"></script>
     <script src="adminPanel.js"></script>

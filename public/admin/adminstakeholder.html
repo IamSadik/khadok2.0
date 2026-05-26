@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    
     <link rel="stylesheet" href="admin-modern.css">
     <title>Stakeholder</title>
 </head>
@@ -13,7 +13,7 @@
 <body data-page="stakeholders">
 
     <div class="container">
-        <!-- Sidebar Section -->
+         <!-- Sidebar Section -->
         <aside>
             <div class="toggle">
                 <div class="logo">
@@ -28,19 +28,19 @@
             </div>
 
             <div class="sidebar">
-                <a href="index.html" >
+                <a href="index.html">
                     <span class="material-icons-sharp">
                         dashboard
                     </span>
                     <h3>Dashboard</h3>
                 </a>
-                <a href="adminconsumer.html" >
+                <a href="adminconsumer.html">
                     <span class="material-icons-sharp">
                         person_outline
                     </span>
                     <h3>Consumer</h3>
                 </a>
-                <a href="#" class="active">
+                <a href="adminstakeholder.html" class="active">
                     <span class="material-icons-sharp">
                         receipt_long
                     </span>
@@ -101,12 +101,6 @@
                     </span>
                     <h3>Settings</h3>
                 </a>
-                <a href="../index.html">
-                    <span class="material-icons-sharp">
-                        logout
-                    </span>
-                    <h3>Logout</h3>
-                </a>
             </div>
         </aside>
         <!-- End of Sidebar Section -->
@@ -132,23 +126,24 @@
                 </table>
             </div>
         </main>
-        <!-- Right Section -->
         <div class="right-section">
-
-
+            <div class="nav utility-bar">
+                <button id="menu-btn" aria-label="Open sidebar">
+                    <span class="material-icons-sharp">menu</span>
+                </button>
+                <div class="dark-mode" aria-label="Toggle theme">
+                    <span class="material-icons-sharp active">light_mode</span>
+                    <span class="material-icons-sharp">dark_mode</span>
+                </div>
+                <a class="logout-btn" href="../index.html">
+                    <span class="material-icons-sharp">logout</span>
+                    <span>Logout</span>
+                </a>
             </div>
-            <!-- End of Nav -->
-           
-
-
-
-
-            </div>
-
         </div>
 
+    </div>
 
-    
 
     <script src="index.js"></script>
     <script src="adminPanel.js"></script>

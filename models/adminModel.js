@@ -324,6 +324,249 @@ const updateDeliveryIssueStatus = async (issue_id, resolution_status) => {
   return rowCount === 1;
 };
 
+const fetchOrderItems = async (orderId) => {
+  const sql = `
+    SELECT
+      oi.id,
+      oi.order_id,
+      oi.menu_id,
+      oi.item_name,
+      oi.item_price,
+      oi.category,
+      oi.quantity,
+      oi.subtotal,
+      oi.created_at
+    FROM order_items oi
+    WHERE oi.order_id = $1
+    ORDER BY oi.id ASC
+  `;
+  const { rows } = await pool.query(sql, [orderId]);
+  return rows;
+};
+
+const fetchCuisines = async () => {
+  const { rows } = await pool.query('SELECT id, name FROM cuisine ORDER BY name ASC');
+  return rows;
+};
+
+const createCuisine = async (name) => {
+  const { rows } = await pool.query(
+    'INSERT INTO cuisine (name) VALUES ($1) RETURNING id, name',
+    [name]
+  );
+  return rows[0];
+};
+
+const updateCuisine = async (id, name) => {
+  const { rows } = await pool.query(
+    'UPDATE cuisine SET name = $1 WHERE id = $2 RETURNING id, name',
+    [name, id]
+  );
+  return rows[0] || null;
+};
+
+const deleteCuisine = async (id) => {
+  const { rowCount } = await pool.query('DELETE FROM cuisine WHERE id = $1', [id]);
+  return rowCount === 1;
+};
+
+const fetchReviews = async () => {
+  const sql = `
+    SELECT
+      r.review_id,
+      r.order_id,
+      r.rating,
+      r.review_text,
+      r.review_date,
+      r.review_pic,
+      c.name AS consumer_name,
+      s.restaurant_name
+    FROM review r
+    LEFT JOIN consumer c ON r.consumer_id = c.consumer_id
+    LEFT JOIN stakeholder s ON r.stakeholder_id = s.stakeholder_id
+    ORDER BY r.review_date DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const deleteReview = async (reviewId) => {
+  const { rowCount } = await pool.query('DELETE FROM review WHERE review_id = $1', [reviewId]);
+  return rowCount === 1;
+};
+
+const fetchActiveDeliveries = async () => {
+  const { rows } = await pool.query('SELECT * FROM active_deliveries ORDER BY created_at DESC');
+  return rows;
+};
+
+const fetchDeliveryTracking = async (orderId) => {
+  const sql = `
+    SELECT
+      tracking_id,
+      order_id,
+      rider_id,
+      status,
+      latitude,
+      longitude,
+      notes,
+      image_proof,
+      created_at
+    FROM delivery_tracking
+    WHERE order_id = $1
+    ORDER BY created_at DESC
+  `;
+  const { rows } = await pool.query(sql, [orderId]);
+  return rows;
+};
+
+const fetchAvailableRiders = async () => {
+  const { rows } = await pool.query('SELECT * FROM available_riders ORDER BY last_location_update DESC');
+  return rows;
+};
+
+const fetchRiderPerformance = async () => {
+  const { rows } = await pool.query('SELECT * FROM rider_performance ORDER BY total_deliveries DESC');
+  return rows;
+};
+
+const fetchRiderEarnings = async () => {
+  const sql = `
+    SELECT
+      e.earning_id,
+      e.rider_id,
+      r.name AS rider_name,
+      e.order_id,
+      e.delivery_fee,
+      e.rider_commission,
+      e.platform_fee,
+      e.tip_amount,
+      e.bonus_amount,
+      e.net_earning,
+      e.payment_status,
+      e.payment_method,
+      e.paid_at,
+      e.delivery_distance,
+      e.delivery_time,
+      e.created_at
+    FROM rider_earnings e
+    LEFT JOIN rider r ON e.rider_id = r.rider_id
+    ORDER BY e.created_at DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const updateRiderEarningStatus = async (earningId, paymentStatus) => {
+  const sql = `
+    UPDATE rider_earnings
+    SET payment_status = $1,
+        paid_at = CASE WHEN $1 = 'paid' THEN NOW() ELSE NULL END
+    WHERE earning_id = $2
+  `;
+  const { rowCount } = await pool.query(sql, [paymentStatus, earningId]);
+  return rowCount === 1;
+};
+
+const fetchRiderAvailability = async () => {
+  const sql = `
+    SELECT
+      availability_id,
+      rider_id,
+      date,
+      start_time,
+      end_time,
+      is_available,
+      reason,
+      created_at,
+      updated_at
+    FROM rider_availability
+    ORDER BY date DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const fetchPickups = async () => {
+  const sql = `
+    SELECT
+      p.pickup_id,
+      p.consumer_id,
+      p.stakeholder_id,
+      p.pickup_date,
+      p.status,
+      p.total_amount,
+      c.name AS consumer_name,
+      s.restaurant_name
+    FROM pickup p
+    LEFT JOIN consumer c ON p.consumer_id = c.consumer_id
+    LEFT JOIN stakeholder s ON p.stakeholder_id = s.stakeholder_id
+    ORDER BY p.pickup_date DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const fetchInteriors = async () => {
+  const sql = `
+    SELECT
+      interior_id,
+      stakeholder_id,
+      table_type,
+      quantity,
+      bookable,
+      picture
+    FROM interior
+    ORDER BY interior_id DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const fetchInteriorPics = async () => {
+  const sql = `
+    SELECT
+      pic_id,
+      stakeholder_id,
+      pic
+    FROM interior_pic
+    ORDER BY pic_id DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const fetchRestaurantInteriors = async () => {
+  const sql = `
+    SELECT
+      id,
+      stakeholder_id,
+      name,
+      floor_length,
+      floor_width,
+      floor_height,
+      layout,
+      is_deleted,
+      created_at,
+      updated_at
+    FROM restaurant_interiors
+    WHERE is_deleted = 0
+    ORDER BY created_at DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
+const fetchUsers = async () => {
+  const sql = `
+    SELECT user_id, name, email, role, created_at, updated_at
+    FROM users
+    ORDER BY user_id DESC
+  `;
+  const { rows } = await pool.query(sql);
+  return rows;
+};
+
 module.exports = {
   findAdminAuthByEmail,
   createAdminAccount,
@@ -344,4 +587,23 @@ module.exports = {
   fetchMenus,
   fetchTickets,
   updateDeliveryIssueStatus,
+  fetchOrderItems,
+  fetchCuisines,
+  createCuisine,
+  updateCuisine,
+  deleteCuisine,
+  fetchReviews,
+  deleteReview,
+  fetchActiveDeliveries,
+  fetchDeliveryTracking,
+  fetchAvailableRiders,
+  fetchRiderPerformance,
+  fetchRiderEarnings,
+  updateRiderEarningStatus,
+  fetchRiderAvailability,
+  fetchPickups,
+  fetchInteriors,
+  fetchInteriorPics,
+  fetchRestaurantInteriors,
+  fetchUsers,
 };

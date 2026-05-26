@@ -317,6 +317,229 @@ const updateDeliveryIssueStatus = async (req, res) => {
     }
 };
 
+const getOrderItems = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const items = await adminModel.fetchOrderItems(id);
+        res.json({ items });
+    } catch (error) {
+        console.error('Error fetching order items:', error);
+        res.status(500).json({ error: 'Failed to fetch order items' });
+    }
+};
+
+const getCuisines = async (req, res) => {
+    try {
+        const cuisines = await adminModel.fetchCuisines();
+        res.json({ cuisines });
+    } catch (error) {
+        console.error('Error fetching cuisines:', error);
+        res.status(500).json({ error: 'Failed to fetch cuisines' });
+    }
+};
+
+const createCuisine = async (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).json({ error: 'name is required' });
+    }
+
+    try {
+        const cuisine = await adminModel.createCuisine(String(name).trim());
+        res.status(201).json({ cuisine });
+    } catch (error) {
+        console.error('Error creating cuisine:', error);
+        res.status(500).json({ error: 'Failed to create cuisine' });
+    }
+};
+
+const updateCuisine = async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).json({ error: 'name is required' });
+    }
+
+    try {
+        const cuisine = await adminModel.updateCuisine(id, String(name).trim());
+        if (!cuisine) {
+            return res.status(404).json({ error: 'Cuisine not found' });
+        }
+        res.json({ cuisine });
+    } catch (error) {
+        console.error('Error updating cuisine:', error);
+        res.status(500).json({ error: 'Failed to update cuisine' });
+    }
+};
+
+const deleteCuisine = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deleted = await adminModel.deleteCuisine(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Cuisine not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting cuisine:', error);
+        res.status(500).json({ error: 'Failed to delete cuisine' });
+    }
+};
+
+const getReviews = async (req, res) => {
+    try {
+        const reviews = await adminModel.fetchReviews();
+        res.json({ reviews });
+    } catch (error) {
+        console.error('Error fetching reviews:', error);
+        res.status(500).json({ error: 'Failed to fetch reviews' });
+    }
+};
+
+const deleteReview = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const deleted = await adminModel.deleteReview(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting review:', error);
+        res.status(500).json({ error: 'Failed to delete review' });
+    }
+};
+
+const getActiveDeliveries = async (req, res) => {
+    try {
+        const deliveries = await adminModel.fetchActiveDeliveries();
+        res.json({ deliveries });
+    } catch (error) {
+        console.error('Error fetching active deliveries:', error);
+        res.status(500).json({ error: 'Failed to fetch active deliveries' });
+    }
+};
+
+const getDeliveryTracking = async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const tracking = await adminModel.fetchDeliveryTracking(orderId);
+        res.json({ tracking });
+    } catch (error) {
+        console.error('Error fetching delivery tracking:', error);
+        res.status(500).json({ error: 'Failed to fetch delivery tracking' });
+    }
+};
+
+const getAvailableRiders = async (req, res) => {
+    try {
+        const riders = await adminModel.fetchAvailableRiders();
+        res.json({ riders });
+    } catch (error) {
+        console.error('Error fetching available riders:', error);
+        res.status(500).json({ error: 'Failed to fetch available riders' });
+    }
+};
+
+const getRiderPerformance = async (req, res) => {
+    try {
+        const performance = await adminModel.fetchRiderPerformance();
+        res.json({ performance });
+    } catch (error) {
+        console.error('Error fetching rider performance:', error);
+        res.status(500).json({ error: 'Failed to fetch rider performance' });
+    }
+};
+
+const getRiderEarnings = async (req, res) => {
+    try {
+        const earnings = await adminModel.fetchRiderEarnings();
+        res.json({ earnings });
+    } catch (error) {
+        console.error('Error fetching rider earnings:', error);
+        res.status(500).json({ error: 'Failed to fetch rider earnings' });
+    }
+};
+
+const updateRiderEarningStatus = async (req, res) => {
+    const { id } = req.params;
+    const { payment_status } = req.body;
+    if (!payment_status) {
+        return res.status(400).json({ error: 'payment_status is required' });
+    }
+
+    try {
+        const updated = await adminModel.updateRiderEarningStatus(id, payment_status);
+        if (!updated) {
+            return res.status(404).json({ error: 'Earning not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating rider earnings:', error);
+        res.status(500).json({ error: 'Failed to update rider earnings' });
+    }
+};
+
+const getRiderAvailability = async (req, res) => {
+    try {
+        const availability = await adminModel.fetchRiderAvailability();
+        res.json({ availability });
+    } catch (error) {
+        console.error('Error fetching rider availability:', error);
+        res.status(500).json({ error: 'Failed to fetch rider availability' });
+    }
+};
+
+const getPickups = async (req, res) => {
+    try {
+        const pickups = await adminModel.fetchPickups();
+        res.json({ pickups });
+    } catch (error) {
+        console.error('Error fetching pickups:', error);
+        res.status(500).json({ error: 'Failed to fetch pickups' });
+    }
+};
+
+const getInteriors = async (req, res) => {
+    try {
+        const interiors = await adminModel.fetchInteriors();
+        res.json({ interiors });
+    } catch (error) {
+        console.error('Error fetching interiors:', error);
+        res.status(500).json({ error: 'Failed to fetch interiors' });
+    }
+};
+
+const getInteriorPics = async (req, res) => {
+    try {
+        const pictures = await adminModel.fetchInteriorPics();
+        res.json({ pictures });
+    } catch (error) {
+        console.error('Error fetching interior pics:', error);
+        res.status(500).json({ error: 'Failed to fetch interior pics' });
+    }
+};
+
+const getRestaurantInteriors = async (req, res) => {
+    try {
+        const interiors = await adminModel.fetchRestaurantInteriors();
+        res.json({ interiors });
+    } catch (error) {
+        console.error('Error fetching restaurant interiors:', error);
+        res.status(500).json({ error: 'Failed to fetch restaurant interiors' });
+    }
+};
+
+const getUsers = async (req, res) => {
+    try {
+        const users = await adminModel.fetchUsers();
+        res.json({ users });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+};
+
 module.exports = {
     loginAdmin,
     signupAdmin,
@@ -336,6 +559,25 @@ module.exports = {
     getMenus,
     getTickets,
     updateDeliveryIssueStatus,
+    getOrderItems,
+    getCuisines,
+    createCuisine,
+    updateCuisine,
+    deleteCuisine,
+    getReviews,
+    deleteReview,
+    getActiveDeliveries,
+    getDeliveryTracking,
+    getAvailableRiders,
+    getRiderPerformance,
+    getRiderEarnings,
+    updateRiderEarningStatus,
+    getRiderAvailability,
+    getPickups,
+    getInteriors,
+    getInteriorPics,
+    getRestaurantInteriors,
+    getUsers,
 };
 
 
