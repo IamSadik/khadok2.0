@@ -1335,7 +1335,7 @@ body {
 }
 
 #clear-location-btn {
-    right: 10px;
+    top:18px;
     background: var(--danger-color);
     color: var(--white);
     width: 30px;

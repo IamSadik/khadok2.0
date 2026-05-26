@@ -125,7 +125,13 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadCuisines() {
     try {
       const res = await fetch('/api/menu/cuisines');
-      const { cuisines } = await res.json();
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = await res.json();
+      const cuisines = Array.isArray(body?.cuisines)
+        ? body.cuisines
+        : Array.isArray(body?.cuisines?.rows)
+          ? body.cuisines.rows
+          : [];
 
       const container = document.querySelector('.checkbox-group');
       if (!container) return;

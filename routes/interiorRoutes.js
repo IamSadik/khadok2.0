@@ -11,7 +11,7 @@ const uploadInteriorImageMiddleware = (req, res, next) => {
 		if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
 			return res.status(400).json({
 				success: false,
-				message: 'Image is too large. Maximum allowed size is 1 MB.',
+				message: 'Image is too large. Maximum allowed size is 10 MB.',
 			});
 		}
 

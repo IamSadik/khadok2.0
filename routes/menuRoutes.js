@@ -9,13 +9,13 @@ router.post('/add-menu-item', upload.single('itemPic'), menuController.addMenuIt
 
 // GET /api/cuisines
 router.get('/cuisines', (req, res) => {
-    db.query('SELECT id, name FROM cuisine', (err, results) => {
+    db.query('SELECT id, name FROM cuisine ORDER BY name', (err, results) => {
       if (err) {
         console.error('DB Error:', err);
         return res.status(500).json({ message: 'Failed to fetch cuisines' });
       }
-  
-      res.json({ cuisines: results });
+
+      res.json({ cuisines: results.rows || [] });
     });
   });
 

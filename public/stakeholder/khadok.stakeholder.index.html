@@ -562,15 +562,15 @@
                     <label>Service Types:</label>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <label>
-                            <input type="checkbox" name="stake-type" value="delivery" />
+                            <input type="checkbox" name="stake-type" value="delivery" required />
                             Delivery
                         </label>
                         <label>
-                            <input type="checkbox" name="stake-type" value="pickup" />
+                            <input type="checkbox" name="stake-type" value="pickup" required />
                             Pickup
                         </label>
                         <label>
-                            <input type="checkbox" name="stake-type" value="dine-in" />
+                            <input type="checkbox" name="stake-type" value="dine-in" required />
                             Dine-In
                         </label>
                     </div>
@@ -745,11 +745,12 @@
                 }
             })();
 
-            // reverse geocode helper
+            // reverse geocode helper (via backend proxy to avoid CORS + rate limiting)
             async function reverseGeocode(lat, lon) {
-                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16`;
+                const url = `/api/map/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=16&addressdetails=1&acceptLanguage=en`;
                 try {
                     const resp = await fetch(url);
+                    if (!resp.ok) return "";
                     const data = await resp.json();
                     return data.display_name || "";
                 } catch {
@@ -757,11 +758,21 @@
                 }
             }
 
-            // update input when map moves
-            async function updateInputWithCenter() {
+            // update input when map moves (debounced)
+            let reverseGeocodeTimer = null;
+            let lastReverseKey = "";
+            function updateInputWithCenter() {
                 if (!map) return;
                 const c = map.getCenter();
-                locationInput.value = await reverseGeocode(c.lat, c.lng);
+                const key = `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`;
+                if (key === lastReverseKey) return;
+                lastReverseKey = key;
+
+                if (reverseGeocodeTimer) clearTimeout(reverseGeocodeTimer);
+                reverseGeocodeTimer = setTimeout(async () => {
+                    const address = await reverseGeocode(c.lat, c.lng);
+                    if (address) locationInput.value = address;
+                }, 500);
             }
 
             // Locate me button
@@ -784,11 +795,14 @@
                         map.setView([latitude, longitude], 16);
                     }
                     centerMarker.classList.remove("hidden");
+
+                    // Prevent duplicate request via moveend/zoomend
+                    lastReverseKey = `${Number(latitude).toFixed(5)},${Number(longitude).toFixed(5)}`;
                     locationInput.value = await reverseGeocode(latitude, longitude);
                 }, () => alert("Please allow location access."));
             });
 
-            // Clear location
+            // Clear location 
             clearBtn.addEventListener("click", () => {
                 locationInput.value = "";
                 suggestionsList.innerHTML = "";
@@ -796,7 +810,7 @@
                 centerMarker.classList.add("hidden");
             });
 
-            // Autocomplete
+            // Autocomplete (via backend proxy to avoid CORS)
             locationInput.addEventListener("input", () => {
                 const q = locationInput.value.trim();
                 clearTimeout(debounceTimeout);
@@ -806,9 +820,10 @@
                     return;
                 }
                 debounceTimeout = setTimeout(async () => {
-                    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=bd&q=${encodeURIComponent(q)}`;
                     try {
+                        const url = `/api/map/search?format=json&limit=5&countrycodes=bd&acceptLanguage=en&q=${encodeURIComponent(q)}`;
                         const resp = await fetch(url);
+                        if (!resp.ok) throw new Error(`Search failed: ${resp.status}`);
                         const data = await resp.json();
                         suggestionsList.innerHTML = data.length
                             ? data.map(p =>

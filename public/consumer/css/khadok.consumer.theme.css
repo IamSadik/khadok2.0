@@ -38,7 +38,7 @@
   /* Gradients */
   --k-gradient-primary: linear-gradient(135deg, #101812 0%, #1e3a22 100%);
   --k-gradient-accent:  linear-gradient(135deg, #00b894 0%, #00d2a0 100%);
-  --k-gradient-hero:    linear-gradient(135deg, #101812 0%, #1b2e1d 60%, #2a4a2e 100%);
+  --k-gradient-hero:    linear-gradient(135deg, #1b2c20 0%, #1b2e1d 60%, #2a4a2e 100%);
 
   /* Radius */
   --k-radius-sm:  6px;

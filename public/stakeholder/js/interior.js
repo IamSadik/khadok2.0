@@ -1033,7 +1033,7 @@ document.getElementById("imageUploadForm").addEventListener("submit", async (e) 
   e.preventDefault();
   const fileInput = document.getElementById("interiorImage");
   const formData = new FormData();
-  const maxImageSizeBytes = 1 * 1024 * 1024;
+  const maxImageSizeBytes = 10 * 1024 * 1024;
   
   if (!fileInput.files[0]) {
     alert("Please select an image file.");
@@ -1041,7 +1041,7 @@ document.getElementById("imageUploadForm").addEventListener("submit", async (e) 
   }
 
   if (fileInput.files[0].size > maxImageSizeBytes) {
-    alert("Image is too large. Please upload an image smaller than or equal to 1 MB.");
+    alert("Image is too large. Please upload an image smaller than or equal to 10 MB.");
     return;
   }
   
