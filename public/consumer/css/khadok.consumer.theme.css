@@ -1,0 +1,781 @@
+/* ============================================================================
+   KHADOK CONSUMER — UNIFIED DESIGN SYSTEM
+   Single source of truth for colors, typography, and spacing
+   Import this on every consumer page AFTER all other CSS files
+   ============================================================================ */
+
+/* ── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Brand Colors */
+  --k-primary:        #101812;   /* deep forest — sidebar, hero, CTAs        */
+  --k-primary-hover:  #1e2e20;   /* slightly lighter on hover                */
+  --k-accent:         #00b894;   /* teal green — buttons, active states       */
+  --k-accent-hover:   #019874;   /* darker teal on hover                     */
+  --k-accent-light:   #00d2a0;   /* lighter teal — gradients, highlights      */
+  --k-accent-subtle:  rgba(0, 184, 148, 0.12); /* very light tint              */
+
+  /* Semantic / Status */
+  --k-success:        #00b894;   /* same as accent for brand coherence        */
+  --k-warning:        #f59e0b;
+  --k-danger:         #ef4444;
+  --k-info:           #00b8d9;
+
+  /* Neutrals */
+  --k-white:          #ffffff;
+  --k-bg:             #f5f7f5;   /* warm-green tinted page background         */
+  --k-bg-card:        #ffffff;
+  --k-border:         #e2e8e4;
+  --k-text-dark:      #101812;
+  --k-text-body:      #374640;
+  --k-text-muted:     #6b7a70;
+  --k-text-light:     #9aada3;
+
+  /* Shadows */
+  --k-shadow-sm:  0 1px 3px rgba(16, 24, 18, 0.08);
+  --k-shadow-md:  0 4px 12px rgba(16, 24, 18, 0.12);
+  --k-shadow-lg:  0 10px 30px rgba(16, 24, 18, 0.16);
+
+  /* Gradients */
+  --k-gradient-primary: linear-gradient(135deg, #101812 0%, #1e3a22 100%);
+  --k-gradient-accent:  linear-gradient(135deg, #00b894 0%, #00d2a0 100%);
+  --k-gradient-hero:    linear-gradient(135deg, #101812 0%, #1b2e1d 60%, #2a4a2e 100%);
+
+  /* Radius */
+  --k-radius-sm:  6px;
+  --k-radius-md:  10px;
+  --k-radius-lg:  16px;
+  --k-radius-xl:  24px;
+
+  /* Typography — Poppins is already loaded via sidebar CSS */
+  --k-font-body:    'Poppins', 'Segoe UI', sans-serif;
+  --k-font-display: 'Poppins', 'Segoe UI', sans-serif;
+}
+
+/* ── Base resets / global overrides ─────────────────────────────────────── */
+body {
+  font-family: var(--k-font-body);
+  background-color: var(--k-bg);
+  color: var(--k-text-body);
+}
+
+/* ── Page backgrounds ────────────────────────────────────────────────────── */
+.home_content,
+.main-content {
+  background-color: var(--k-bg) !important;
+}
+
+/* ── Sidebar — already correct (#101812), just reinforce ─────────────────── */
+.sidebar {
+  background: var(--k-primary) !important;
+}
+
+/* ── Buttons — global accent ─────────────────────────────────────────────── */
+
+/* Primary / confirm buttons */
+.btn-confirm,
+.checkout-btn,
+.checkout-button,
+.btn-primary,
+.nav-btn,
+.apply-promo-btn,
+.btn.primary,
+.filter-apply-btn,
+.btn-new-reservation,
+.refresh-btn,
+.widget-track-btn,
+.notification-btn.primary,
+.explore-btn,
+.browse-menu-btn {
+  background: var(--k-gradient-accent) !important;
+  color: var(--k-white) !important;
+  border-color: var(--k-accent) !important;
+}
+
+.btn-confirm:hover,
+.checkout-btn:hover,
+.checkout-button:hover,
+.btn-primary:hover,
+.nav-btn:hover,
+.apply-promo-btn:hover,
+.btn.primary:hover,
+.filter-apply-btn:hover,
+.btn-new-reservation:hover,
+.refresh-btn:hover,
+.widget-track-btn:hover,
+.notification-btn.primary:hover,
+.explore-btn:hover,
+.browse-menu-btn:hover {
+  background: linear-gradient(135deg, var(--k-accent-hover) 0%, var(--k-accent) 100%) !important;
+  box-shadow: 0 6px 20px rgba(0, 184, 148, 0.35) !important;
+}
+
+/* Ghost / secondary buttons */
+.btn.ghost,
+.filter-clear-btn,
+.btn-secondary,
+.btn-cancel,
+.notification-btn.secondary {
+  border-color: var(--k-accent) !important;
+  color: var(--k-accent) !important;
+  background: transparent !important;
+}
+
+.btn.ghost:hover,
+.filter-clear-btn:hover {
+  background: var(--k-accent-subtle) !important;
+}
+
+/* Add-to-cart, tab active, menu active */
+.add-to-cart-btn,
+.tab-btn.active,
+.menu-tab-btn.active,
+.order-type-btn.active,
+.order-type-tab.active {
+  background: var(--k-gradient-accent) !important;
+  color: var(--k-white) !important;
+  border-color: var(--k-accent) !important;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3) !important;
+}
+
+.add-to-cart-btn:hover {
+  background: linear-gradient(135deg, var(--k-accent-hover) 0%, var(--k-accent) 100%) !important;
+}
+
+/* Quantity buttons */
+.qty-btn,
+.quantity-btn:hover {
+  background: var(--k-gradient-accent) !important;
+  color: var(--k-white) !important;
+  border-color: var(--k-accent) !important;
+}
+
+/* ── Accent text & icons ──────────────────────────────────────────────────── */
+.menu-card .price,
+.cart-item-price,
+.order-item-price,
+.item-price,
+.total-value,
+.total-amount,
+.restaurant-subtotal span,
+.stat-tile .stat-value,
+.order-amount,
+.order-status,
+.detail-value,
+.summary-note,
+.widget-order-id span {
+  color: var(--k-accent) !important;
+}
+
+/* Links */
+a {
+  color: var(--k-accent);
+}
+a:hover {
+  color: var(--k-accent-hover);
+}
+
+/* ── Input focus states ───────────────────────────────────────────────────── */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--k-accent) !important;
+  box-shadow: 0 0 0 3px rgba(0, 184, 148, 0.15) !important;
+  outline: none !important;
+}
+
+/* ── Cards & panels ───────────────────────────────────────────────────────── */
+.menu-card,
+.restaurant-card,
+.order-card,
+.reservation-card,
+.stat-card,
+.stat-tile,
+.summary-card,
+.promo-card,
+.spotlight-card,
+.card,
+.info-card {
+  background: var(--k-bg-card) !important;
+  border-color: var(--k-border) !important;
+  box-shadow: var(--k-shadow-sm) !important;
+}
+
+.menu-card:hover,
+.restaurant-card:hover,
+.order-card:hover,
+.reservation-card:hover {
+  box-shadow: var(--k-shadow-md) !important;
+  border-color: var(--k-accent) !important;
+}
+
+/* ── Section headers with left accent ────────────────────────────────────── */
+.menu-section h2,
+.section h2,
+.reservation-section h2 {
+  border-left-color: var(--k-accent) !important;
+  color: var(--k-text-dark) !important;
+}
+
+/* Menu section headings */
+.menu-section h3 {
+  border-bottom-color: var(--k-accent) !important;
+}
+
+/* ── Dashboard hero / navbar ─────────────────────────────────────────────── */
+.hero {
+  background: var(--k-gradient-hero) !important;
+}
+
+.search-bar .search-btn {
+  background: var(--k-accent) !important;
+  color: var(--k-white) !important;
+}
+
+.search-bar .search-btn:hover {
+  background: var(--k-accent-hover) !important;
+}
+
+.nav-center .location {
+  background: rgba(0, 184, 148, 0.1) !important;
+  border: 1px solid rgba(0, 184, 148, 0.2) !important;
+  color: var(--k-text-dark) !important;
+}
+
+/* ── Cart icon (floating) ────────────────────────────────────────────────── */
+.cart-icon {
+  background: var(--k-accent) !important;
+  box-shadow: 0 4px 16px rgba(0, 184, 148, 0.4) !important;
+}
+
+.cart-icon:hover {
+  background: var(--k-accent-hover) !important;
+}
+
+/* ── Cart popup header ───────────────────────────────────────────────────── */
+.cart-popup h3 {
+  color: var(--k-text-dark) !important;
+  border-bottom-color: var(--k-border) !important;
+}
+
+/* ── Cart summary total row ──────────────────────────────────────────────── */
+.summary-row.total-row,
+.total-row {
+  border-top-color: var(--k-accent) !important;
+}
+
+/* ── Payment modal header ────────────────────────────────────────────────── */
+.payment-modal-header,
+.menu-modal-header {
+  background: var(--k-gradient-accent) !important;
+  color: var(--k-white) !important;
+}
+
+.payment-modal-header h2,
+.menu-modal-header h2 {
+  color: var(--k-white) !important;
+}
+
+/* ── Order tracking widget ───────────────────────────────────────────────── */
+.order-tracking-widget .widget-header,
+#order-tracking-widget .widget-header {
+  background: var(--k-gradient-accent) !important;
+}
+
+.widget-track-btn {
+  background: var(--k-gradient-accent) !important;
+  box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3) !important;
+}
+
+/* Progress steps completed */
+.progress-step.completed i {
+  background: var(--k-gradient-accent) !important;
+  box-shadow: 0 2px 8px rgba(0, 184, 148, 0.4) !important;
+}
+
+.progress-step.completed span {
+  color: var(--k-accent) !important;
+}
+
+/* Active step border */
+.progress-step.active {
+  border-left-color: var(--k-accent) !important;
+  background: rgba(0, 184, 148, 0.08) !important;
+}
+
+/* ── Delivery notification ───────────────────────────────────────────────── */
+.delivery-notification {
+  background: var(--k-gradient-accent) !important;
+}
+
+.notification-header {
+  background: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Order tabs (orders page) ────────────────────────────────────────────── */
+.tab-btn.active {
+  background: var(--k-gradient-accent) !important;
+  border-color: var(--k-accent) !important;
+  color: var(--k-white) !important;
+}
+
+/* Stat icons — keep semantic colors but accent ones use brand */
+.stat-icon.total {
+  background: var(--k-gradient-accent) !important;
+}
+
+/* ── Page headers ─────────────────────────────────────────────────────────── */
+.page-header {
+  border-left-color: var(--k-accent) !important;
+  background: var(--k-bg-card) !important;
+  box-shadow: var(--k-shadow-sm) !important;
+}
+
+.header-content h1 i,
+.header-left h1 i,
+.page-header h1 i {
+  color: var(--k-accent) !important;
+}
+
+/* ── Reservation page specific ───────────────────────────────────────────── */
+.tabs-section,
+.tabs-container .tab-btn.active {
+  background: var(--k-gradient-accent) !important;
+  color: var(--k-white) !important;
+  border-color: var(--k-accent) !important;
+}
+
+.stat-icon.upcoming {
+  background: rgba(0, 184, 148, 0.12) !important;
+  color: var(--k-accent) !important;
+}
+
+.status-approved {
+  background: rgba(0, 184, 148, 0.12) !important;
+  color: #065f46 !important;
+  border-color: rgba(0, 184, 148, 0.3) !important;
+}
+
+/* Card header accent line */
+.card-header {
+  border-bottom-color: var(--k-border) !important;
+}
+
+.detail-item i,
+.message-section {
+  border-left-color: var(--k-accent) !important;
+}
+
+.detail-item i {
+  color: var(--k-accent) !important;
+}
+
+/* Reservation action buttons */
+.btn-view {
+  background: var(--k-accent) !important;
+  color: var(--k-white) !important;
+  border-color: var(--k-accent) !important;
+}
+
+.btn-view:hover {
+  background: var(--k-accent-hover) !important;
+  border-color: var(--k-accent-hover) !important;
+}
+
+/* ── Settings page ────────────────────────────────────────────────────────── */
+:root {
+  --accent: var(--k-accent) !important;
+  --accent-soft: var(--k-accent-subtle) !important;
+}
+
+.btn.primary {
+  background: var(--k-accent) !important;
+  box-shadow: 0 8px 20px rgba(0, 184, 148, 0.25) !important;
+}
+
+.btn.ghost {
+  border-color: var(--k-accent) !important;
+  color: var(--k-accent) !important;
+}
+
+.switch input:checked + .slider {
+  background: var(--k-accent) !important;
+}
+
+/* ── User profile page ────────────────────────────────────────────────────── */
+.profile-hero .pill {
+  background: rgba(0, 184, 148, 0.1) !important;
+  color: var(--k-accent) !important;
+}
+
+.avatar-action {
+  background: var(--k-accent) !important;
+}
+
+/* Review rating stars */
+.review-rating {
+  color: var(--k-warning) !important;
+}
+
+/* Map shell border accent on hover */
+.map-shell {
+  border-color: var(--k-border) !important;
+}
+
+/* ── Dine-in page ─────────────────────────────────────────────────────────── */
+.btn-view-menu {
+  background: var(--k-gradient-accent) !important;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3) !important;
+}
+
+.table-category:hover {
+  border-color: var(--k-accent) !important;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.15) !important;
+}
+
+.table-count strong {
+  color: var(--k-accent) !important;
+}
+
+.availability-info {
+  background: var(--k-gradient-accent) !important;
+}
+
+.btn-primary.dine-submit,
+.reservation-section .btn-primary {
+  background: var(--k-accent) !important;
+  color: var(--k-white) !important;
+}
+
+/* ── Delivery tracking sidebar ────────────────────────────────────────────── */
+
+/* Replace the old red/pink gradient on the consumer-delivery-tracking sidebar */
+.sidebar[style*="FF6B6B"],
+#sidebar.sidebar {
+  background: var(--k-gradient-primary) !important;
+}
+
+/* info-card headings in tracking */
+.info-card h3 {
+  color: rgba(0, 212, 170, 0.85) !important;
+}
+
+.info-card p i {
+  color: rgba(0, 212, 170, 0.7) !important;
+}
+
+/* status badges in tracking */
+.status-badge.status-assigned,
+.status-badge.status-picked_up,
+.status-badge.status-out_for_delivery,
+.status-badge.status-arrived {
+  background: var(--k-gradient-accent) !important;
+}
+
+/* nav buttons in tracking sidebar */
+.nav-btn {
+  background: var(--k-gradient-accent) !important;
+}
+
+.nav-btn.secondary {
+  background: linear-gradient(135deg, #0099cc 0%, #006fa6 100%) !important;
+}
+
+.nav-btn.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #c62828 100%) !important;
+}
+
+/* Location indicator */
+.location-indicator {
+  background: var(--k-gradient-accent) !important;
+  box-shadow: 0 6px 20px rgba(0, 184, 148, 0.5) !important;
+}
+
+/* Toggle sidebar button */
+.toggle-sidebar {
+  color: var(--k-accent) !important;
+}
+
+/* Info panel ETA */
+.eta-info {
+  background: var(--k-gradient-accent) !important;
+}
+
+.distance-info .value {
+  color: var(--k-accent) !important;
+}
+
+/* ── Loading overlays ─────────────────────────────────────────────────────── */
+.loading-overlay {
+  background: rgba(16, 24, 18, 0.96) !important;
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--k-bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--k-accent);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--k-accent-hover);
+}
+
+/* ── Filter panel ─────────────────────────────────────────────────────────── */
+.filter-apply-btn {
+  background: var(--k-primary) !important;
+  color: var(--k-white) !important;
+}
+
+.filter-apply-btn:hover {
+  background: var(--k-primary-hover) !important;
+}
+
+.checkbox-item input[type="checkbox"] {
+  accent-color: var(--k-accent) !important;
+}
+
+/* ── Search suggestions ───────────────────────────────────────────────────── */
+.search-result-item .category-label {
+  background: rgba(0, 184, 148, 0.12) !important;
+  color: var(--k-accent) !important;
+}
+
+.search-result-item:hover {
+  background: rgba(0, 184, 148, 0.05) !important;
+}
+
+/* ── Badge / pill chips ───────────────────────────────────────────────────── */
+.badge-open {
+  background-color: rgba(0, 184, 148, 0.12) !important;
+  color: #065f46 !important;
+}
+
+.cart-item-count,
+.cart-badge {
+  background: var(--k-gradient-accent) !important;
+}
+
+/* ── Modal close buttons ──────────────────────────────────────────────────── */
+.close-modal:hover,
+.close-modal:hover {
+  background: var(--k-danger) !important;
+  color: var(--k-white) !important;
+}
+
+/* ── Order status badges (orders page) ────────────────────────────────────── */
+.status-badge.ready,
+.status-badge.completed {
+  background: rgba(0, 184, 148, 0.12) !important;
+  color: #065f46 !important;
+}
+
+/* ── Footer breadcrumbs ───────────────────────────────────────────────────── */
+.breadcrumbs a:hover {
+  color: var(--k-accent) !important;
+}
+
+/* ── View details / inline action buttons ─────────────────────────────────── */
+.view-details-btn {
+  background: var(--k-gradient-accent) !important;
+  border: none !important;
+}
+
+.view-details-btn:hover {
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.35) !important;
+}
+
+/* ── Map section heading icons ────────────────────────────────────────────── */
+.map-view-section h2 i,
+.section h2 i,
+.reservation-section h2 i {
+  color: var(--k-accent) !important;
+}
+
+/* ── Service buttons (dashboard filter) ──────────────────────────────────── */
+.service-buttons button.active,
+.service-buttons button:hover {
+  background: var(--k-primary) !important;
+  color: var(--k-white) !important;
+}
+
+/* Sort / filter active buttons */
+.sort-options button.active,
+.sort-options button:hover {
+  background: var(--k-primary) !important;
+  color: var(--k-white) !important;
+}
+
+/* ── Cuisine cards ─────────────────────────────────────────────────────────── */
+.cuisine-card:hover {
+  background: var(--k-accent) !important;
+  color: var(--k-white) !important;
+}
+
+/* ── Restaurant info card (dine-in) ───────────────────────────────────────── */
+.restaurant-info-card {
+  box-shadow: var(--k-shadow-sm) !important;
+  border-color: var(--k-border) !important;
+}
+
+.restaurant-details i {
+  color: var(--k-accent) !important;
+}
+
+/* ── Consistent heading colors ────────────────────────────────────────────── */
+h1, h2, h3 {
+  color: var(--k-text-dark);
+}
+
+/* Muted text */
+.muted,
+.text-muted,
+.subtitle,
+.cart-subtitle {
+  color: var(--k-text-muted) !important;
+}
+
+/* ── Font consistency ─────────────────────────────────────────────────────── */
+/*
+   Only target genuine text elements — never <i>, <div>, or anything
+   that icon libraries (Font Awesome, Boxicons, Remixicon) use.
+   Using div or * here will break icon rendering.
+*/
+body,
+p,
+h1, h2, h3, h4, h5, h6,
+li,
+label,
+input,
+select,
+textarea,
+button,
+td, th {
+  font-family: var(--k-font-body) !important;
+}
+
+/* Settings page overrides Space Grotesk — reset to Poppins */
+.home_content,
+.settings-shell,
+.page-shell {
+  font-family: var(--k-font-body) !important;
+}
+
+/* ── Explicitly restore icon font families ───────────────────────────────── */
+/*
+   Font Awesome uses "Font Awesome 6 Free" / "Font Awesome 6 Brands"
+   Boxicons uses "boxicons"
+   Remixicon uses "remixicon"
+   We must restore these AFTER any font override above.
+*/
+.fas, .fa-solid {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+}
+.far, .fa-regular {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 400 !important;
+}
+.fab, .fa-brands {
+  font-family: "Font Awesome 6 Brands" !important;
+  font-weight: 400 !important;
+}
+.fal, .fa-light {
+  font-family: "Font Awesome 6 Pro" !important;
+  font-weight: 300 !important;
+}
+.fad, .fa-duotone {
+  font-family: "Font Awesome 6 Duotone" !important;
+}
+/* Font Awesome 5 fallback */
+.fa {
+  font-family: "Font Awesome 5 Free", "Font Awesome 6 Free" !important;
+}
+
+/* Boxicons */
+.bx,
+[class^="bx-"],
+[class*=" bx-"],
+[class^="bxs-"],
+[class*=" bxs-"],
+[class^="bxl-"],
+[class*=" bxl-"] {
+  font-family: "boxicons" !important;
+}
+
+/* Remixicon */
+.ri,
+[class^="ri-"],
+[class*=" ri-"] {
+  font-family: "remixicon" !important;
+}
+
+/* ── Smooth transitions everywhere ───────────────────────────────────────── */
+button,
+a,
+input,
+select,
+.card,
+.menu-card,
+.restaurant-card,
+.order-card {
+  transition: all 0.2s ease;
+}
+
+/* ── Small UX polish ─────────────────────────────────────────────────────── */
+
+/* Consistent border radius on inputs */
+input,
+select,
+textarea {
+  border-radius: var(--k-radius-sm) !important;
+}
+
+/* Radio button accent */
+input[type="radio"] {
+  accent-color: var(--k-accent) !important;
+}
+
+/* Payment options hover */
+.payment-option:hover,
+.payment-method-card:hover {
+  border-color: var(--k-accent) !important;
+  background: var(--k-accent-subtle) !important;
+}
+
+/* Selected payment method */
+.payment-method-option input[type="radio"]:checked + .payment-method-card {
+  border-color: var(--k-accent) !important;
+  background: var(--k-accent-subtle) !important;
+  box-shadow: 0 4px 15px rgba(0, 184, 148, 0.2) !important;
+}
+
+.payment-option i,
+.payment-method-card i {
+  color: var(--k-accent) !important;
+}
+
+/* ── Reservation form submit ──────────────────────────────────────────────── */
+.btn-primary[type="submit"],
+.reservation-section .form-actions .btn-primary {
+  background: var(--k-gradient-accent) !important;
+  color: var(--k-white) !important;
+  border: none !important;
+}
+
+/* ── Back / secondary form buttons ───────────────────────────────────────── */
+.btn-secondary,
+.reservation-section .form-actions .btn-secondary {
+  background: #f0f5f2 !important;
+  color: var(--k-text-body) !important;
+  border-color: var(--k-border) !important;
+}
+
+.btn-secondary:hover {
+  background: var(--k-accent-subtle) !important;
+  border-color: var(--k-accent) !important;
+  color: var(--k-accent) !important;
+}
+
+/* ============================================================================
+   END OF KHADOK CONSUMER DESIGN SYSTEM
+   ============================================================================ */
