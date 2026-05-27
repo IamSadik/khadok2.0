@@ -13,6 +13,7 @@
 
     // Initialize dashboard on page load
     document.addEventListener('DOMContentLoaded', function() {
+        initRealtime();
         loadRiderProfile();
         loadRiderStats();
         loadActiveDeliveries(); // Load active deliveries first
@@ -29,6 +30,29 @@
             loadRiderStatus();
         }, 30000);
     });
+
+    // Real-time updates via Socket.IO
+    function initRealtime() {
+        try {
+            if (typeof io !== 'function') {
+                return;
+            }
+
+            const socket = io();
+
+            socket.on('connect', () => {
+                socket.emit('registerRider', riderId);
+            });
+
+            socket.on('order-assigned', (payload) => {
+                // Keep it minimal: refresh lists so the new order appears
+                loadActiveDeliveries();
+                loadRecentOrders();
+            });
+        } catch (error) {
+            console.error('Error initializing real-time updates:', error);
+        }
+    }
 
     // Load rider profile information
     async function loadRiderProfile() {

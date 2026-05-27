@@ -362,7 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
           id: item.menu_id,
           name: item.item_name,
           price: parseFloat(item.item_price),
-          quantity: item.quatity, // ✅ Use 'quatity' (database column name)
+          quantity: item.quantity,
           picture: item.item_picture
         }));
       } else {
@@ -612,6 +612,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function openPaymentModal() {
     const modal = document.getElementById("payment-modal");
     const orderItemsList = document.getElementById("order-items-list");
+    const confirmBtn = document.getElementById("confirm-payment");
     
     // Calculate totals
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -641,12 +642,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const pickupSection = document.getElementById("pickup-time-section");
     const cashOption = document.getElementById("cash-option");
     const deliveryRow = document.getElementById("modal-delivery-row");
+    const paymentCash = document.getElementById("payment-cash");
+    const paymentBkash = document.getElementById("payment-bkash");
     
     if (orderType === 'delivery') {
       deliverySection.style.display = 'block';
       pickupSection.style.display = 'none';
       cashOption.style.display = 'flex';
       deliveryRow.style.display = 'flex';
+
+      // Default payment for delivery: Cash on Delivery
+      if (paymentCash) paymentCash.checked = true;
+      if (paymentBkash) paymentBkash.checked = false;
       
       // 🗺️ Initialize delivery map with user's location
       initDeliveryMap();
@@ -663,7 +670,14 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("pickup-time").value = formatted;
       
       // Force bKash selection for pickup
-      document.getElementById("payment-bkash").checked = true;
+      if (paymentBkash) paymentBkash.checked = true;
+      if (paymentCash) paymentCash.checked = false;
+    }
+
+    // Ensure confirm button is usable when modal opens
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
     }
     
     // Show modal
@@ -688,14 +702,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   async function handlePaymentConfirmation() {
-    const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+    const selectedPayment = document.querySelector('input[name="payment-method"]:checked');
+    const paymentMethod = selectedPayment
+      ? selectedPayment.value
+      : (orderType === 'delivery' ? 'cash' : 'bkash');
     const confirmBtn = document.getElementById("confirm-payment");
     
     // Validate inputs
     if (orderType === 'delivery') {
-      const address = document.getElementById("delivery-address").value.trim();
-      if (!address) {
-        alert("Please enter your delivery address!");
+      const addressInput = document.getElementById("delivery-address");
+      const addressDisplay = document.getElementById("delivery-address-display");
+      const address = addressInput
+        ? String(addressInput.value || "").trim()
+        : (addressDisplay ? String(addressDisplay.textContent || "").trim() : "");
+
+      if (!address || address === 'Loading address...' || address.toLowerCase().includes('location not set')) {
+        alert("Please set your delivery location from the dashboard (Location Picker) and try again.");
         return;
       }
     } else {
@@ -750,6 +772,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
       
       if (data.success && data.data.bkashURL) {
+        const addressInput = document.getElementById("delivery-address");
+        const addressDisplay = document.getElementById("delivery-address-display");
+        const deliveryAddress = addressInput
+          ? String(addressInput.value || "").trim()
+          : (addressDisplay ? String(addressDisplay.textContent || "").trim() : null);
+
         // Store order details in localStorage for after payment
         const orderDetails = {
           cart: cart,
@@ -758,7 +786,7 @@ document.addEventListener("DOMContentLoaded", () => {
           deliveryFee: deliveryFee,
           serviceFee: serviceFee,
           totalAmount: total,
-          deliveryAddress: orderType === 'delivery' ? document.getElementById("delivery-address").value : null,
+          deliveryAddress: orderType === 'delivery' ? deliveryAddress : null,
           deliveryLat: orderType === 'delivery' ? deliveryLat : null, // 🔥 NEW
           deliveryLng: orderType === 'delivery' ? deliveryLng : null, // 🔥 NEW
           pickupTime: orderType === 'pickup' ? document.getElementById("pickup-time").value : null,
@@ -794,6 +822,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const deliveryLng = localStorage.getItem('current_user_lng');
     
     try {
+      const addressInput = document.getElementById("delivery-address");
+      const addressDisplay = document.getElementById("delivery-address-display");
+      const deliveryAddress = addressInput
+        ? String(addressInput.value || "").trim()
+        : (addressDisplay ? String(addressDisplay.textContent || "").trim() : null);
+
       // Create order with cash payment
       const orderData = {
         consumer_id: consumerId,
@@ -804,7 +838,7 @@ document.addEventListener("DOMContentLoaded", () => {
         delivery_fee: deliveryFee,
         service_fee: serviceFee,
         total_amount: total,
-        delivery_address: orderType === 'delivery' ? document.getElementById("delivery-address").value : null,
+        delivery_address: orderType === 'delivery' ? deliveryAddress : null,
         delivery_lat: orderType === 'delivery' ? deliveryLat : null, // 🔥 NEW
         delivery_lng: orderType === 'delivery' ? deliveryLng : null, // 🔥 NEW
         pickup_time: orderType === 'pickup' ? document.getElementById("pickup-time").value : null,
@@ -942,7 +976,7 @@ document.addEventListener("DOMContentLoaded", () => {
           id: item.menu_id,
           name: item.item_name,
           price: parseFloat(item.item_price),
-          quantity: item.quatity, // ✅ Use 'quatity' (database column name)
+          quantity: item.quantity,
           picture: item.item_picture
         }));
       } else {

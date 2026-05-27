@@ -144,8 +144,53 @@ const getRestaurantById = async (req, res) => {
   }
 };
 
-// Export all controller functions here
+const getTopRatedRestaurants = async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 7, 20);
+    const restaurants = await restaurantModel.getTopRatedRestaurants(limit);
+
+    const results = restaurants.map((restaurant) => ({
+      stakeholder_id: restaurant.stakeholder_id,
+      restaurant_name: restaurant.restaurant_name,
+      ratings: restaurant.ratings,
+      address: restaurant.address,
+      type: restaurant.type,
+      picture: restaurant.picture ? `/uploads/${restaurant.picture}` : null,
+    }));
+
+    return res.status(200).json(results);
+  } catch (error) {
+    console.error('Error in getTopRatedRestaurants controller:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const searchRestaurants = async (req, res) => {
+  try {
+    const query = (req.query.query || '').trim();
+    if (!query) {
+      return res.status(200).json([]);
+    }
+
+    const restaurants = await restaurantModel.searchRestaurantsByName(query, 10);
+    const results = restaurants.map((restaurant) => ({
+      stakeholder_id: restaurant.stakeholder_id,
+      restaurant_name: restaurant.restaurant_name,
+      ratings: restaurant.ratings,
+      address: restaurant.address,
+      picture: restaurant.picture ? `/uploads/${restaurant.picture}` : null,
+    }));
+
+    return res.status(200).json(results);
+  } catch (error) {
+    console.error('Error in searchRestaurants controller:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
   getNearbyRestaurants,
   getRestaurantById,
+  getTopRatedRestaurants,
+  searchRestaurants,
 };

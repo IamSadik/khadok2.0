@@ -1,15 +1,15 @@
 const orderModel = require('../models/orderModel');
+const db = require('../config/configdb');
 
 const REVIEW_WINDOW_MINUTES = 45;
 
-// 🔥 Get Socket.IO instance for real-time notifications
-let io;
-try {
-  const server = require('../server');
-  io = server.io;
-} catch (error) {
-  console.warn('⚠️ Socket.IO not available yet');
-}
+const toTypeVariants = (type) => {
+  const raw = String(type ?? '').trim();
+  return {
+    raw,
+    json: JSON.stringify(raw),
+  };
+};
 
 // Helper function to calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -156,6 +156,22 @@ exports.createOrder = async (req, res) => {
 
     await orderModel.createOrderItems(orderItems);
 
+    // ✅ Clear ordered items from cart after successful order creation
+    // (Clear by consumer + stakeholder + type so we don't wipe unrelated carts.)
+    try {
+      const { raw: rawType, json: jsonType } = toTypeVariants(order_type);
+      await db.query(
+        `DELETE FROM cart
+         WHERE consumer_id = $1
+           AND stakeholder_id = $2
+           AND (type::text = $3 OR type::text = $4)`,
+        [consumer_id, stakeholder_id, rawType, jsonType]
+      );
+    } catch (clearError) {
+      // Don't fail the order if cart cleanup fails
+      console.warn('⚠️ Failed to clear cart after order creation:', clearError?.message || clearError);
+    }
+
     // 🔥 IMMEDIATE RIDER ASSIGNMENT FOR DELIVERY ORDERS
     if (order_type === 'delivery') {
       // Create initial tracking entry
@@ -171,6 +187,16 @@ exports.createOrder = async (req, res) => {
         
         // Update delivery status to 'assigned'
         await orderModel.updateDeliveryStatus(orderId, 'assigned');
+
+        // Notify rider in real time (if connected)
+        const ioInstance = req.app?.get('io');
+        if (ioInstance && assignmentResult.rider?.rider_id) {
+          ioInstance.to(`rider-${assignmentResult.rider.rider_id}`).emit('order-assigned', {
+            orderId,
+            delivery_status: 'assigned',
+            created_at: new Date().toISOString(),
+          });
+        }
         
         res.json({
           success: true,
@@ -179,7 +205,7 @@ exports.createOrder = async (req, res) => {
           estimated_delivery_time: orderData.estimated_delivery_time,
           rider_assigned: true,
           rider_name: assignmentResult.rider.name,
-          rider_phone: assignmentResult.rider.phone
+          rider_phone: assignmentResult.rider.number
         });
       } else {
         console.warn(`⚠️ Rider assignment failed for order ${orderId}: ${assignmentResult.message}`);
@@ -600,6 +626,16 @@ exports.updateOrderStatus = async (req, res) => {
             if (assigned.success) {
               await orderModel.updateDeliveryStatus(order_id, 'assigned');
               console.log(`✅ Rider assigned during confirmation: ${assigned.rider.name}`);
+
+              // Notify rider in real time (if connected)
+              const ioInstance = req.app?.get('io');
+              if (ioInstance && assigned.rider?.rider_id) {
+                ioInstance.to(`rider-${assigned.rider.rider_id}`).emit('order-assigned', {
+                  orderId: Number(order_id),
+                  delivery_status: 'assigned',
+                  created_at: new Date().toISOString(),
+                });
+              }
             } else {
               console.warn(`⚠️ Rider assignment failed: ${assigned.message}`);
             }
@@ -614,10 +650,40 @@ exports.updateOrderStatus = async (req, res) => {
         case 'ready':
           trackingMessage = 'Order is ready for pickup by rider';
           await orderModel.createTrackingEntry(order_id, order.rider_id, 'ready_for_pickup', trackingMessage);
+
+          // 🔥 If still unassigned, retry assignment now (this is where many orders get stuck)
+          if (!order.rider_id) {
+            console.log(`🚴 Order ${order_id} is READY but has no rider - attempting assignment...`);
+            const assigned = await assignRiderToOrder(order_id);
+            if (assigned.success) {
+              await orderModel.updateDeliveryStatus(order_id, 'assigned');
+              console.log(`✅ Rider assigned during ready: ${assigned.rider.name}`);
+
+              const ioInstance = req.app?.get('io');
+              if (ioInstance && assigned.rider?.rider_id) {
+                ioInstance.to(`rider-${assigned.rider.rider_id}`).emit('order-assigned', {
+                  orderId: Number(order_id),
+                  delivery_status: 'assigned',
+                  created_at: new Date().toISOString(),
+                });
+              }
+            } else {
+              console.warn(`⚠️ Rider assignment failed on ready: ${assigned.message}`);
+            }
+          }
           
           // Notify rider if assigned
           if (order.rider_id) {
             console.log(`🔔 Notifying rider ${order.rider_id} that order ${order_id} is ready`);
+
+            const ioInstance = req.app?.get('io');
+            if (ioInstance) {
+              ioInstance.to(`rider-${order.rider_id}`).emit('order-ready', {
+                orderId: Number(order_id),
+                status: 'ready',
+                created_at: new Date().toISOString(),
+              });
+            }
           }
           break;
           
@@ -844,19 +910,28 @@ async function assignRiderToOrder(orderId) {
       return { success: false, message: 'Delivery location not available' };
     }
 
-    // Find available riders within 5km of restaurant
-    console.log(`🔍 Searching for riders within 5km of restaurant (${order.restaurant_lat}, ${order.restaurant_lng})...`);
-    
-    const availableRiders = await orderModel.getAvailableRiders(
-      order.restaurant_lat,
-      order.restaurant_lng,
-      5 // radius in km
-    );
+    // Find available riders near the restaurant (prefer verified riders, expand radius if needed)
+    const radiusStepsKm = [5, 8];
+    let availableRiders = [];
+    let selectedRadius = radiusStepsKm[0];
+    let usedUnverifiedFallback = false;
 
-    console.log(`📋 Found ${availableRiders.length} available riders`);
+    for (const radiusKm of radiusStepsKm) {
+      selectedRadius = radiusKm;
+      console.log(`🔍 Searching for VERIFIED riders within ${radiusKm}km of restaurant (${order.restaurant_lat}, ${order.restaurant_lng})...`);
+      availableRiders = await orderModel.getAvailableRiders(order.restaurant_lat, order.restaurant_lng, radiusKm);
+      console.log(`📋 Found ${availableRiders.length} verified riders (radius ${radiusKm}km)`);
+      if (availableRiders.length > 0) break;
+
+      console.log(`🔍 Searching for ANY available riders (including unverified) within ${radiusKm}km...`);
+      availableRiders = await orderModel.getAvailableRiders(order.restaurant_lat, order.restaurant_lng, radiusKm, { includeUnverified: true });
+      usedUnverifiedFallback = availableRiders.length > 0;
+      console.log(`📋 Found ${availableRiders.length} riders incl. unverified (radius ${radiusKm}km)`);
+      if (availableRiders.length > 0) break;
+    }
 
     if (availableRiders.length === 0) {
-      return { success: false, message: 'No riders available within 5km radius' };
+      return { success: false, message: `No riders available within ${radiusStepsKm[radiusStepsKm.length - 1]}km radius` };
     }
 
     // Calculate delivery feasibility score for each rider
@@ -882,7 +957,10 @@ async function assignRiderToOrder(orderId) {
     // Assign to best rider (lowest score = best)
     const bestRider = scoredRiders.sort((a, b) => a.score - b.score)[0];
 
-    console.log(`🎯 Best rider selected: ${bestRider.name} (ID: ${bestRider.rider_id}) - Score: ${bestRider.score.toFixed(2)}`);
+    console.log(
+      `🎯 Best rider selected: ${bestRider.name} (ID: ${bestRider.rider_id}) - ` +
+      `Score: ${bestRider.score.toFixed(2)} (radius ${selectedRadius}km${usedUnverifiedFallback ? ', incl. unverified' : ''})`
+    );
 
     // Update order with rider assignment
     await orderModel.assignRider(orderId, bestRider.rider_id);

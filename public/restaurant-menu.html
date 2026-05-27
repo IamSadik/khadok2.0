@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Menu | Khadok</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/restaurant-preview.css">
+</head>
+
+<body class="preview-page">
+    <header class="preview-header">
+        <a href="index.html" class="logo-link">
+            <img src="images/khadok2.png" alt="Khadok" class="brand-logo">
+            <span>Khadok</span>
+        </a>
+        <a href="login.html" class="preview-login-btn">Login to Order</a>
+    </header>
+
+    <main class="preview-main">
+        <div id="loading" class="preview-loading">
+            <i class="fas fa-spinner fa-spin"></i> Loading menu...
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="preview-banner">
+                <h1 id="restaurant-name">Restaurant</h1>
+                <p class="meta" id="restaurant-meta"></p>
+            </div>
+
+            <div class="preview-notice">
+                <i class="fas fa-info-circle"></i>
+                <span>Browsing only — <a href="login.html">Log in</a> or <a href="signup.html">sign up</a> to place orders.</span>
+            </div>
+
+            <div class="preview-controls">
+                <input type="text" id="searchInput" placeholder="Search menu items...">
+                <select id="sortSelect">
+                    <option value="default">Sort By</option>
+                    <option value="priceLow">Price: Low to High</option>
+                    <option value="priceHigh">Price: High to Low</option>
+                    <option value="alphaAZ">Alphabetical (A–Z)</option>
+                    <option value="alphaZA">Alphabetical (Z–A)</option>
+                </select>
+            </div>
+
+            <div class="preview-tabs" id="categoryTabs"></div>
+            <div id="menuSections"></div>
+        </div>
+    </main>
+
+    <script src="js/restaurant-preview.js"></script>
+</body>
+
+</html>

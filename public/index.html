@@ -312,29 +312,65 @@
     </script>
 
     <script>
+        function goToRestaurantPreview(stakeholderId) {
+            if (!stakeholderId) return;
+            window.location.href = `/restaurant-menu.html?restaurant_id=${encodeURIComponent(stakeholderId)}`;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const restaurantGrid = document.getElementById('restaurant-grid');
 
-            fetch('/api/restaurant/top-rated-restaurants')
-                .then(response => response.json())
+            fetch('/api/restaurant/top-rated-restaurants?limit=7')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load restaurants');
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.error) {
-                        console.error('Error:', data.error);
+                    if (!Array.isArray(data) || data.error) {
+                        console.error('Error:', data?.error || 'Invalid response');
+                        restaurantGrid.innerHTML = '<p style="padding:1rem;color:#666;">No restaurants to show yet.</p>';
                         return;
                     }
 
-                    data.forEach(restaurant => {
-                        const rating = typeof restaurant.ratings === 'number' ? restaurant.ratings.toFixed(1) : 'N/A';
-                        const restaurantCard = `
-                            <div class="restaurant-card">
-                                <h3>${restaurant.restaurant_name}</h3>
-                                <p>Rating: ${rating}</p>
+                    if (data.length === 0) {
+                        restaurantGrid.innerHTML = '<p style="padding:1rem;color:#666;">No restaurants to show yet.</p>';
+                        return;
+                    }
+
+                    restaurantGrid.innerHTML = data.map(restaurant => {
+                        const rating = restaurant.ratings != null
+                            ? Number(restaurant.ratings).toFixed(1)
+                            : 'N/A';
+                        const imgSrc = restaurant.picture || 'images/khadok2.png';
+                        return `
+                            <div class="restaurant-card" role="button" tabindex="0"
+                                 data-id="${restaurant.stakeholder_id}"
+                                 style="cursor:pointer;">
+                                <img src="${imgSrc}" alt="${restaurant.restaurant_name}"
+                                     class="restaurant-image" onerror="this.src='images/khadok2.png'">
+                                <div class="restaurant-info">
+                                    <h3>${restaurant.restaurant_name}</h3>
+                                    <p>★ ${rating}</p>
+                                </div>
                             </div>
                         `;
-                        restaurantGrid.innerHTML += restaurantCard;
+                    }).join('');
+
+                    restaurantGrid.querySelectorAll('.restaurant-card[data-id]').forEach(card => {
+                        const id = card.dataset.id;
+                        card.addEventListener('click', () => goToRestaurantPreview(id));
+                        card.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                goToRestaurantPreview(id);
+                            }
+                        });
                     });
                 })
-                .catch(error => console.error('Fetch Error:', error));
+                .catch(error => {
+                    console.error('Fetch Error:', error);
+                    restaurantGrid.innerHTML = '<p style="padding:1rem;color:#666;">Could not load top restaurants.</p>';
+                });
         });
     </script>
 
@@ -385,51 +421,6 @@
 
     </script>
 
-    <script>
-        // Function to fetch suggestions as the user types
-        async function fetchSuggestions() {
-            const searchQuery = document.getElementById('search-input').value.trim();
-            const suggestionsBox = document.getElementById('suggestions');
-
-            // Clear the suggestions box if search query is empty
-            if (!searchQuery) {
-                suggestionsBox.innerHTML = '';
-                return;
-            }
-
-            try {
-                // Send request to the backend to fetch search results
-                const response = await fetch(`/api/search-restaurants?query=${searchQuery}`);
-                const suggestions = await response.json();
-
-                // Display suggestions in the suggestion box
-                suggestionsBox.innerHTML = suggestions.map(restaurant => {
-                    return `<div class="suggestion-item">${restaurant.restaurant_name}</div>`;
-                }).join('');
-
-                // Add event listeners to the suggestion items (optional, for selecting suggestions)
-                const suggestionItems = document.querySelectorAll('.suggestion-item');
-                suggestionItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        document.getElementById('search-input').value = item.textContent;  // Fill the input with selected suggestion
-                        suggestionsBox.innerHTML = '';  // Clear suggestions
-                    });
-                });
-            } catch (error) {
-                console.error('Error fetching suggestions:', error);
-            }
-        }
-
-        // Prevent form submission on Enter key
-        function searchRestaurants() {
-            const searchQuery = document.getElementById('search-input').value.trim();
-            if (searchQuery) {
-                window.location.href = `/search-results?query=${searchQuery}`;  // Redirect to a results page or perform another action
-            }
-            return false;  // Prevent form submission
-        }
-
-    </script>
 
 
 
@@ -671,7 +662,7 @@
     <footer>
         <hr class="footer-divider" />
         <div class="footer-content">
-            <p>&copy; 2024 Khadok. All rights reserved.</p>
+            <p>&copy; 2026 Khadok. All rights reserved.</p>
             <div class="footer-links">
                 <a href="terms&conditions.html">Terms & Conditions</a>
                 <a href="privacy.html">Privacy Policy</a>

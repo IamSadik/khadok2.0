@@ -6,6 +6,9 @@ const restaurantController = require("../controllers/restaurantController");
 // Get nearby restaurants by user's current location
 router.get("/nearby", restaurantController.getNearbyRestaurants);
 
+// Top rated restaurants for landing page (must be before /:stakeholder_id)
+router.get("/top-rated-restaurants", restaurantController.getTopRatedRestaurants);
+
 
 /*## How to Use:
 

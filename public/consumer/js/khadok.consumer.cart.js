@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeCart = currentOrderType === 'delivery' ? deliveryCart : pickupCart;
 
     // Update total items badge
-    const totalItems = activeCart.reduce((sum, item) => sum + item.quatity, 0);
+    const totalItems = activeCart.reduce((sum, item) => sum + item.quantity, 0);
     totalItemsBadge.textContent = `${totalItems} item${totalItems !== 1 ? 's' : ''}`;
 
     // Show empty state if cart is empty
@@ -271,7 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const restaurant = restaurantDetails[stakeholderId] || { restaurant_name: 'Restaurant' };
 
       const restaurantSubtotal = items.reduce((sum, item) =>
-        sum + (parseFloat(item.item_price) * item.quatity), 0
+        sum + (parseFloat(item.item_price) * item.quantity), 0
       );
       grandSubtotal += restaurantSubtotal;
 
@@ -325,7 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ==================== RENDER CART ITEM ====================
   function renderCartItem(item) {
-    const itemSubtotal = parseFloat(item.item_price) * item.quatity;
+    const itemSubtotal = parseFloat(item.item_price) * item.quantity;
     
     return `
       <div class="cart-item-card" data-cart-id="${item.cart_id}">
@@ -341,11 +341,11 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="item-actions">
           <div class="quantity-controls">
-            <button class="qty-btn" onclick="updateItemQuantity(${item.cart_id}, ${item.quatity - 1})">
+            <button class="qty-btn" onclick="updateItemQuantity(${item.cart_id}, ${item.quantity - 1})">
               <i class="fas fa-minus"></i>
             </button>
-            <span class="quantity-display">${item.quatity}</span>
-            <button class="qty-btn" onclick="updateItemQuantity(${item.cart_id}, ${item.quatity + 1})">
+            <span class="quantity-display">${item.quantity}</span>
+            <button class="qty-btn" onclick="updateItemQuantity(${item.cart_id}, ${item.quantity + 1})">
               <i class="fas fa-plus"></i>
             </button>
           </div>
@@ -388,8 +388,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const itemIndex = activeCart.findIndex(item => item.cart_id === cartId);
     
     if (itemIndex !== -1) {
-      const oldQuantity = activeCart[itemIndex].quatity;
-      activeCart[itemIndex].quatity = newQuantity;
+      const oldQuantity = activeCart[itemIndex].quantity;
+      activeCart[itemIndex].quantity = newQuantity;
       
       // 🎯 Instant UI update
       const itemCard = document.querySelector(`[data-cart-id="${cartId}"]`);
@@ -416,13 +416,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!res.ok) {
           // 🔙 Rollback on failure
-          activeCart[itemIndex].quatity = oldQuantity;
+          activeCart[itemIndex].quantity = oldQuantity;
           renderCart();
           alert('Failed to update quantity');
         }
       } catch (error) {
         // 🔙 Rollback on error
-        activeCart[itemIndex].quatity = oldQuantity;
+        activeCart[itemIndex].quantity = oldQuantity;
         renderCart();
         console.error('Error updating quantity:', error);
         alert('Failed to update quantity');
@@ -677,7 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const restaurant = restaurantDetails[stakeholderId] || { restaurant_name: 'Restaurant' };
 
       const restaurantSubtotal = items.reduce((sum, item) =>
-        sum + (parseFloat(item.item_price) * item.quatity), 0
+        sum + (parseFloat(item.item_price) * item.quantity), 0
       );
       subtotal += restaurantSubtotal;
 
@@ -695,9 +695,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="order-item-row">
               <div>
                 <div class="order-item-name">${item.item_name}</div>
-                <div class="order-item-quantity">Qty: ${item.quatity}</div>
+                <div class="order-item-quantity">Qty: ${item.quantity}</div>
               </div>
-              <div class="order-item-price">৳${(parseFloat(item.item_price) * item.quatity).toFixed(2)}</div>
+              <div class="order-item-price">৳${(parseFloat(item.item_price) * item.quantity).toFixed(2)}</div>
             </div>
           `).join('')}
         </div>
@@ -718,12 +718,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const pickupTimeSection = document.getElementById('pickup-time-section');
     const modalDeliveryRow = document.getElementById('modal-delivery-row');
     const cashOption = document.getElementById('cash-option');
+    const paymentCash = document.getElementById('payment-cash');
+    const paymentBkash = document.getElementById('payment-bkash');
 
     if (currentOrderType === 'delivery') {
       deliveryAddressSection.style.display = 'block';
       pickupTimeSection.style.display = 'none';
       modalDeliveryRow.style.display = 'flex';
       cashOption.style.display = 'flex';
+
+      // Default payment for delivery: Cash on Delivery
+      if (paymentCash) paymentCash.checked = true;
+      if (paymentBkash) paymentBkash.checked = false;
       
       // 🗺️ Initialize delivery map with user's location
       initDeliveryMap();
@@ -732,7 +738,8 @@ document.addEventListener("DOMContentLoaded", () => {
       pickupTimeSection.style.display = 'block';
       modalDeliveryRow.style.display = 'none';
       cashOption.style.display = 'none';
-      document.getElementById('payment-bkash').checked = true;
+      if (paymentBkash) paymentBkash.checked = true;
+      if (paymentCash) paymentCash.checked = false;
 
       const now = new Date();
       now.setMinutes(now.getMinutes() + 30);
@@ -819,7 +826,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const restaurant = restaurantDetails[firstStakeholderId] || {};
       
       const subtotal = cart.reduce((sum, item) => 
-        sum + (parseFloat(item.item_price) * item.quatity), 0
+        sum + (parseFloat(item.item_price) * item.quantity), 0
       );
       
       const deliveryFee = currentOrderType === 'delivery'
@@ -893,7 +900,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const restaurant = restaurantDetails[stakeholderId] || {};
         
         const restaurantSubtotal = items.reduce((sum, item) =>
-          sum + (parseFloat(item.item_price) * item.quatity), 0
+          sum + (parseFloat(item.item_price) * item.quantity), 0
         );
 
         const restaurantDeliveryFee = currentOrderType === 'delivery'
@@ -917,9 +924,9 @@ document.addEventListener("DOMContentLoaded", () => {
             menu_id: item.menu_id,
             item_name: item.item_name,
             item_price: parseFloat(item.item_price),
-            quantity: item.quatity,
+            quantity: item.quantity,
             category: item.category || null, // ✅ Include category from cart
-            subtotal: parseFloat(item.item_price) * item.quatity
+            subtotal: parseFloat(item.item_price) * item.quantity
           }))
         };
 

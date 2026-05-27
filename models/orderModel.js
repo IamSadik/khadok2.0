@@ -449,10 +449,19 @@ exports.createTrackingEntry = async (order_id, rider_id, status, notes) => {
 };
 
 // 🔥 NEW: Get available riders near restaurant
-exports.getAvailableRiders = async (restaurant_lat, restaurant_lng, radius_km) => {
-  const distanceExpr = `(6371 * acos(cos(radians($1)) * cos(radians(COALESCE(current_lat, lat))) *
-    cos(radians(COALESCE(current_lng, lng)) - radians($2)) +
-    sin(radians($1)) * sin(radians(COALESCE(current_lat, lat)))))`;
+exports.getAvailableRiders = async (restaurant_lat, restaurant_lng, radius_km, options = {}) => {
+  const { includeUnverified = false } = options;
+
+  // rider coords are stored as varchar in this DB; cast safely (and treat empty strings as NULL)
+  const riderLatExpr = `COALESCE(NULLIF(current_lat, '')::double precision, NULLIF(lat, '')::double precision)`;
+  const riderLngExpr = `COALESCE(NULLIF(current_lng, '')::double precision, NULLIF(lng, '')::double precision)`;
+  const distanceExpr = `(6371 * acos(
+    cos(radians($1::double precision)) * cos(radians(${riderLatExpr})) *
+    cos(radians(${riderLngExpr}) - radians($2::double precision)) +
+    sin(radians($1::double precision)) * sin(radians(${riderLatExpr}))
+  ))`;
+
+  const verificationClause = includeUnverified ? '' : 'AND is_verified = true';
 
   const sql = `
     SELECT
@@ -472,7 +481,7 @@ exports.getAvailableRiders = async (restaurant_lat, restaurant_lng, radius_km) =
     FROM rider
     WHERE status = 'available'
       AND is_active = true
-      AND is_verified = true
+      ${verificationClause}
       AND ${distanceExpr} < $3
     ORDER BY distance_to_restaurant ASC, rating DESC
     LIMIT 10

@@ -166,7 +166,7 @@
         
         .locate-me-btn {
             position: absolute;
-            top: 50%;
+            top: 20%;
             right: 8px;
             transform: translateY(-50%);
             width: 34px;
@@ -584,6 +584,7 @@
 
     <!-- =========== Scripts =========  -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/dashboard.js"></script>
 
@@ -641,7 +642,11 @@
                     return;
                 }
                 showScreen(screens.step2);
-                setTimeout(() => map && map.invalidateSize(), 100);
+                // Initialize map early so the rider can pick an exact point
+                setTimeout(() => {
+                    ensureMapInitialized();
+                    map && map.invalidateSize();
+                }, 100);
             };
             document.getElementById("back-to-step-1").onclick = () => showScreen(screens.step1);
             document.getElementById("to-step-3").onclick = () => showScreen(screens.step3);
@@ -650,10 +655,60 @@
             document.getElementById("back-to-step-3").onclick = () => showScreen(screens.step3);
 
             // Map & Geocoding
-            let map, tileURL;
+            let map, tileURL, tileLayer, marker;
             const locationInput = document.getElementById("location-input");
             const suggestionsList = document.getElementById("location-suggestions");
             const locateBtn = document.getElementById("locate-me-btn");
+
+            const DEFAULT_CENTER = { lat: 23.8103, lng: 90.4125, zoom: 12 }; // Dhaka fallback
+
+            function setBaseLayer() {
+                if (!map) return;
+                const url = tileURL || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+                const options = tileURL
+                    ? { tileSize: 512, zoomOffset: -1, attribution: "© MapTiler © OSM" }
+                    : { attribution: "© OpenStreetMap contributors" };
+
+                if (tileLayer) {
+                    tileLayer.remove();
+                    tileLayer = null;
+                }
+                tileLayer = L.tileLayer(url, options).addTo(map);
+            }
+
+            function syncMarkerToCenter() {
+                if (!map || !marker) return;
+                marker.setLatLng(map.getCenter());
+            }
+
+            async function updateInputWithCenter() {
+                if (!map) return;
+                const c = map.getCenter();
+                syncMarkerToCenter();
+                locationInput.value = await reverseGeocode(c.lat, c.lng);
+            }
+
+            function ensureMapInitialized(lat = DEFAULT_CENTER.lat, lng = DEFAULT_CENTER.lng, zoom = DEFAULT_CENTER.zoom) {
+                if (!map) {
+                    map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], zoom);
+                    setBaseLayer();
+
+                    // Visible marker used for saving exact lat/lng (kept at map center)
+                    marker = L.marker([lat, lng], { draggable: false }).addTo(map);
+
+                    // Keep marker centered while panning; reverse-geocode after movement ends
+                    map.on("move", syncMarkerToCenter);
+                    map.on("moveend zoomend", updateInputWithCenter);
+
+                    // Click to jump center (marker follows automatically)
+                    map.on("click", (e) => {
+                        map.setView(e.latlng, Math.max(map.getZoom(), 16));
+                    });
+                } else {
+                    map.setView([lat, lng], zoom);
+                    if (marker) marker.setLatLng([lat, lng]);
+                }
+            }
 
             // Load tile URL
             (async () => {
@@ -661,6 +716,8 @@
                     const resp = await fetch("/api/map/tile-url");
                     const json = await resp.json();
                     tileURL = json.tileURL;
+                    // If the map is already on-screen, swap to the configured tile layer.
+                    setBaseLayer();
                 } catch (err) {
                     console.error("Failed to fetch tile URL:", err);
                 }
@@ -678,30 +735,12 @@
                 }
             }
 
-            // Update input when map moves
-            async function updateInputWithCenter() {
-                if (!map) return;
-                const c = map.getCenter();
-                locationInput.value = await reverseGeocode(c.lat, c.lng);
-            }
-
             // Locate me button
             locateBtn.addEventListener("click", () => {
                 if (!navigator.geolocation) return alert("Geolocation not supported.");
                 navigator.geolocation.getCurrentPosition(async ({ coords }) => {
                     const { latitude, longitude } = coords;
-                    if (!map) {
-                        map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
-                            .setView([latitude, longitude], 16);
-                        L.tileLayer(tileURL, {
-                            tileSize: 512,
-                            zoomOffset: -1,
-                            attribution: '© MapTiler © OSM'
-                        }).addTo(map);
-                        map.on("moveend zoomend", updateInputWithCenter);
-                    } else {
-                        map.setView([latitude, longitude], 16);
-                    }
+                    ensureMapInitialized(latitude, longitude, 16);
                     locationInput.value = await reverseGeocode(latitude, longitude);
                 }, () => alert("Please allow location access."));
             });
@@ -737,18 +776,7 @@
                 const lat = +e.target.dataset.lat;
                 const lon = +e.target.dataset.lon;
                 const name = e.target.textContent;
-                if (!map) {
-                    map = L.map("map-container", { zoomControl: true, scrollWheelZoom: false })
-                        .setView([lat, lon], 16);
-                    L.tileLayer(tileURL, {
-                        tileSize: 512,
-                        zoomOffset: -1,
-                        attribution: '© MapTiler © OSM'
-                    }).addTo(map);
-                    map.on("moveend zoomend", updateInputWithCenter);
-                } else {
-                    map.setView([lat, lon], 16);
-                }
+                ensureMapInitialized(lat, lon, 16);
                 locationInput.value = name;
                 suggestionsList.innerHTML = "";
                 suggestionsList.classList.add("hidden");
@@ -780,7 +808,11 @@
 
                 // Get map center
                 let lat = "", lng = "";
-                if (map) {
+                if (marker) {
+                    const p = marker.getLatLng();
+                    lat = p.lat.toFixed(6);
+                    lng = p.lng.toFixed(6);
+                } else if (map) {
                     const c = map.getCenter();
                     lat = c.lat.toFixed(6);
                     lng = c.lng.toFixed(6);

@@ -493,8 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       
       const cart = data.cartItems || [];
-      // Fix: Use 'quatity' instead of 'quantity' to match database column name
-      const totalItems = cart.reduce((sum, item) => sum + (item.quatity || 0), 0);
+      const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
       
       cartCount.textContent = totalItems;
 
@@ -506,8 +505,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Calculate fees
-      // Fix: Use 'quatity' instead of 'quantity' to match database column name
-      const subtotal = cart.reduce((sum, item) => sum + (item.item_price * (item.quatity || 0)), 0);
+      const subtotal = cart.reduce((sum, item) => sum + (item.item_price * (item.quantity || 0)), 0);
       const deliveryFee = orderType === 'delivery' ? 0 : 0; // Update based on your logic
       const serviceFee = 4;
       const total = subtotal + deliveryFee + serviceFee;
@@ -516,7 +514,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('cart-summary').style.display = 'block';
       
       // Render cart items
-      // Fix: Use 'quatity' instead of 'quantity' to match database column name
       cartItems.innerHTML = cart.map(item => `
         <div class="cart-item">
           <img src="${item.item_picture}" alt="${item.item_name}" class="cart-item-image" />
@@ -528,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="decrease">
               <i class="fas fa-minus"></i>
             </button>
-            <span class="quantity">${item.quatity || 0}</span>
+            <span class="quantity">${item.quantity || 0}</span>
             <button class="quantity-btn" data-cart-id="${item.cart_id}" data-action="increase">
               <i class="fas fa-plus"></i>
             </button>

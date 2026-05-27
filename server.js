@@ -63,7 +63,9 @@ app.use('/api/menu', menuRoutes);
 const interiorRoutes = require('./routes/interiorRoutes');
 app.use('/api/interior', interiorRoutes);
 const restaurantRoutes = require('./routes/restaurantRoutes');
+const restaurantController = require('./controllers/restaurantController');
 app.use('/api/restaurant', restaurantRoutes);
+app.get('/api/search-restaurants', restaurantController.searchRestaurants);
 const locationRoutes = require('./routes/locationRoute');
 app.use('/api/location',locationRoutes);
 const cartRoutes = require('./routes/cartRoutes');
@@ -102,6 +104,7 @@ app.set('io', io);
 
 // ==================== SOCKET.IO - REAL-TIME TRACKING ====================
 const consumerSockets = new Map(); // Track consumer connections
+const riderSockets = new Map(); // Track rider connections
 
 io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
@@ -111,6 +114,13 @@ io.on('connection', (socket) => {
         consumerSockets.set(consumerId, socket.id);
         socket.join(`consumer-${consumerId}`);
         console.log(`✅ Consumer ${consumerId} registered for notifications (Socket: ${socket.id})`);
+    });
+
+    // 🔥 Rider registers for notifications
+    socket.on('registerRider', (riderId) => {
+        riderSockets.set(riderId, socket.id);
+        socket.join(`rider-${riderId}`);
+        console.log(`✅ Rider ${riderId} registered for notifications (Socket: ${socket.id})`);
     });
 
     // Rider joins a tracking room for an order
@@ -156,12 +166,21 @@ io.on('connection', (socket) => {
                 break;
             }
         }
+
+        // Remove rider from tracking
+        for (const [riderId, socketId] of riderSockets.entries()) {
+            if (socketId === socket.id) {
+                riderSockets.delete(riderId);
+                console.log(`Rider ${riderId} disconnected`);
+                break;
+            }
+        }
         console.log('Client disconnected:', socket.id);
     });
 });
 
 // 🔥 Export io for use in controllers
-module.exports = { io, consumerSockets };
+module.exports = { io, consumerSockets, riderSockets };
 
 // Start
 const PORT = process.env.PORT || 5000;

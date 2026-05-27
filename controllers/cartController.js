@@ -1,6 +1,31 @@
 // controllers/cartController.js
 const db = require("../config/configdb");
 
+const toTypeVariants = (type) => {
+  const raw = String(type ?? "").trim();
+  return {
+    raw,
+    json: JSON.stringify(raw),
+  };
+};
+
+const safeParseCartType = (value) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      // Handles values like "delivery" stored as JSON string ("\"delivery\"")
+      return JSON.parse(trimmed);
+    } catch {
+      // Handles plain values like delivery
+      return trimmed;
+    }
+  }
+  // For json/jsonb columns, pg may already deserialize into JS
+  return value;
+};
+
 // Add item to cart
 const addToCart = async (req, res) => {
   try {
@@ -11,32 +36,34 @@ const addToCart = async (req, res) => {
     }
 
     // Validate type
-    if (type !== 'delivery' && type !== 'pickup') {
+    const { raw: rawType, json: jsonType } = toTypeVariants(type);
+    if (rawType !== 'delivery' && rawType !== 'pickup') {
       return res.status(400).json({ error: "Type must be 'delivery' or 'pickup'" });
     }
 
-    // Convert type to JSON format for database storage
-    const jsonType = JSON.stringify(type);
-
-    const checkQuery = `SELECT cart_id FROM cart WHERE consumer_id = $1 AND menu_id = $2 AND type = $3`;
-    const { rows: existing } = await db.query(checkQuery, [consumer_id, menu_id, jsonType]);
+    // Match both raw and JSON-encoded representations; use ::text to support json/jsonb columns.
+    const checkQuery = `
+      SELECT cart_id
+      FROM cart
+      WHERE consumer_id = $1
+        AND menu_id = $2
+        AND (type::text = $3 OR type::text = $4)
+      LIMIT 1
+    `;
+    const { rows: existing } = await db.query(checkQuery, [consumer_id, menu_id, rawType, jsonType]);
 
     if (existing.length > 0) {
-      const updateQuery = `
-        UPDATE cart
-        SET quatity = quatity + $1
-        WHERE consumer_id = $2 AND menu_id = $3 AND type = $4
-      `;
-      await db.query(updateQuery, [quantity || 1, consumer_id, menu_id, jsonType]);
+      const updateQuery = `UPDATE cart SET quantity = quantity + $1 WHERE cart_id = $2`;
+      await db.query(updateQuery, [quantity || 1, existing[0].cart_id]);
       return res.status(200).json({ message: "Cart updated successfully" });
     }
 
     const categoryQuery = `SELECT category FROM menu WHERE menu_id = $1`;
     const { rows: menuResults } = await db.query(categoryQuery, [menu_id]);
-    const category = menuResults.length > 0 ? menuResults[0].category : null;
+    const category = menuResults.length > 0 ? (menuResults[0].category ?? null) : null;
 
     const insertQuery = `
-      INSERT INTO cart (consumer_id, menu_id, quatity, stakeholder_id, item_name, item_price, item_picture, type, category)
+      INSERT INTO cart (consumer_id, menu_id, quantity, stakeholder_id, item_name, item_price, item_picture, type, category)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     `;
     await db.query(insertQuery, [
@@ -48,7 +75,7 @@ const addToCart = async (req, res) => {
       item_price,
       item_picture,
       jsonType,
-      category
+      category || ''
     ]);
     return res.status(201).json({ message: "Item added to cart successfully" });
   } catch (error) {
@@ -78,10 +105,11 @@ const getCartItems = async (req, res) => {
       query += ` AND stakeholder_id = $${params.length}`;
     }
 
-    // Filter by type if provided (convert to JSON format)
+    // Filter by type if provided; match both raw and JSON-encoded representations.
     if (type) {
-      params.push(JSON.stringify(type));
-      query += ` AND type = $${params.length}`;
+      const variants = toTypeVariants(type);
+      params.push(variants.raw, variants.json);
+      query += ` AND (type::text = $${params.length - 1} OR type::text = $${params.length})`;
     }
 
     query += ` ORDER BY added_at DESC`;
@@ -90,7 +118,7 @@ const getCartItems = async (req, res) => {
 
     const cartItems = rows.map(item => ({
       ...item,
-      type: item.type ? JSON.parse(item.type) : null
+      type: safeParseCartType(item.type)
     }));
 
     return res.status(200).json({ cartItems });
@@ -114,7 +142,7 @@ const updateCartItem = async (req, res) => {
       return res.status(400).json({ error: "Quantity must be greater than 0" });
     }
 
-    const query = `UPDATE cart SET quatity = $1 WHERE cart_id = $2`;
+    const query = `UPDATE cart SET quantity = $1 WHERE cart_id = $2`;
     await db.query(query, [quantity, cart_id]);
     return res.status(200).json({ message: "Cart item updated successfully" });
   } catch (error) {
@@ -152,11 +180,12 @@ const clearCart = async (req, res) => {
     }
 
     let query = `DELETE FROM cart WHERE consumer_id = $1`;
-    let params = [consumer_id];
+    const params = [consumer_id];
 
     if (type) {
-      params.push(JSON.stringify(type));
-      query += ` AND type = $${params.length}`;
+      const variants = toTypeVariants(type);
+      params.push(variants.raw, variants.json);
+      query += ` AND (type::text = $${params.length - 1} OR type::text = $${params.length})`;
     }
 
     await db.query(query, params);

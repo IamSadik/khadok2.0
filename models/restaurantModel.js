@@ -39,4 +39,37 @@ const testBasicQuery = async () => {
   return rows;
 };
 
-module.exports = { getNearbyRestaurants, getRestaurantById, testBasicQuery };
+const getTopRatedRestaurants = async (limit = 7) => {
+  const { rows } = await pool.query(
+    `SELECT stakeholder_id, restaurant_name, ratings, picture, address, type
+     FROM stakeholder
+     WHERE restaurant_name IS NOT NULL
+       AND TRIM(restaurant_name) <> ''
+     ORDER BY COALESCE(ratings, 0) DESC, restaurant_name ASC
+     LIMIT $1`,
+    [limit]
+  );
+  return rows;
+};
+
+const searchRestaurantsByName = async (query, limit = 10) => {
+  const { rows } = await pool.query(
+    `SELECT stakeholder_id, restaurant_name, ratings, picture, address
+     FROM stakeholder
+     WHERE restaurant_name IS NOT NULL
+       AND TRIM(restaurant_name) <> ''
+       AND restaurant_name ILIKE $1
+     ORDER BY COALESCE(ratings, 0) DESC, restaurant_name ASC
+     LIMIT $2`,
+    [`%${query}%`, limit]
+  );
+  return rows;
+};
+
+module.exports = {
+  getNearbyRestaurants,
+  getRestaurantById,
+  testBasicQuery,
+  getTopRatedRestaurants,
+  searchRestaurantsByName,
+};
