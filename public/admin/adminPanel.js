@@ -126,20 +126,30 @@ const loadConsumers = async () => {
     if (!tbody) return;
 
     if (!consumers || consumers.length === 0) {
-        renderEmptyRow(tbody, 6, 'No consumers found');
+        renderEmptyRow(tbody, 8, 'No consumers found');
         return;
     }
 
-    tbody.innerHTML = consumers.map((consumer) => `
+    tbody.innerHTML = consumers.map((consumer) => {
+        const isRestricted = consumer.flag === false;
+        return `
         <tr>
             <td>${consumer.consumer_id}</td>
             <td>${escapeHtml(consumer.name || '--')}</td>
             <td>${escapeHtml(consumer.email || '--')}</td>
             <td>${escapeHtml(consumer.number || '--')}</td>
             <td>${escapeHtml(consumer.address || '--')}</td>
+            <td>${isRestricted ? 'Restricted' : 'Active'}</td>
             <td>${formatDate(consumer.created_at)}</td>
+            <td>
+                <button class="primary action-btn" data-action="toggle-consumer-restrict" data-id="${consumer.consumer_id}" data-restricted="${isRestricted}">
+                    ${isRestricted ? 'Unrestrict' : 'Restrict'}
+                </button>
+                <button class="primary action-btn" data-action="delete-consumer" data-id="${consumer.consumer_id}">Delete</button>
+            </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 };
 
 const loadStakeholders = async () => {
@@ -148,11 +158,13 @@ const loadStakeholders = async () => {
     if (!tbody) return;
 
     if (!stakeholders || stakeholders.length === 0) {
-        renderEmptyRow(tbody, 7, 'No stakeholders found');
+        renderEmptyRow(tbody, 9, 'No stakeholders found');
         return;
     }
 
-    tbody.innerHTML = stakeholders.map((stakeholder) => `
+    tbody.innerHTML = stakeholders.map((stakeholder) => {
+        const isRestricted = stakeholder.is_restricted === true;
+        return `
         <tr>
             <td>${stakeholder.stakeholder_id}</td>
             <td>${escapeHtml(stakeholder.name || '--')}</td>
@@ -160,9 +172,17 @@ const loadStakeholders = async () => {
             <td>${escapeHtml(stakeholder.restaurant_name || '--')}</td>
             <td>${escapeHtml(stakeholder.address || '--')}</td>
             <td>${stakeholder.ratings ?? '--'}</td>
+            <td>${isRestricted ? 'Restricted' : 'Active'}</td>
             <td>${formatDate(stakeholder.created_at)}</td>
+            <td>
+                <button class="primary action-btn" data-action="toggle-stakeholder-restrict" data-id="${stakeholder.stakeholder_id}" data-restricted="${isRestricted}">
+                    ${isRestricted ? 'Unrestrict' : 'Restrict'}
+                </button>
+                <button class="primary action-btn" data-action="delete-stakeholder" data-id="${stakeholder.stakeholder_id}">Delete</button>
+            </td>
         </tr>
-    `).join('');
+    `;
+    }).join('');
 };
 
 const loadRiders = async () => {
@@ -186,6 +206,7 @@ const loadRiders = async () => {
             <td>${rider.is_active ? 'Active' : 'Inactive'} / ${rider.is_verified ? 'Verified' : 'Unverified'}</td>
             <td>
                 <button class="primary action-btn" data-action="edit-rider" data-id="${rider.rider_id}">Update</button>
+                <button class="primary action-btn" data-action="delete-rider" data-id="${rider.rider_id}">Delete</button>
             </td>
         </tr>
     `).join('');
@@ -292,28 +313,41 @@ const loadMenus = async () => {
     `).join('');
 };
 
+const formatTicketType = (type) => {
+    if (type === 'order_issue') return 'Order Issue';
+    if (type === 'dine_in_report') return 'Dine-In Report';
+    if (type === 'delivery_issue') return 'Order Issue';
+    return type || '--';
+};
+
 const loadTickets = async () => {
     const { tickets } = await fetchJSON(`${apiBase}/tickets`);
     const tbody = document.getElementById('tickets-table');
     if (!tbody) return;
 
     if (!tickets || tickets.length === 0) {
-        renderEmptyRow(tbody, 7, 'No tickets found');
+        renderEmptyRow(tbody, 9, 'No tickets found');
         return;
     }
 
     tbody.innerHTML = tickets.map((ticket) => `
         <tr>
             <td>${ticket.id}</td>
-            <td>${escapeHtml(ticket.type || '--')}</td>
+            <td>${escapeHtml(formatTicketType(ticket.type))}</td>
             <td>${ticket.order_id || '--'}</td>
             <td>${escapeHtml(ticket.consumer_name || '--')}</td>
+            <td>${escapeHtml(ticket.restaurant_name || ticket.rider_name || '--')}</td>
             <td>${escapeHtml(ticket.issue_type || '--')}</td>
+            <td>${escapeHtml(ticket.description || '--')}</td>
             <td>${escapeHtml(ticket.resolution_status || '--')}</td>
             <td>
-                ${ticket.type === 'delivery_issue'
-                    ? `<button class="primary action-btn" data-action="edit-ticket" data-id="${ticket.id}" data-status="${ticket.resolution_status}">Update</button>`
-                    : '--'}
+                <button class="primary action-btn"
+                    data-action="edit-ticket"
+                    data-id="${ticket.id}"
+                    data-type="${ticket.type}"
+                    data-status="${ticket.resolution_status}">
+                    Update
+                </button>
             </td>
         </tr>
     `).join('');
@@ -409,7 +443,7 @@ const loadReport = async () => {
     const exportTicketsBtn = document.getElementById('export-tickets-csv');
     if (exportTicketsBtn) {
         exportTicketsBtn.onclick = () => {
-            const csv = toCSV(tickets, ['id', 'type', 'order_id', 'consumer_name', 'issue_type', 'description', 'resolution_status', 'reported_at']);
+            const csv = toCSV(tickets, ['id', 'type', 'order_id', 'consumer_name', 'restaurant_name', 'issue_type', 'description', 'resolution_status', 'reported_at']);
             downloadCSV(`admin-tickets-${Date.now()}.csv`, csv);
         };
     }
@@ -488,13 +522,74 @@ const handleAction = async (event) => {
 
         if (action === 'edit-ticket') {
             const ticketId = button.dataset.id;
+            const ticketType = button.dataset.type;
             const status = openPrompt('Ticket status', ['reported', 'investigating', 'resolved', 'unresolved'], button.dataset.status);
             if (status) {
-                await fetchJSON(`${apiBase}/tickets/delivery/${ticketId}/status`, {
+                const endpoint = ticketType === 'dine_in_report'
+                    ? `${apiBase}/tickets/dine-in/${ticketId}/status`
+                    : `${apiBase}/tickets/delivery/${ticketId}/status`;
+
+                await fetchJSON(endpoint, {
                     method: 'PATCH',
                     body: JSON.stringify({ resolution_status: status })
                 });
                 await loadTickets();
+            }
+        }
+
+        if (action === 'toggle-consumer-restrict') {
+            const consumerId = button.dataset.id;
+            const currentlyRestricted = button.dataset.restricted === 'true';
+            const nextRestricted = !currentlyRestricted;
+            const confirmMessage = nextRestricted
+                ? 'Restrict this consumer? They will not be able to log in.'
+                : 'Remove restriction for this consumer?';
+            if (window.confirm(confirmMessage)) {
+                await fetchJSON(`${apiBase}/consumers/${consumerId}/restrict`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ restricted: nextRestricted })
+                });
+                await loadConsumers();
+            }
+        }
+
+        if (action === 'delete-consumer') {
+            const consumerId = button.dataset.id;
+            if (window.confirm('Delete this consumer account permanently?')) {
+                await fetchJSON(`${apiBase}/consumers/${consumerId}`, { method: 'DELETE' });
+                await loadConsumers();
+            }
+        }
+
+        if (action === 'toggle-stakeholder-restrict') {
+            const stakeholderId = button.dataset.id;
+            const currentlyRestricted = button.dataset.restricted === 'true';
+            const nextRestricted = !currentlyRestricted;
+            const confirmMessage = nextRestricted
+                ? 'Restrict this stakeholder? They will not be able to log in.'
+                : 'Remove restriction for this stakeholder?';
+            if (window.confirm(confirmMessage)) {
+                await fetchJSON(`${apiBase}/stakeholders/${stakeholderId}/restrict`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ restricted: nextRestricted })
+                });
+                await loadStakeholders();
+            }
+        }
+
+        if (action === 'delete-stakeholder') {
+            const stakeholderId = button.dataset.id;
+            if (window.confirm('Delete this stakeholder account permanently?')) {
+                await fetchJSON(`${apiBase}/stakeholders/${stakeholderId}`, { method: 'DELETE' });
+                await loadStakeholders();
+            }
+        }
+
+        if (action === 'delete-rider') {
+            const riderId = button.dataset.id;
+            if (window.confirm('Delete this rider account permanently?')) {
+                await fetchJSON(`${apiBase}/riders/${riderId}`, { method: 'DELETE' });
+                await loadRiders();
             }
         }
 

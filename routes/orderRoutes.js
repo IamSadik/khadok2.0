@@ -29,6 +29,9 @@ router.get('/:order_id', orderController.getOrderById);
 // Submit review for a delivered order within 45 minutes.
 router.post('/:order_id/review', orderController.submitOrderReview);
 
+// Report an order issue for admin ticket handling.
+router.post('/:order_id/issue', orderController.submitOrderIssue);
+
 // Get orders for a consumer (path params - keeping for backward compatibility)
 router.get('/consumer/:consumer_id', orderController.getConsumerOrders);
 

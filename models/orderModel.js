@@ -141,7 +141,11 @@ exports.getOrdersByConsumer = async (consumer_id) => {
       GREATEST(
         CEIL(EXTRACT(EPOCH FROM (${reviewExpiresAt} - NOW())) / 60.0),
         0
-      )::int AS review_minutes_left
+      )::int AS review_minutes_left,
+      iss.issue_id AS open_issue_id,
+      iss.issue_type AS open_issue_type,
+      iss.resolution_status AS open_issue_status,
+      iss.description AS open_issue_description
     FROM orders o
     LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN (
@@ -153,6 +157,14 @@ exports.getOrdersByConsumer = async (consumer_id) => {
         GROUP BY order_id
       ) latest ON latest.max_review_id = r.review_id
     ) rv ON rv.order_id = o.id
+    LEFT JOIN LATERAL (
+      SELECT di.issue_id, di.issue_type, di.resolution_status, di.description
+      FROM delivery_issues di
+      WHERE di.order_id = o.id
+        AND di.resolution_status IN ('reported', 'investigating')
+      ORDER BY di.reported_at DESC
+      LIMIT 1
+    ) iss ON true
     WHERE o.consumer_id = $1
     ORDER BY o.created_at DESC
   `;
@@ -233,15 +245,13 @@ exports.createOrderReview = async ({ order_id, stakeholder_id, consumer_id, rati
 // Recalculate and persist stakeholder average rating.
 exports.refreshStakeholderRating = async (stakeholder_id) => {
   const sql = `
-    UPDATE stakeholder s
-    SET ratings = rv.avg_rating
-    FROM (
-      SELECT stakeholder_id, ROUND(AVG(rating)::numeric, 2) AS avg_rating
+    UPDATE stakeholder
+    SET ratings = (
+      SELECT ROUND(AVG(rating)::numeric, 2)
       FROM review
-      GROUP BY stakeholder_id
-    ) rv
-    WHERE s.stakeholder_id = rv.stakeholder_id
-      AND s.stakeholder_id = $1
+      WHERE stakeholder_id = $1
+    )
+    WHERE stakeholder_id = $1
   `;
 
   try {
@@ -250,6 +260,66 @@ exports.refreshStakeholderRating = async (stakeholder_id) => {
     console.error('Refresh stakeholder rating error:', err);
     throw err;
   }
+};
+
+const OPEN_ISSUE_STATUSES = ['reported', 'investigating'];
+
+exports.getOrderForIssue = async (order_id) => {
+  const sql = `
+    SELECT
+      o.id,
+      o.consumer_id,
+      o.stakeholder_id,
+      o.rider_id,
+      o.order_type,
+      o.order_status,
+      o.delivery_status
+    FROM orders o
+    WHERE o.id = $1
+    LIMIT 1
+  `;
+
+  const { rows } = await pool.query(sql, [order_id]);
+  return rows[0] || null;
+};
+
+exports.getOpenOrderIssue = async (order_id) => {
+  const sql = `
+    SELECT issue_id, issue_type, resolution_status, description, reported_at
+    FROM delivery_issues
+    WHERE order_id = $1
+      AND resolution_status = ANY($2::varchar[])
+    ORDER BY reported_at DESC
+    LIMIT 1
+  `;
+
+  const { rows } = await pool.query(sql, [order_id, OPEN_ISSUE_STATUSES]);
+  return rows[0] || null;
+};
+
+exports.createOrderIssue = async ({
+  order_id,
+  consumer_id,
+  rider_id,
+  issue_type,
+  description,
+}) => {
+  const sql = `
+    INSERT INTO delivery_issues (
+      order_id, consumer_id, rider_id, issue_type, description, resolution_status, reported_at
+    ) VALUES ($1, $2, $3, $4, $5, 'reported', NOW())
+    RETURNING issue_id, order_id, issue_type, description, resolution_status, reported_at
+  `;
+
+  const { rows } = await pool.query(sql, [
+    order_id,
+    consumer_id || null,
+    rider_id || null,
+    issue_type,
+    description,
+  ]);
+
+  return rows[0];
 };
 
 // Get orders by stakeholder ID
@@ -568,7 +638,13 @@ exports.completeDelivery = async (order_id) => {
     SET delivery_status = 'delivered',
         delivered_at = NOW(),
         order_status = 'completed',
-        actual_delivery_time = FLOOR(EXTRACT(EPOCH FROM (NOW() - created_at)) / 60)
+        actual_delivery_time = FLOOR(EXTRACT(EPOCH FROM (NOW() - created_at)) / 60),
+        payment_status = CASE
+          WHEN payment_method = 'cash'
+            AND (payment_status IS NULL OR payment_status = 'pending')
+          THEN 'paid'
+          ELSE payment_status
+        END
     WHERE id = $1
   `;
 

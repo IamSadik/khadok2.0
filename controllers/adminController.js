@@ -1,4 +1,5 @@
 const adminModel = require('../models/adminModel');
+const orderModel = require('../models/orderModel');
 const bcrypt = require('bcrypt');
 
 const loginAdmin = async (req, res) => {
@@ -317,6 +318,111 @@ const updateDeliveryIssueStatus = async (req, res) => {
     }
 };
 
+const updateDineInTicketStatus = async (req, res) => {
+    const { id } = req.params;
+    const { resolution_status } = req.body;
+
+    if (!resolution_status) {
+        return res.status(400).json({ error: 'resolution_status is required' });
+    }
+
+    try {
+        const updated = await adminModel.updateDineInReportStatus(id, resolution_status);
+        if (!updated) {
+            return res.status(404).json({ error: 'Ticket not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating dine-in ticket status:', error);
+        res.status(500).json({ error: 'Failed to update ticket status' });
+    }
+};
+
+const restrictConsumer = async (req, res) => {
+    const { id } = req.params;
+    const { restricted } = req.body;
+
+    if (typeof restricted !== 'boolean') {
+        return res.status(400).json({ error: 'restricted boolean is required' });
+    }
+
+    try {
+        const updated = await adminModel.updateConsumerRestriction(id, restricted);
+        if (!updated) {
+            return res.status(404).json({ error: 'Consumer not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating consumer restriction:', error);
+        res.status(500).json({ error: 'Failed to update consumer restriction' });
+    }
+};
+
+const restrictStakeholder = async (req, res) => {
+    const { id } = req.params;
+    const { restricted } = req.body;
+
+    if (typeof restricted !== 'boolean') {
+        return res.status(400).json({ error: 'restricted boolean is required' });
+    }
+
+    try {
+        const updated = await adminModel.updateStakeholderRestriction(id, restricted);
+        if (!updated) {
+            return res.status(404).json({ error: 'Stakeholder not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating stakeholder restriction:', error);
+        res.status(500).json({ error: 'Failed to update stakeholder restriction' });
+    }
+};
+
+const deleteConsumer = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deleted = await adminModel.deleteConsumerAccount(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Consumer not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting consumer:', error);
+        res.status(500).json({ error: 'Failed to delete consumer account' });
+    }
+};
+
+const deleteStakeholder = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deleted = await adminModel.deleteStakeholderAccount(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Stakeholder not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting stakeholder:', error);
+        res.status(500).json({ error: 'Failed to delete stakeholder account' });
+    }
+};
+
+const deleteRider = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const deleted = await adminModel.deleteRiderAccount(id);
+        if (!deleted) {
+            return res.status(404).json({ error: 'Rider not found' });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting rider:', error);
+        res.status(500).json({ error: 'Failed to delete rider account' });
+    }
+};
+
 const getOrderItems = async (req, res) => {
     const { id } = req.params;
     try {
@@ -399,10 +505,17 @@ const getReviews = async (req, res) => {
 const deleteReview = async (req, res) => {
     const { id } = req.params;
     try {
+        const review = await adminModel.getReviewById(id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+
         const deleted = await adminModel.deleteReview(id);
         if (!deleted) {
             return res.status(404).json({ error: 'Review not found' });
         }
+
+        await orderModel.refreshStakeholderRating(review.stakeholder_id);
         res.json({ success: true });
     } catch (error) {
         console.error('Error deleting review:', error);
@@ -559,6 +672,12 @@ module.exports = {
     getMenus,
     getTickets,
     updateDeliveryIssueStatus,
+    updateDineInTicketStatus,
+    restrictConsumer,
+    restrictStakeholder,
+    deleteConsumer,
+    deleteStakeholder,
+    deleteRider,
     getOrderItems,
     getCuisines,
     createCuisine,

@@ -258,14 +258,9 @@ const PaymentController = {
 
             console.log('bKash callback received:', { paymentID, status });
 
-            // Redirect to success/failure page based on status
-            if (status === 'success') {
-                res.redirect(`/payment-success.html?paymentID=${paymentID}`);
-            } else if (status === 'failure') {
-                res.redirect(`/payment-failed.html?paymentID=${paymentID}`);
-            } else {
-                res.redirect(`/payment-cancelled.html`);
-            }
+            const safePaymentId = encodeURIComponent(paymentID || '');
+            const safeStatus = encodeURIComponent(status || '');
+            res.redirect(`/consumer/payment-callback.html?paymentID=${safePaymentId}&status=${safeStatus}`);
 
         } catch (error) {
             console.error('Callback error:', error);

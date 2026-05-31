@@ -61,6 +61,7 @@ async function loadRestaurantInfo() {
         
         if (data.success && data.stakeholder) {
             document.getElementById('restaurant-name').textContent = data.stakeholder.restaurant_name || 'Restaurant Owner';
+            updateRatingDisplay(data.stakeholder.ratings);
         }
     } catch (error) {
         console.error('Error loading restaurant info:', error);
@@ -74,20 +75,26 @@ async function loadDashboardData() {
         showLoadingState();
         
         // Fetch all data in parallel for faster loading
-        const [ordersResponse, reservationsResponse, statsResponse] = await Promise.all([
+        const [ordersResponse, reservationsResponse, statsResponse, infoResponse] = await Promise.all([
             fetch(`/api/stakeholder/dashboard/orders?stakeholder_id=${stakeholderId}`),
             fetch(`/api/stakeholder/dashboard/reservations?stakeholder_id=${stakeholderId}`),
-            fetch(`/api/stakeholder/dashboard/stats?stakeholder_id=${stakeholderId}`)
+            fetch(`/api/stakeholder/dashboard/stats?stakeholder_id=${stakeholderId}`),
+            fetch(`/api/stakeholder/info?stakeholder_id=${stakeholderId}`)
         ]);
         
-        const [ordersData, reservationsData, statsData] = await Promise.all([
+        const [ordersData, reservationsData, statsData, infoData] = await Promise.all([
             ordersResponse.json(),
             reservationsResponse.json(),
-            statsResponse.json()
+            statsResponse.json(),
+            infoResponse.json()
         ]);
         
         // Update metrics
         updateMetrics(ordersData, reservationsData);
+
+        if (infoData.success && infoData.stakeholder) {
+            updateRatingDisplay(infoData.stakeholder.ratings);
+        }
         
         // Update activities
         updateActivities(ordersData, reservationsData);
@@ -168,11 +175,6 @@ function updateMetrics(ordersData, reservationsData) {
     );
     document.getElementById('upcoming-reservations').textContent = upcomingReservations.length;
     
-    // Average rating (mock data - replace with actual API call)
-    const avgRating = 4.5;
-    document.getElementById('avg-rating').textContent = avgRating.toFixed(1);
-    updateRatingStars(avgRating);
-    
     // Calculate revenue trend (mock)
     const revenueTrend = ((Math.random() * 20) - 5).toFixed(1);
     const trendElement = document.getElementById('revenue-trend');
@@ -188,6 +190,15 @@ function updateMetrics(ordersData, reservationsData) {
         trendParent.classList.remove('positive');
         trendParent.querySelector('i').className = 'fas fa-arrow-down';
     }
+}
+
+// ========== UPDATE RATING DISPLAY ==========
+function updateRatingDisplay(ratings) {
+    const parsed = ratings !== null && ratings !== undefined ? parseFloat(ratings) : null;
+    const hasRating = parsed !== null && !Number.isNaN(parsed);
+
+    document.getElementById('avg-rating').textContent = hasRating ? parsed.toFixed(1) : '—';
+    updateRatingStars(hasRating ? parsed : 0);
 }
 
 // ========== UPDATE RATING STARS ==========

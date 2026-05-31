@@ -336,7 +336,13 @@
         socket.on('order-status-update', (data) => {
             console.log('📦 Order status update:', data);
             if (data.orderId == orderId) {
-                orderData.delivery_status = data.status;
+                const nextStatus = data.delivery_status || data.status || data.order_status;
+                if (nextStatus) {
+                    orderData.delivery_status = nextStatus;
+                }
+                if (data.order_status) {
+                    orderData.order_status = data.order_status;
+                }
                 displayOrderInfo();
             }
         });

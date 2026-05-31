@@ -76,7 +76,8 @@ const getOverview = async () => {
       (SELECT COUNT(*) FROM orders) AS orders,
       (SELECT COUNT(*) FROM payments) AS payments,
       (SELECT COUNT(*) FROM dine_in) AS reservations,
-      (SELECT COUNT(*) FROM delivery_issues) + (SELECT COUNT(*) FROM dine_in_reports) AS tickets
+      (SELECT COUNT(*) FROM delivery_issues WHERE resolution_status NOT IN ('resolved', 'unresolved'))
+        + (SELECT COUNT(*) FROM dine_in_reports WHERE COALESCE(resolution_status, 'reported') NOT IN ('resolved', 'unresolved')) AS tickets
   `;
 
   const { rows } = await pool.query(sql);
@@ -106,14 +107,16 @@ const fetchRecentOrders = async () => {
 
 const fetchConsumers = async () => {
   const { rows } = await pool.query(
-    `SELECT consumer_id, name, email, number, address, created_at FROM consumer ORDER BY consumer_id DESC`
+    `SELECT consumer_id, name, email, number, address, flag, created_at
+     FROM consumer
+     ORDER BY consumer_id DESC`
   );
   return rows;
 };
 
 const fetchStakeholders = async () => {
   const { rows } = await pool.query(`
-    SELECT stakeholder_id, name, email, restaurant_name, ratings, address, number, created_at
+    SELECT stakeholder_id, name, email, restaurant_name, ratings, address, number, is_restricted, created_at
     FROM stakeholder
     ORDER BY stakeholder_id DESC
   `);
@@ -282,16 +285,19 @@ const fetchTickets = async () => {
   const deliverySql = `
     SELECT
       di.issue_id AS id,
-      'delivery_issue' AS type,
+      'order_issue' AS type,
       di.order_id,
       di.issue_type,
       di.description,
       di.resolution_status,
       di.reported_at,
       c.name AS consumer_name,
+      s.restaurant_name,
       r.name AS rider_name
     FROM delivery_issues di
     LEFT JOIN consumer c ON di.consumer_id = c.consumer_id
+    LEFT JOIN orders o ON di.order_id = o.id
+    LEFT JOIN stakeholder s ON o.stakeholder_id = s.stakeholder_id
     LEFT JOIN rider r ON di.rider_id = r.rider_id
   `;
 
@@ -300,12 +306,13 @@ const fetchTickets = async () => {
       dr.id AS id,
       'dine_in_report' AS type,
       dr.dine_id_id AS order_id,
-      NULL AS issue_type,
+      'no_show' AS issue_type,
       dr.message AS description,
-      'reported' AS resolution_status,
-      NOW() AS reported_at,
+      COALESCE(dr.resolution_status, 'reported') AS resolution_status,
+      COALESCE(dr.reported_at, NOW()) AS reported_at,
       c.name AS consumer_name,
-      s.restaurant_name AS rider_name
+      s.restaurant_name,
+      NULL AS rider_name
     FROM dine_in_reports dr
     LEFT JOIN consumer c ON dr.consumer_id = c.consumer_id
     LEFT JOIN stakeholder s ON dr.stakeholder_id = s.stakeholder_id
@@ -317,11 +324,113 @@ const fetchTickets = async () => {
 };
 
 const updateDeliveryIssueStatus = async (issue_id, resolution_status) => {
+  const resolvedAt = resolution_status === 'resolved' ? 'NOW()' : 'NULL';
   const { rowCount } = await pool.query(
-    'UPDATE delivery_issues SET resolution_status = $1 WHERE issue_id = $2',
+    `UPDATE delivery_issues
+     SET resolution_status = $1,
+         resolved_at = ${resolvedAt}
+     WHERE issue_id = $2`,
     [resolution_status, issue_id]
   );
   return rowCount === 1;
+};
+
+const updateDineInReportStatus = async (report_id, resolution_status) => {
+  const resolvedAt = resolution_status === 'resolved' ? 'NOW()' : 'NULL';
+  const { rowCount } = await pool.query(
+    `UPDATE dine_in_reports
+     SET resolution_status = $1,
+         resolved_at = ${resolvedAt}
+     WHERE id = $2`,
+    [resolution_status, report_id]
+  );
+  return rowCount === 1;
+};
+
+const updateConsumerRestriction = async (consumer_id, restricted) => {
+  const { rowCount } = await pool.query(
+    'UPDATE consumer SET flag = $1, updated_at = NOW() WHERE consumer_id = $2',
+    [!restricted, consumer_id]
+  );
+  return rowCount === 1;
+};
+
+const updateStakeholderRestriction = async (stakeholder_id, restricted) => {
+  const { rowCount } = await pool.query(
+    'UPDATE stakeholder SET is_restricted = $1, updated_at = NOW() WHERE stakeholder_id = $2',
+    [restricted, stakeholder_id]
+  );
+  return rowCount === 1;
+};
+
+const deleteConsumerAccount = async (consumer_id) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM cart WHERE consumer_id = $1', [consumer_id]);
+    const { rowCount: consumerCount } = await client.query(
+      'DELETE FROM consumer WHERE consumer_id = $1',
+      [consumer_id]
+    );
+    if (consumerCount !== 1) {
+      await client.query('ROLLBACK');
+      return false;
+    }
+    await client.query('DELETE FROM users WHERE user_id = $1 AND role = $2', [consumer_id, 'consumer']);
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const deleteStakeholderAccount = async (stakeholder_id) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rowCount: stakeholderCount } = await client.query(
+      'DELETE FROM stakeholder WHERE stakeholder_id = $1',
+      [stakeholder_id]
+    );
+    if (stakeholderCount !== 1) {
+      await client.query('ROLLBACK');
+      return false;
+    }
+    await client.query('DELETE FROM users WHERE user_id = $1 AND role = $2', [stakeholder_id, 'stakeholder']);
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const deleteRiderAccount = async (rider_id) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const { rowCount: riderCount } = await client.query(
+      'DELETE FROM rider WHERE rider_id = $1',
+      [rider_id]
+    );
+    if (riderCount !== 1) {
+      await client.query('ROLLBACK');
+      return false;
+    }
+    await client.query('DELETE FROM users WHERE user_id = $1 AND role = $2', [rider_id, 'rider']);
+    await client.query('COMMIT');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 const fetchOrderItems = async (orderId) => {
@@ -388,6 +497,14 @@ const fetchReviews = async () => {
   `;
   const { rows } = await pool.query(sql);
   return rows;
+};
+
+const getReviewById = async (reviewId) => {
+  const { rows } = await pool.query(
+    'SELECT review_id, stakeholder_id FROM review WHERE review_id = $1',
+    [reviewId]
+  );
+  return rows[0] || null;
 };
 
 const deleteReview = async (reviewId) => {
@@ -587,12 +704,19 @@ module.exports = {
   fetchMenus,
   fetchTickets,
   updateDeliveryIssueStatus,
+  updateDineInReportStatus,
+  updateConsumerRestriction,
+  updateStakeholderRestriction,
+  deleteConsumerAccount,
+  deleteStakeholderAccount,
+  deleteRiderAccount,
   fetchOrderItems,
   fetchCuisines,
   createCuisine,
   updateCuisine,
   deleteCuisine,
   fetchReviews,
+  getReviewById,
   deleteReview,
   fetchActiveDeliveries,
   fetchDeliveryTracking,

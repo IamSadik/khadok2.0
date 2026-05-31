@@ -236,6 +236,7 @@ async function showOrderDetails(orderId) {
     const createdAt = new Date(order.order_date || order.pickup_date || order.created_at);
     const items = order.items || [];
     const reviewSection = renderReviewSection(order, orderId);
+    const issueSection = renderIssueSection(order, orderId);
 
     modalBody.innerHTML = `
         <div style="padding: 10px 0;">
@@ -357,6 +358,7 @@ async function showOrderDetails(orderId) {
             ` : ''}
 
             ${reviewSection}
+            ${issueSection}
         </div>
     `;
 
@@ -495,6 +497,109 @@ async function submitOrderReview(event, orderId) {
 }
 
 window.submitOrderReview = submitOrderReview;
+
+const ORDER_ISSUE_OPTIONS = [
+    { value: 'wrong_order', label: 'Wrong order' },
+    { value: 'order_damaged', label: 'Order damaged' },
+    { value: 'late_delivery', label: 'Late delivery / pickup' },
+    { value: 'wrong_address', label: 'Wrong address' },
+    { value: 'payment_issue', label: 'Payment issue' },
+    { value: 'other', label: 'Other' },
+];
+
+function canReportOrderIssue(order) {
+    const status = order.order_status || order.status;
+    return status && status !== 'cancelled' && status !== 'pending';
+}
+
+function renderIssueSection(order, orderId) {
+    if (order.open_issue_id) {
+        return `
+            <div class="detail-section review-section" style="margin-top: 25px;">
+                <h4><i class='bx bx-error-circle'></i> Reported Issue</h4>
+                <div class="review-readonly-card">
+                    <p><strong>Type:</strong> ${escapeHtml(order.open_issue_type || '--')}</p>
+                    <p><strong>Status:</strong> ${escapeHtml(order.open_issue_status || '--')}</p>
+                    <p class="review-text-display">${escapeHtml(order.open_issue_description || 'No details provided')}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    if (!canReportOrderIssue(order)) {
+        return '';
+    }
+
+    const options = ORDER_ISSUE_OPTIONS.map((option) =>
+        `<option value="${option.value}">${option.label}</option>`
+    ).join('');
+
+    return `
+        <div class="detail-section review-section" style="margin-top: 25px;">
+            <h4><i class='bx bx-error-circle'></i> Report an Issue</h4>
+            <form class="review-form" onsubmit="submitOrderIssue(event, ${orderId})">
+                <label for="issue-type-${orderId}">Issue type</label>
+                <select id="issue-type-${orderId}" class="review-input" required>
+                    <option value="">Select issue type</option>
+                    ${options}
+                </select>
+
+                <label for="issue-text-${orderId}">Describe the problem</label>
+                <textarea id="issue-text-${orderId}" class="review-input" maxlength="500" rows="3" placeholder="Tell us what went wrong..." required></textarea>
+
+                <button type="submit" class="submit-review-btn">
+                    <i class='bx bx-flag'></i> Submit Ticket
+                </button>
+            </form>
+        </div>
+    `;
+}
+
+async function submitOrderIssue(event, orderId) {
+    event.preventDefault();
+
+    const consumerId = localStorage.getItem('consumer_id');
+    if (!consumerId) {
+        alert('Please log in again to report an issue.');
+        return;
+    }
+
+    const issueTypeEl = document.getElementById(`issue-type-${orderId}`);
+    const textEl = document.getElementById(`issue-text-${orderId}`);
+    const issue_type = issueTypeEl?.value || '';
+    const description = (textEl?.value || '').trim();
+
+    if (!issue_type || !description) {
+        alert('Please choose an issue type and describe the problem.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/issue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                consumer_id: Number(consumerId),
+                issue_type,
+                description,
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to submit issue');
+        }
+
+        alert('Your issue was submitted. Our admin team will review it.');
+        await fetchOrders();
+        showOrderDetails(orderId);
+    } catch (error) {
+        console.error('Submit order issue error:', error);
+        alert(error.message || 'Failed to submit issue.');
+    }
+}
+
+window.submitOrderIssue = submitOrderIssue;
 
 function renderStars(rating) {
     const safeRating = Number(rating) || 0;

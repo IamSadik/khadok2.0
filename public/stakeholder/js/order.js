@@ -550,11 +550,86 @@ async function showOrderDetails(orderId) {
                     </div>
                 </div>
             ` : ''}
+
+            ${renderStakeholderIssueSection(order, orderId)}
         </div>
     `;
 
     orderModal.classList.add('active');
 }
+
+function renderStakeholderIssueSection(order, orderId) {
+    const status = order.order_status || order.status;
+    if (!status || status === 'cancelled' || status === 'pending') {
+        return '';
+    }
+
+    return `
+        <div class="order-detail-section" style="margin-top: 25px;">
+            <h3 style="color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-flag"></i> Report Order Issue
+            </h3>
+            <form onsubmit="submitStakeholderOrderIssue(event, ${orderId})">
+                <label for="stakeholder-issue-type-${orderId}">Issue type</label>
+                <select id="stakeholder-issue-type-${orderId}" required style="width:100%; margin-bottom:10px;">
+                    <option value="">Select issue type</option>
+                    <option value="consumer_unavailable">Customer unavailable</option>
+                    <option value="wrong_order">Wrong order details</option>
+                    <option value="payment_issue">Payment issue</option>
+                    <option value="other">Other</option>
+                </select>
+                <label for="stakeholder-issue-text-${orderId}">Description</label>
+                <textarea id="stakeholder-issue-text-${orderId}" maxlength="500" rows="3" required style="width:100%; margin-bottom:10px;" placeholder="Describe the issue..."></textarea>
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-paper-plane"></i> Submit Ticket
+                </button>
+            </form>
+        </div>
+    `;
+}
+
+async function submitStakeholderOrderIssue(event, orderId) {
+    event.preventDefault();
+
+    const stakeholderId = localStorage.getItem('stakeholder_id');
+    if (!stakeholderId) {
+        alert('Please log in again.');
+        return;
+    }
+
+    const issueType = document.getElementById(`stakeholder-issue-type-${orderId}`)?.value;
+    const description = document.getElementById(`stakeholder-issue-text-${orderId}`)?.value.trim();
+
+    if (!issueType || !description) {
+        alert('Please complete the issue form.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/orders/${orderId}/issue`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                stakeholder_id: Number(stakeholderId),
+                issue_type: issueType,
+                description,
+            }),
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to submit issue');
+        }
+
+        alert('Issue submitted to admin support.');
+        closeModal();
+    } catch (error) {
+        console.error('Stakeholder issue submit error:', error);
+        alert(error.message || 'Failed to submit issue.');
+    }
+}
+
+window.submitStakeholderOrderIssue = submitStakeholderOrderIssue;
 
 // Make function global
 window.showOrderDetails = showOrderDetails;

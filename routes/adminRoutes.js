@@ -20,6 +20,12 @@ const {
     getMenus,
     getTickets,
     updateDeliveryIssueStatus,
+    updateDineInTicketStatus,
+    restrictConsumer,
+    restrictStakeholder,
+    deleteConsumer,
+    deleteStakeholder,
+    deleteRider,
     getOrderItems,
     getCuisines,
     createCuisine,
@@ -74,6 +80,12 @@ router.get("/reviews", getReviews);
 router.delete("/reviews/:id", deleteReview);
 router.get("/tickets", getTickets);
 router.patch("/tickets/delivery/:id/status", updateDeliveryIssueStatus);
+router.patch("/tickets/dine-in/:id/status", updateDineInTicketStatus);
+router.patch("/consumers/:id/restrict", restrictConsumer);
+router.delete("/consumers/:id", deleteConsumer);
+router.patch("/stakeholders/:id/restrict", restrictStakeholder);
+router.delete("/stakeholders/:id", deleteStakeholder);
+router.delete("/riders/:id", deleteRider);
 router.get("/deliveries/active", getActiveDeliveries);
 router.get("/deliveries/:orderId/tracking", getDeliveryTracking);
 router.get("/pickups", getPickups);

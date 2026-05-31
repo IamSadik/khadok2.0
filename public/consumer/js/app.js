@@ -1012,6 +1012,7 @@ window.viewRestaurant = function(restaurantId) {
 let activeDeliveryNotifications = [];
 let notificationCheckInterval = null;
 let trackingWidgetVisible = false;
+let deliverySocket = null;
 
 // 🔥 Function to check for active deliveries and show notifications
 async function checkForActiveDeliveries() {
@@ -1044,15 +1045,13 @@ async function checkForActiveDeliveries() {
         delivery_status: order.delivery_status
       });
 
-      // Show persistent widget if not already visible
-      if (!trackingWidgetVisible) {
-        showTrackingWidget(order);
-      }
+      applyOrderUpdate(order);
 
-      // ✅ Show popup notification for new orders
       if (!activeDeliveryNotifications.includes(order.id)) {
         showDeliveryNotification(order);
         activeDeliveryNotifications.push(order.id);
+      } else {
+        updateDeliveryNotification(order);
       }
     } else {
       // No active orders - hide widget
@@ -1067,6 +1066,8 @@ async function checkForActiveDeliveries() {
 // 🔥 Function to show delivery notification popup (temporary)
 function showDeliveryNotification(order) {
   console.log('🔔 Showing delivery notification for order:', order);
+
+  const normalizedStatus = normalizeStatus(order.delivery_status, order.order_status);
 
   // Create notification element
   const notification = document.createElement('div');
@@ -1095,7 +1096,7 @@ function showDeliveryNotification(order) {
       </div>
       <div class="notification-status">
         <i class="fas fa-shipping-fast"></i>
-        ${getStatusMessage(order.delivery_status)}
+        ${getStatusMessage(normalizedStatus)}
       </div>
       <div class="notification-actions">
         <button class="notification-btn primary" onclick="trackDelivery(${order.id})">
@@ -1127,6 +1128,18 @@ function showDeliveryNotification(order) {
   }, 30000);
 }
 
+// 🔥 Update an existing notification if it's already visible
+function updateDeliveryNotification(order) {
+  const notification = document.querySelector(`.delivery-notification[data-order-id="${order.id}"]`);
+  if (!notification) return;
+
+  const normalizedStatus = normalizeStatus(order.delivery_status, order.order_status);
+  const statusNode = notification.querySelector('.notification-status');
+  if (statusNode) {
+    statusNode.innerHTML = `<i class="fas fa-shipping-fast"></i> ${getStatusMessage(normalizedStatus)}`;
+  }
+}
+
 // 🔥 Function to show persistent tracking widget (bottom-right)
 function showTrackingWidget(order) {
   let widget = document.getElementById('order-tracking-widget');
@@ -1141,12 +1154,13 @@ function showTrackingWidget(order) {
 
   // Get order status information
   const restaurantName = order.restaurant_name || 'Restaurant';
-  const statusText = getWidgetStatusText(order.delivery_status);
+  const normalizedStatus = normalizeStatus(order.delivery_status, order.order_status);
+  const statusText = getWidgetStatusText(normalizedStatus);
   
   // Determine progress steps
   const isConfirmed = true; // Always true if order exists
-  const isPreparing = ['preparing', 'ready', 'picked_up', 'on_the_way'].includes(order.delivery_status);
-  const isOnWay = ['picked_up', 'on_the_way'].includes(order.delivery_status);
+  const isPreparing = ['preparing', 'ready', 'picked_up', 'on_the_way', 'arrived'].includes(normalizedStatus);
+  const isOnWay = ['picked_up', 'on_the_way', 'arrived'].includes(normalizedStatus);
 
   widget.innerHTML = `
     <div class="widget-header">
@@ -1202,12 +1216,16 @@ window.closeTrackingWidget = function() {
 // 🔥 Function to get status message for notification
 function getStatusMessage(deliveryStatus) {
   const messages = {
+    'pending_rider': 'Finding a delivery partner',
+    'assigned': 'Rider assigned and preparing to pick up',
     'pending': 'Your order has been placed',
     'confirmed': 'Restaurant is preparing your order',
     'preparing': 'Your food is being prepared',
     'ready': 'Your order is ready for pickup',
     'picked_up': 'Rider is on the way to you',
+    'out_for_delivery': 'Rider is on the way to you',
     'on_the_way': 'Delivery partner is arriving soon',
+    'arrived': 'Rider has arrived at your location',
     'delivered': 'Your order has been delivered',
     'cancelled': 'Order was cancelled'
   };
@@ -1218,12 +1236,16 @@ function getStatusMessage(deliveryStatus) {
 // 🔥 Function to get widget status text
 function getWidgetStatusText(deliveryStatus) {
   const texts = {
+    'pending_rider': 'Finding Rider',
+    'assigned': 'Rider Assigned',
     'pending': 'Order Placed',
     'confirmed': 'Being Prepared',
     'preparing': 'Preparing Your Food',
     'ready': 'Ready for Pickup',
     'picked_up': 'On The Way',
+    'out_for_delivery': 'On The Way',
     'on_the_way': 'Arriving Soon',
+    'arrived': 'Arrived',
     'delivered': 'Delivered',
     'cancelled': 'Cancelled'
   };
@@ -1265,6 +1287,71 @@ window.openTrackingPage = function() {
   }
 };
 
+// Normalize backend status fields to UI-friendly stages
+function normalizeStatus(deliveryStatus, orderStatus) {
+  const rawDelivery = String(deliveryStatus || '').trim();
+  const rawOrder = String(orderStatus || '').trim();
+  const orderPriority = new Set(['preparing', 'ready', 'completed', 'cancelled']);
+  const map = {
+    pending_rider: 'pending',
+    assigned: 'confirmed',
+    out_for_delivery: 'on_the_way',
+    arrived: 'arrived'
+  };
+
+  if (orderPriority.has(rawOrder)) return rawOrder;
+  if (rawDelivery && map[rawDelivery]) return map[rawDelivery];
+  if (rawDelivery) return rawDelivery;
+  if (rawOrder) return rawOrder;
+  return 'pending';
+}
+
+function applyOrderUpdate(order) {
+  if (!order) return;
+  showTrackingWidget(order);
+}
+
+function initDeliverySocket() {
+  if (typeof io !== 'function') {
+    console.warn('⚠️ Socket.io not available for delivery updates');
+    return;
+  }
+
+  if (deliverySocket) return;
+  deliverySocket = io();
+
+  deliverySocket.on('connect', () => {
+    const consumerId = localStorage.getItem('consumer_id');
+    if (consumerId) {
+      deliverySocket.emit('registerConsumer', consumerId);
+    }
+  });
+
+  const handleStatusUpdate = (payload) => {
+    if (!payload || !payload.order_id) return;
+    const order = {
+      id: payload.order_id,
+      order_status: payload.order_status || payload.status,
+      delivery_status: payload.delivery_status || payload.status,
+      restaurant_name: payload.restaurant_name,
+      rider_name: payload.rider_name,
+      estimated_delivery_time: payload.estimated_time
+    };
+
+    applyOrderUpdate(order);
+
+    if (!activeDeliveryNotifications.includes(order.id)) {
+      showDeliveryNotification(order);
+      activeDeliveryNotifications.push(order.id);
+    } else {
+      updateDeliveryNotification(order);
+    }
+  };
+
+  deliverySocket.on('deliveryStatusUpdate', handleStatusUpdate);
+  deliverySocket.on('order-status-update', handleStatusUpdate);
+}
+
 // 🔥 Function to play notification sound
 function playNotificationSound() {
   try {
@@ -1279,6 +1366,7 @@ function playNotificationSound() {
 
 // 🔥 Initialize delivery notification system when dashboard loads
 document.addEventListener('DOMContentLoaded', () => {
+  initDeliverySocket();
   // Check for active deliveries immediately
   setTimeout(() => {
     checkForActiveDeliveries();

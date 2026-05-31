@@ -91,8 +91,14 @@ app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+const allowedHtmlPaths = new Set([
+    '/login.html',
+    '/consumer/payment-callback.html',
+    '/consumer/payment-success.html'
+]);
+
 app.use((req, res, next) => {
-    if (req.path.endsWith('.html') && !req.path.includes('/login.html')) {
+    if (req.path.endsWith('.html') && !allowedHtmlPaths.has(req.path)) {
         return res.status(403).send('Direct access to HTML files is restricted.');
     }
     next();

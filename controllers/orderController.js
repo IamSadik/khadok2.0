@@ -2,6 +2,15 @@ const orderModel = require('../models/orderModel');
 const db = require('../config/configdb');
 
 const REVIEW_WINDOW_MINUTES = 45;
+const ORDER_ISSUE_TYPES = [
+  'wrong_address',
+  'consumer_unavailable',
+  'order_damaged',
+  'late_delivery',
+  'wrong_order',
+  'payment_issue',
+  'other',
+];
 
 const toTypeVariants = (type) => {
   const raw = String(type ?? '').trim();
@@ -599,14 +608,18 @@ exports.updateOrderStatus = async (req, res) => {
       const io = req.app.get('io');
       const notificationData = {
         order_id: order.id,
-        status: order_status,
+        orderId: order.id,
+        order_status: order.order_status,
+        delivery_status: order.delivery_status,
+        status: order.delivery_status || order.order_status,
         restaurant_name: order.restaurant_name || 'Restaurant',
         rider_name: order.rider_name || null,
         estimated_time: order.estimated_delivery_time || null
       };
-      
-      // Emit to specific consumer
+
       io.to(`consumer-${order.consumer_id}`).emit('deliveryStatusUpdate', notificationData);
+      io.to(`consumer-${order.consumer_id}`).emit('order-status-update', notificationData);
+      io.to(`order-${order.id}`).emit('order-status-update', notificationData);
       console.log(`🔔 Notification sent to consumer ${order.consumer_id} for order ${order_id}`);
     }
     
@@ -885,6 +898,97 @@ exports.submitOrderReview = async (req, res) => {
   }
 };
 
+// Report an order issue (consumer or stakeholder) for admin ticket handling.
+exports.submitOrderIssue = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+    const { consumer_id, stakeholder_id, issue_type, description } = req.body;
+
+    if (!order_id || !issue_type || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Order ID, issue type, and description are required',
+      });
+    }
+
+    if (!ORDER_ISSUE_TYPES.includes(issue_type)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid issue type',
+      });
+    }
+
+    const safeDescription = String(description).trim().slice(0, 500);
+    if (!safeDescription) {
+      return res.status(400).json({
+        success: false,
+        message: 'Description is required',
+      });
+    }
+
+    const order = await orderModel.getOrderForIssue(order_id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    if (order.order_status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot report issues for cancelled orders',
+      });
+    }
+
+    const isConsumerReport =
+      consumer_id && Number(consumer_id) === Number(order.consumer_id);
+    const isStakeholderReport =
+      stakeholder_id && Number(stakeholder_id) === Number(order.stakeholder_id);
+
+    if (!isConsumerReport && !isStakeholderReport) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not allowed to report an issue for this order',
+      });
+    }
+
+    const existingIssue = await orderModel.getOpenOrderIssue(order_id);
+    if (existingIssue) {
+      return res.status(409).json({
+        success: false,
+        message: 'An open ticket already exists for this order',
+        issue: existingIssue,
+      });
+    }
+
+    const issueDescription = isStakeholderReport
+      ? `[Stakeholder report] ${safeDescription}`
+      : safeDescription;
+
+    const savedIssue = await orderModel.createOrderIssue({
+      order_id: Number(order_id),
+      consumer_id: order.consumer_id,
+      rider_id: order.rider_id || null,
+      issue_type,
+      description: issueDescription,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Issue reported successfully. Our team will review it.',
+      issue: savedIssue,
+    });
+  } catch (error) {
+    console.error('Submit order issue error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit order issue',
+      error: error.message,
+    });
+  }
+};
+
 // AUTO RIDER ASSIGNMENT ALGORITHM
 async function assignRiderToOrder(orderId) {
   try {
@@ -1028,6 +1132,25 @@ exports.updateDeliveryStatus = async (req, res) => {
       if (order && order.rider_id) {
         await createRiderEarnings(order);
       }
+    }
+
+    const updatedOrder = await orderModel.getOrderById(order_id);
+    if (updatedOrder && req.app.get('io')) {
+      const io = req.app.get('io');
+      const notificationData = {
+        order_id: updatedOrder.id,
+        orderId: updatedOrder.id,
+        order_status: updatedOrder.order_status,
+        delivery_status: updatedOrder.delivery_status,
+        status: updatedOrder.delivery_status || updatedOrder.order_status,
+        restaurant_name: updatedOrder.restaurant_name || 'Restaurant',
+        rider_name: updatedOrder.rider_name || null,
+        estimated_time: updatedOrder.estimated_delivery_time || null
+      };
+
+      io.to(`consumer-${updatedOrder.consumer_id}`).emit('deliveryStatusUpdate', notificationData);
+      io.to(`consumer-${updatedOrder.consumer_id}`).emit('order-status-update', notificationData);
+      io.to(`order-${updatedOrder.id}`).emit('order-status-update', notificationData);
     }
 
     res.json({

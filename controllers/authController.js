@@ -24,6 +24,14 @@ exports.login = async (req, res) => {
             });
         }
 
+        const isRestricted = await authModel.isUserRestricted(user.user_id, user.role);
+        if (isRestricted) {
+            return res.status(403).json({
+                success: false,
+                message: 'Your account has been restricted. Please contact support.'
+            });
+        }
+
         // 3 & 4. Rotate session to clear old one, then store user info in the new session
         return req.session.regenerate((err) => {
             if (err) {
