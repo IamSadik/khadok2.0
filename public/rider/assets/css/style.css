@@ -1106,3 +1106,80 @@ button:hover {
       font-size: 1.2rem;
   }
 }
+
+.rider-topbar-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 12px;
+}
+
+.rider-topbar-meta strong {
+  font-size: 1rem;
+  color: var(--blue);
+}
+
+.rider-topbar-meta span {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.user.avatar-fallback,
+.user .avatar-initials {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3F8883, #5C8374);
+  color: #fff;
+  font-weight: 700;
+}
+
+.user img {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.recentCustomers .imgBx {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #3F8883;
+}
+
+.settings-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+  max-width: 720px;
+}
+
+.settings-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-grid label {
+  font-weight: 600;
+  color: #334155;
+}
+
+.settings-grid input,
+.settings-grid select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}

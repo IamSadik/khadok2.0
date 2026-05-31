@@ -1,5 +1,6 @@
 const riderModel = require('../models/riderModel');
 const orderModel = require('../models/orderModel');
+const orderChatModel = require('../models/orderChatModel');
 const multer = require('multer');
 const path = require('path');
 
@@ -804,6 +805,21 @@ exports.checkWorkingHours = async (req, res) => {
             message: 'Failed to check working hours',
             error: error.message
         });
+    }
+};
+
+exports.getChatThreads = async (req, res) => {
+    try {
+        const riderId = req.params.riderId || req.query.rider_id;
+        if (!riderId) {
+            return res.status(400).json({ success: false, message: 'Rider ID is required' });
+        }
+
+        const threads = await orderChatModel.getRiderChatThreads(riderId);
+        res.json({ success: true, threads });
+    } catch (error) {
+        console.error('Error fetching rider chat threads:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch chat threads' });
     }
 };
 

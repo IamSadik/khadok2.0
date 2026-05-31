@@ -1,4 +1,5 @@
 const orderModel = require('../models/orderModel');
+const orderChatModel = require('../models/orderChatModel');
 const db = require('../config/configdb');
 
 const REVIEW_WINDOW_MINUTES = 45;
@@ -986,6 +987,106 @@ exports.submitOrderIssue = async (req, res) => {
       message: 'Failed to submit order issue',
       error: error.message,
     });
+  }
+};
+
+exports.getOrderMessages = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+    const { consumer_id, rider_id } = req.query;
+
+    const order = await orderChatModel.getOrderChatContext(order_id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    const isConsumer = consumer_id && orderChatModel.isParticipant(order, 'consumer', consumer_id);
+    const isRider = rider_id && orderChatModel.isParticipant(order, 'rider', rider_id);
+
+    if (!isConsumer && !isRider) {
+      return res.status(403).json({ success: false, message: 'Not allowed to view this chat' });
+    }
+
+    if (!orderChatModel.canReadChatHistory(order)) {
+      return res.status(400).json({ success: false, message: 'Chat is not available for this order' });
+    }
+
+    const messages = await orderChatModel.getOrderMessages(order_id);
+    res.json({
+      success: true,
+      messages,
+      can_send: orderChatModel.canSendChatMessage(order),
+    });
+  } catch (error) {
+    console.error('Get order messages error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load messages' });
+  }
+};
+
+exports.postOrderMessage = async (req, res) => {
+  try {
+    const { order_id } = req.params;
+    const { consumer_id, rider_id, body } = req.body;
+
+    const sender_type = consumer_id ? 'consumer' : rider_id ? 'rider' : null;
+    const sender_id = consumer_id || rider_id;
+
+    if (!sender_type || !sender_id || !body) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sender and message body are required',
+      });
+    }
+
+    const safeBody = String(body).trim().slice(0, 1000);
+    if (!safeBody) {
+      return res.status(400).json({ success: false, message: 'Message cannot be empty' });
+    }
+
+    const order = await orderChatModel.getOrderChatContext(order_id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    if (!orderChatModel.isParticipant(order, sender_type, sender_id)) {
+      return res.status(403).json({ success: false, message: 'Not allowed to send messages for this order' });
+    }
+
+    if (!orderChatModel.canSendChatMessage(order)) {
+      return res.status(400).json({ success: false, message: 'Chat is closed for this order' });
+    }
+
+    const message = await orderChatModel.createOrderMessage({
+      order_id: Number(order_id),
+      sender_type,
+      sender_id: Number(sender_id),
+      body: safeBody,
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`order-${order_id}`).emit('chat-message', message);
+    }
+
+    res.status(201).json({ success: true, message });
+  } catch (error) {
+    console.error('Post order message error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send message' });
+  }
+};
+
+exports.getConsumerChatThreads = async (req, res) => {
+  try {
+    const { consumer_id } = req.query;
+    if (!consumer_id) {
+      return res.status(400).json({ success: false, message: 'consumer_id is required' });
+    }
+
+    const threads = await orderChatModel.getConsumerChatThreads(consumer_id);
+    res.json({ success: true, threads });
+  } catch (error) {
+    console.error('Get consumer chat threads error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load chat threads' });
   }
 };
 

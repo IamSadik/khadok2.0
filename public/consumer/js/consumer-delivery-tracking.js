@@ -35,6 +35,7 @@
         await loadMapTileURL();
         await loadOrderData();
         initializeSocket();
+        await initOrderChat();
         setupEventListeners();
         
         // Hide loading overlay
@@ -310,6 +311,21 @@
         `;
     }
 
+    async function initOrderChat() {
+        if (typeof OrderChat === 'undefined' || !orderData || !consumerId) return;
+        if (!orderData.rider_id) return;
+
+        const chat = new OrderChat({
+            orderId,
+            senderType: 'consumer',
+            senderId: consumerId,
+            peerLabel: orderData.rider_name || 'Rider',
+            container: '#order-chat-container',
+            socket,
+        });
+        await chat.init();
+    }
+
     // Initialize Socket.IO connection
     function initializeSocket() {
         console.log('🔌 Connecting to Socket.IO...');
@@ -350,6 +366,7 @@
         // Connection status
         socket.on('connect', () => {
             console.log('✅ Socket connected');
+            if (consumerId) socket.emit('registerConsumer', consumerId);
             document.getElementById('locationIndicator').style.display = 'flex';
         });
 

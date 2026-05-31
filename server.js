@@ -10,6 +10,7 @@ const http = require('http');
 const socketio = require('socket.io');
 
 const pool = require('./config/configdb');
+const orderChatModel = require('./models/orderChatModel');
 const authRoutes = require('./routes/authRoutes');
 const signupRoutes = require('./routes/signupRoutes');
 const sessionMiddleware = require('./middlewares/sessionMiddleware');
@@ -160,6 +161,42 @@ io.on('connection', (socket) => {
         });
 
         console.log(`Location update for order ${orderId}: ${lat}, ${lng}`);
+    });
+
+    // Order-scoped rider ↔ consumer chat
+    socket.on('chat-message', async (payload, callback) => {
+        try {
+            const orderId = payload?.orderId;
+            const senderType = payload?.senderType;
+            const senderId = payload?.senderId;
+            const body = String(payload?.body || '').trim().slice(0, 1000);
+
+            if (!orderId || !senderType || !senderId || !body) {
+                throw new Error('Invalid chat payload');
+            }
+
+            const order = await orderChatModel.getOrderChatContext(orderId);
+            if (!order) throw new Error('Order not found');
+            if (!orderChatModel.isParticipant(order, senderType, senderId)) {
+                throw new Error('Not allowed to chat on this order');
+            }
+            if (!orderChatModel.canSendChatMessage(order)) {
+                throw new Error('Chat is closed for this order');
+            }
+
+            const message = await orderChatModel.createOrderMessage({
+                order_id: Number(orderId),
+                sender_type: senderType,
+                sender_id: Number(senderId),
+                body,
+            });
+
+            io.to(`order-${orderId}`).emit('chat-message', message);
+            if (typeof callback === 'function') callback({ success: true, message });
+        } catch (error) {
+            console.error('Socket chat-message error:', error.message);
+            if (typeof callback === 'function') callback({ success: false, error: error.message });
+        }
     });
 
     // Handle disconnection

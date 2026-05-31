@@ -1102,6 +1102,9 @@ function showDeliveryNotification(order) {
         <button class="notification-btn primary" onclick="trackDelivery(${order.id})">
           <i class="fas fa-map-marked-alt"></i> Track Live
         </button>
+        <button class="notification-btn secondary" onclick="messageRider(${order.id})">
+          <i class="fas fa-comments"></i> Message Rider
+        </button>
         <button class="notification-btn secondary" onclick="closeDeliveryNotification('${order.id}')">
           <i class="fas fa-check"></i> Got it
         </button>
@@ -1192,6 +1195,9 @@ function showTrackingWidget(order) {
       <button class="widget-track-btn" onclick="trackDelivery(${order.id})">
         <i class="fas fa-map-marked-alt"></i> Track on Map
       </button>
+      <button class="widget-track-btn" style="margin-top:8px;background:#3F8883;" onclick="messageRider(${order.id})">
+        <i class="fas fa-comments"></i> Message Rider
+      </button>
     </div>
   `;
 
@@ -1275,6 +1281,11 @@ window.trackDelivery = function(orderId) {
   
   // Navigate to consumer tracking page
   window.location.href = `consumer-delivery-tracking.html?order_id=${orderId}`;
+};
+
+window.messageRider = function(orderId) {
+  closeDeliveryNotification(orderId);
+  window.location.href = `consumer-delivery-tracking.html?order_id=${orderId}#chat`;
 };
 
 // 🔥 Function to open tracking page from widget

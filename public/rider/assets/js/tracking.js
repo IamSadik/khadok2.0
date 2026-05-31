@@ -26,6 +26,7 @@
         await loadMapTileURL();
         await loadOrderData();
         initializeSocket();
+        await initOrderChat();
         setupEventListeners();
         startLocationTracking();
     });
@@ -276,6 +277,19 @@
         `;
     }
 
+    async function initOrderChat() {
+        if (typeof OrderChat === 'undefined' || !orderData) return;
+        const chat = new OrderChat({
+            orderId,
+            senderType: 'rider',
+            senderId: riderId,
+            peerLabel: orderData.consumer_name || 'Customer',
+            container: '#order-chat-container',
+            socket,
+        });
+        await chat.init();
+    }
+
     // Initialize Socket.IO connection
     function initializeSocket() {
         socket = io();
@@ -296,6 +310,7 @@
         // Connection status
         socket.on('connect', () => {
             console.log('Socket connected');
+            socket.emit('registerRider', riderId);
             document.getElementById('locationIndicator').style.display = 'flex';
         });
 

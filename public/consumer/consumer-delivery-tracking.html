@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Your Delivery - KHADOK</title>
     
-    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="/css/order-chat.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Animate CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
@@ -736,9 +736,9 @@
             </h2>
         </div>
 
-        <div class="order-info" id="orderInfo">
-            <!-- Order information will be loaded here -->
-        </div>
+        <div class="order-info" id="orderInfo"></div>
+
+        <div id="order-chat-container" style="padding: 0 16px 16px;"></div>
 
         <div class="nav-controls">
             <button class="nav-btn secondary" onclick="centerOnRider()">
@@ -788,6 +788,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
 
+    <script src="/js/order-chat.js"></script>
     <script src="js/consumer-delivery-tracking.js"></script>
 </body>
 </html>

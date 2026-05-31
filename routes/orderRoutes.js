@@ -23,6 +23,13 @@ router.get('/pickup', orderController.getConsumerPickupOrdersQuery);
 // ✅ NEW: Get active delivery orders for a consumer
 router.get('/consumer/:consumer_id/active', orderController.getActiveDeliveryOrders);
 
+// Chat threads for consumer dashboard
+router.get('/chat/consumer', orderController.getConsumerChatThreads);
+
+// Order chat messages
+router.get('/:order_id/messages', orderController.getOrderMessages);
+router.post('/:order_id/messages', orderController.postOrderMessage);
+
 // ✅ NEW: Get single order by ID (for tracking page)
 router.get('/:order_id', orderController.getOrderById);
 

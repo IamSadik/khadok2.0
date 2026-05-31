@@ -71,4 +71,7 @@ router.post('/orders/cancel', riderController.cancelOrder);
 // Get delivery history
 router.get('/history/:riderId', riderController.getDeliveryHistory);
 
+// Active delivery chat threads
+router.get('/chat-threads/:riderId', riderController.getChatThreads);
+
 module.exports = router;

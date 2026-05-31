@@ -14,12 +14,10 @@
     // Initialize dashboard on page load
     document.addEventListener('DOMContentLoaded', function() {
         initRealtime();
-        loadRiderProfile();
         loadRiderStats();
-        loadActiveDeliveries(); // Load active deliveries first
+        loadActiveDeliveries();
         loadRecentOrders();
         loadRecentCustomers();
-        setupSignOut();
         setupStatusToggle();
         
         // Refresh data every 30 seconds
@@ -54,22 +52,9 @@
         }
     }
 
-    // Load rider profile information
+    // Load rider profile information (header handled by rider-shared.js)
     async function loadRiderProfile() {
-        try {
-            const response = await fetch(`/api/rider/profile/${riderId}`);
-            const data = await response.json();
-
-            if (data.success && data.rider) {
-                const rider = data.rider;
-                // Update avatar if available
-                if (rider.profile_image) {
-                    document.getElementById('riderAvatar').src = rider.profile_image;
-                }
-            }
-        } catch (error) {
-            console.error('Error loading rider profile:', error);
-        }
+        return;
     }
 
     // Load rider statistics
@@ -249,10 +234,11 @@
 
     // View order details (modal or navigation)
     window.viewOrderDetails = function(orderId) {
-        // You can implement a modal here or navigate to order details page
-        console.log('View order details:', orderId);
-        // For now, just show an alert - you can expand this later
-        alert(`Order #${orderId}\n\nClick OK to continue.\n\n(Feature: Full order details view can be implemented here)`);
+        window.location.href = `tracking.html?orderId=${orderId}`;
+    };
+
+    window.openOrderChat = function(orderId) {
+        window.location.href = `messages.html?orderId=${orderId}`;
     };
 
     // Load recent customers from order history
@@ -294,16 +280,15 @@
             }
         }
 
-        table.innerHTML = uniqueCustomers.map((order, index) => {
-            const imgSrc = order.consumer_image || 
-                          (index % 2 === 0 ? 'assets/imgs/customer01.jpg' : 'assets/imgs/customer02.jpg');
+        table.innerHTML = uniqueCustomers.map((order) => {
             const name = order.consumer_name || order.customer_name || 'Customer';
             const location = order.delivery_address || order.address || 'Unknown Location';
-            
+            const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'C';
+
             return `
                 <tr>
                     <td width="60px">
-                        <div class="imgBx"><img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(name)}" onerror="this.src='assets/imgs/customer01.jpg'"></div>
+                        <div class="imgBx">${initials}</div>
                     </td>
                     <td>
                         <h4>${escapeHtml(name)} <br> <span>${escapeHtml(truncate(location, 25))}</span></h4>
@@ -422,64 +407,8 @@
         `;
     }
 
-    // Setup sign out functionality
-    function setupSignOut() {
-        const signOutBtn = document.getElementById('signOutBtn');
-        if (signOutBtn) {
-            signOutBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                await logout();
-            });
-        }
-    }
-
-    // Logout function
-    async function logout() {
-        const sessionId = localStorage.getItem("sessionId");
-
-        if (!sessionId) {
-            console.warn("No session found.");
-            // Clear all session data anyway
-            sessionStorage.clear();
-            localStorage.removeItem('rider_id');
-            window.location.href = '../rider_login.html';
-            return;
-        }
-
-        try {
-            const res = await fetch("/api/auth/logout", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sessionId }),
-                credentials: "include", // Include the session cookie in the request
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                localStorage.removeItem("sessionId"); // Clear sessionId from localStorage after logout
-                sessionStorage.clear(); // Clear all session data
-                localStorage.removeItem('rider_id'); // Clear rider ID
-                alert(data.message || "Logged out successfully"); // Show success message
-                window.location.href = '../rider_login.html';
-            } else {
-                // Even if logout fails on server, clear local data
-                localStorage.removeItem("sessionId");
-                sessionStorage.clear();
-                localStorage.removeItem('rider_id');
-                alert(data.message || "Logout failed.");
-                window.location.href = '../rider_login.html'; // Redirect to login page on error
-            }
-        } catch (err) {
-            console.error("Logout error:", err);
-            // Clear local data even on error
-            localStorage.removeItem("sessionId");
-            sessionStorage.clear();
-            localStorage.removeItem('rider_id');
-            alert("Something went wrong during logout.");
-            window.location.href = '../rider_login.html'; // Redirect to login page on error
-        }
-    }
+    // Setup sign out functionality (handled by rider-shared.js on index/settings/messages)
+    function setupSignOut() {}
 
     // Setup status toggle buttons
     function setupStatusToggle() {
@@ -727,6 +656,22 @@
                     " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(33, 150, 243, 0.4)';"
                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(33, 150, 243, 0.3)';">
                         📍 Live Tracking
+                    </button>
+                    <button onclick="event.stopPropagation(); openOrderChat(${order.id})" style="
+                        position: absolute;
+                        top: 58px;
+                        right: 15px;
+                        padding: 8px 16px;
+                        background: linear-gradient(135deg, #3F8883 0%, #5C8374 100%);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-size: 0.85rem;
+                        z-index: 10;
+                    ">
+                        💬 Message
                     </button>
                     
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; padding-right: 140px;">

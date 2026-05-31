@@ -241,7 +241,7 @@
     </style>
 </head>
 
-<body>
+<body data-page="dashboard">
     <!-- =============== Navigation ================ -->
     <div class="container">
         <div class="navigation">
@@ -256,7 +256,7 @@
                 </li>
 
                 <li>
-                    <a href="#">
+                    <a href="index.html" data-nav="dashboard" class="active">
                         <span class="icon">
                             <ion-icon name="home-outline"></ion-icon>
                         </span>
@@ -265,24 +265,7 @@
                 </li>
 
                 <li>
-                    <a href="customer.html">
-                        <span class="icon">
-                            <ion-icon name="people-outline"></ion-icon>
-                        </span>
-                        <span class="title">Customers</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="tracking.html">
-                        <span class="icon">
-                            <ion-icon name="navigate-outline"></ion-icon>
-                        </span>
-                        <span class="title">Tracking</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="messages.html">
+                    <a href="messages.html" data-nav="messages">
                         <span class="icon">
                             <ion-icon name="chatbubble-outline"></ion-icon>
                         </span>
@@ -291,23 +274,13 @@
                 </li>
 
                 <li>
-                    <a href="help.html">
-                        <span class="icon">
-                            <ion-icon name="help-outline"></ion-icon>
-                        </span>
-                        <span class="title">Help</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="settings.html">
+                    <a href="settings.html" data-nav="settings">
                         <span class="icon">
                             <ion-icon name="settings-outline"></ion-icon>
                         </span>
                         <span class="title">Settings</span>
                     </a>
                 </li>
-
 
                 <li>
                     <a href="#" id="signOutBtn">
@@ -327,16 +300,12 @@
                     <ion-icon name="menu-outline"></ion-icon>
                 </div>
 
-                <div class="search">
-                    <label>
-                        <input type="text" placeholder="Search here">
-                        <ion-icon name="search-outline"></ion-icon>
-                    </label>
+                <div class="rider-topbar-meta">
+                    <strong id="riderDisplayName">Rider</strong>
+                    <span>Khadok Delivery Partner</span>
                 </div>
 
-                <div class="user">
-                    <img src="assets/imgs/customer01.jpg" alt="" id="riderAvatar">
-                </div>
+                <div class="user" id="riderAvatar"></div>
             </div>
 
             <!-- ======================= Cards ================== --> 
@@ -404,7 +373,7 @@
                 <div class="card">
                     <div>
                         <div class="numbers" id="totalEarnings">৳0</div>
-                        <div class="cardName">Total Earnings</div>
+                        <div class="cardName">Today's Earnings</div>
                     </div>
 
                     <div class="iconBx">
@@ -433,7 +402,7 @@
                 <div class="recentOrders">
                     <div class="cardHeader">
                         <h2>Recent Orders</h2>
-                        <a href="#" class="btn">View All</a>
+                        <a href="messages.html" class="btn">Open Chats</a>
                     </div>
 
                     <table>
@@ -585,6 +554,7 @@
     <!-- =========== Scripts =========  -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="assets/js/rider-shared.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/dashboard.js"></script>
 
