@@ -704,6 +704,12 @@ exports.updateOrderStatus = async (req, res) => {
         case 'completed':
           trackingMessage = 'Order completed';
           await orderModel.createTrackingEntry(order_id, order.rider_id, 'completed', trackingMessage);
+          
+          // Free up rider if assigned (for delivery orders)
+          if (order.rider_id && order.order_type === 'delivery') {
+            await orderModel.updateRiderStatus(order.rider_id, 'available');
+            console.log(`🚴 Rider ${order.rider_id} marked available after order ${order_id} completed`);
+          }
           break;
           
         case 'cancelled':
@@ -1232,6 +1238,10 @@ exports.updateDeliveryStatus = async (req, res) => {
       const order = await orderModel.getOrderById(order_id);
       if (order && order.rider_id) {
         await createRiderEarnings(order);
+        
+        // 🔥 FREE UP RIDER: Set status back to 'available' for new deliveries
+        await orderModel.updateRiderStatus(order.rider_id, 'available');
+        console.log(`✅ Rider ${order.rider_id} marked available after delivery of order ${order_id}`);
       }
     }
 

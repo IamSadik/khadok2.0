@@ -19,6 +19,7 @@
         loadRecentOrders();
         loadRecentCustomers();
         setupStatusToggle();
+        loadRiderProfile();
         
         // Refresh data every 30 seconds
         setInterval(() => {

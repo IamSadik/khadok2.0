@@ -127,6 +127,10 @@ let currentFilter = 'delivery'; // Track current filter: 'all', 'delivery', 'pic
 let currentSort = 'relevance'; // Track current sort: 'relevance', 'rating', 'distance', 'fastest'
 let searchQuery = ''; // Track current search query
 
+function formatRating(rating) {
+  return rating !== null && rating !== undefined ? Number(rating).toFixed(1) : 'N/A';
+}
+
 // 🔥 GLOBAL FUNCTION - View restaurant details (must be global for onclick to work)
 window.viewRestaurant = function(restaurantId) {
   console.log('🔥 Opening restaurant:', restaurantId, typeof restaurantId);
@@ -662,9 +666,7 @@ window.viewRestaurant = function(restaurantId) {
             distance = 'N/A';
           }
 
-          const rating = restaurant.ratings !== null && restaurant.ratings !== undefined
-            ? restaurant.ratings 
-            : 'N/A';
+          const rating = formatRating(restaurant.ratings);
           
           const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
             ? `${Math.max(1, Math.round(restaurant.estimated_time))} min` 
@@ -743,9 +745,7 @@ window.viewRestaurant = function(restaurantId) {
         }
 
         // Get rating from API (can be null)
-        const rating = restaurant.ratings !== null && restaurant.ratings !== undefined
-          ? restaurant.ratings 
-          : 'N/A';
+        const rating = formatRating(restaurant.ratings);
         
         // Use estimated_time from API (check for null/undefined, not falsy)
         const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
@@ -887,9 +887,7 @@ window.viewRestaurant = function(restaurantId) {
             }
           }
 
-          const rating = restaurant.ratings !== null && restaurant.ratings !== undefined
-            ? restaurant.ratings 
-            : 'N/A';
+          const rating = formatRating(restaurant.ratings);
           
           const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
             ? `${Math.max(1, Math.round(restaurant.estimated_time))} min` 
