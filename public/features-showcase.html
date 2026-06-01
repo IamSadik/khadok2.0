@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khadok - Advanced Food Delivery Platform Features</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ff1493 0%, #1abc9c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            color: #ff1493;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(255, 20, 147, 0.6);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Section Styling */
+        .section {
+            padding: 5rem 2rem;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Role Section Styling */
+        .role-section {
+            margin-bottom: 4rem;
+            padding: 3rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff1493, #1abc9c);
+        }
+
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .role-icon {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ff1493, #ff69b4);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .role-header h2 {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .role-header p {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        /* Feature Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-card {
+            background: #f9f9f9;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 2px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-color: #ff1493;
+        }
+
+        .feature-card-image {
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .feature-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card-image:hover img {
+            transform: scale(1.05);
+        }
+
+        .feature-card-content {
+            padding: 1.5rem;
+        }
+
+        .feature-card h4 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .feature-icon {
+            font-size: 1.5rem;
+            color: #ff1493;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .feature-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #ff1493, #ff69b4);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Full Width Feature Showcase */
+        .feature-showcase {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .showcase-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .showcase-text {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .showcase-text h3 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .showcase-text p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .showcase-image {
+            background: #f0f0f0;
+            overflow: hidden;
+            height: 100%;
+            min-height: 400px;
+        }
+
+        .showcase-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .showcase-reverse .showcase-content {
+            direction: rtl;
+        }
+
+        .showcase-reverse .showcase-text {
+            direction: ltr;
+        }
+
+        /* Highlights Section */
+        .highlights {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border-left: 4px solid #ff1493;
+        }
+
+        .highlights h4 {
+            color: #ff1493;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .highlight-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .highlight-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: #666;
+        }
+
+        .highlight-list li:before {
+            content: '✓';
+            color: #1abc9c;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Role-specific colors */
+        .admin-icon { background: linear-gradient(135deg, #667eea, #764ba2) !important; }
+        .consumer-icon { background: linear-gradient(135deg, #f093fb, #f5576c) !important; }
+        .stakeholder-icon { background: linear-gradient(135deg, #fa709a, #fee140) !important; }
+        .rider-icon { background: linear-gradient(135deg, #30cfd0, #330867) !important; }
+
+        /* Tech Stack Section */
+        .tech-stack {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 3rem;
+            border-radius: 12px;
+            margin-top: 3rem;
+        }
+
+        .tech-stack h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .tech-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        /* Lightbox Modal CSS */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 50px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 85vh;
+            object-fit: contain;
+            animation: zoomIn 0.3s ease;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @keyframes zoomIn {
+            from {transform: scale(0.8); opacity: 0;}
+            to {transform: scale(1); opacity: 1;}
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+            z-index: 1001;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: #ff1493;
+            text-decoration: none;
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .showcase-content {
+                grid-template-columns: 1fr;
+            }
+
+            .showcase-reverse .showcase-content {
+                direction: ltr;
+            }
+
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .highlight-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .close-modal {
+                top: 10px;
+                right: 20px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .role-section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">🍖 KHADOK</div>
+            <ul>
+                <li><a href="#admin">Admin Hub</a></li>
+                <li><a href="#consumer">Consumer</a></li>
+                <li><a href="#stakeholder">Stakeholder</a></li>
+                <li><a href="#rider">Rider</a></li>
+                <li><a href="#tech">Technology</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>🚀 Advanced Food Delivery Revolution</h1>
+            <p>Khadok 2.0 - A Multi-Role Platform with Cutting-Edge Features for Every Stakeholder</p>
+            <a href="/" class="cta-button">Explore Platform →</a>
+        </div>
+    </section>
+
+    <div class="container">
+        <section class="section" id="admin">
+            <div class="section-title">👨‍💼 Admin Control Center</div>
+            <div class="section-subtitle">Complete command center to manage the entire ecosystem with real-time insights and enforcement tools</div>
+
+            <div class="role-section">
+                <div class="role-header">
+                    <div class="role-icon admin-icon">⚙️</div>
+                    <div>
+                        <h2>Admin Management</h2>
+                        <p>Comprehensive control panel for system-wide operations</p>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/ticket system.png" alt="Advanced Ticket System">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🎫</span> Ticket Management System</h4>
+                            <p>Handle customer complaints, issues, and support requests with status tracking, priority levels, and automated routing to resolve tickets efficiently.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Real-time Updates</span>
+                                <span class="tag">Prioritization</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/admin.png" alt="Admin Dashboard">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📊</span> Unified Dashboard</h4>
+                            <p>Real-time analytics with total consumers, restaurants, riders, orders, payments, reservations, and ticket counts. Monitor platform health at a glance.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Analytics</span>
+                                <span class="tag">Real-time Metrics</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/account management.png" alt="Account Management">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🚫</span> Account Management</h4>
+                            <p>Restrict, verify, and manage user accounts across all roles. Implement account lockdowns for suspicious activities and maintain platform security.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Security</span>
+                                <span class="tag">Moderation</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlights">
+                    <h4>Admin Capabilities</h4>
+                    <ul class="highlight-list">
+                        <li>Multi-level reporting and export</li>
+                        <li>User account verification</li>
+                        <li>Dispute resolution</li>
+                        <li>Payment monitoring</li>
+                        <li>System-wide announcements</li>
+                        <li>Performance metrics</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="consumer">
+            <div class="section-title">👥 Consumer Experience</div>
+            <div class="section-subtitle">Intuitive platform delivering seamless food ordering with innovative features</div>
+
+            <div class="role-section">
+                <div class="role-header">
+                    <div class="role-icon consumer-icon">🛒</div>
+                    <div>
+                        <h2>Smart Consumer Platform</h2>
+                        <p>Advanced ordering system with location intelligence and multiple delivery options</p>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/consumer dashboard.png" alt="Location-Based Search">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📍</span> Location-Based Restaurant Discovery</h4>
+                            <p>Smart geolocation algorithm shows nearby restaurants sorted by distance, rating, and delivery time. Instant map view with real-time restaurant locations.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Geolocation</span>
+                                <span class="tag">Smart Sorting</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/delivery.png" alt="Live Delivery Tracking">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🗺️</span> Live Delivery Tracking</h4>
+                            <p>Real-time GPS tracking with interactive map showing rider location, route optimization using OSRM, estimated delivery time, and live status updates.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Real-time GPS</span>
+                                <span class="tag">OSRM Routing</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/interior2.png" alt="Dine-In with 360 Interior View">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🏨</span> Dine-In with 360° Interior View</h4>
+                            <p>Browse restaurant interiors with panoramic 360° images before dining. Interactive floor plan showing table availability and seating capacity for reservations.</p>
+                            <div class="feature-tags">
+                                <span class="tag">360° Panorama</span>
+                                <span class="tag">Table Booking</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/bkash.png" alt="Multiple Payment Options">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">💳</span> Multiple Payment Methods</h4>
+                            <p>Integrated bKash payment gateway for Bangladesh, cash on delivery option, and secure wallet management. Multiple payment options for user convenience.</p>
+                            <div class="feature-tags">
+                                <span class="tag">bKash</span>
+                                <span class="tag">Wallet</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/Chat.png" alt="Real-time Communication">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">💬</span> Live Chat with Riders</h4>
+                            <p>Direct real-time messaging with delivery riders using WebSocket technology. Ask for updates, provide specific delivery instructions, and track rider ETA instantly.</p>
+                            <div class="feature-tags">
+                                <span class="tag">WebSocket</span>
+                                <span class="tag">Real-time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/Review.png" alt="Rating & Review">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">⭐</span> Smart Rating & Reviews</h4>
+                            <p>Rate orders within 45 minutes of delivery. Provide detailed reviews with optional comments. System-wide review aggregation for quality assurance and restaurant credibility.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Feedback Loop</span>
+                                <span class="tag">Quality Control</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/notification.png" alt="Real-Time Notifications">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🔔</span> Real-Time Notifications</h4>
+                            <p>Instant push notifications for order confirmations, kitchen updates, rider assignments, delivery milestones, and promotional offers.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Push Alerts</span>
+                                <span class="tag">Event-driven</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/map location.png" alt="Map Location Integration">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📍</span> Map Location Integration</h4>
+                            <p>Consumer can save their location in map for faster and more precise deliveries right to their doorstep.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Maps</span>
+                                <span class="tag">Location Saving</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">🛍️</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🛍️</span> Multiple Order Types</h4>
+                            <p>Flexible ordering: Delivery with home address routing, Pickup with restaurant collection, Dine-In with table reservations and seamless indoor ordering.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Flexible</span>
+                                <span class="tag">Multi-option</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlights">
+                    <h4>Consumer Advantages</h4>
+                    <ul class="highlight-list">
+                        <li>Smart location-based discovery</li>
+                        <li>Live GPS tracking</li>
+                        <li>Interior 360° pre-visit</li>
+                        <li>Multiple payment options</li>
+                        <li>Real-time rider communication</li>
+                        <li>Quick rating system</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="stakeholder">
+            <div class="section-title">🏪 Stakeholder Dashboard</div>
+            <div class="section-subtitle">Powerful tools for restaurant partners to manage operations and grow their business</div>
+
+            <div class="role-section">
+                <div class="role-header">
+                    <div class="role-icon stakeholder-icon">🏢</div>
+                    <div>
+                        <h2>Restaurant Management Suite</h2>
+                        <p>Complete control over menus, orders, interior setup, and business insights</p>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/interior.png" alt="Interactive 3D Floor Plan">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🎨</span> Interactive 3D Interior Designer</h4>
+                            <p>Drag-and-drop 3D floor planner with table configuration tools. Add pillars, chairs, and custom fixtures. Auto-rotate feature for immersive restaurant layout preview.</p>
+                            <div class="feature-tags">
+                                <span class="tag">3D Visualization</span>
+                                <span class="tag">Interactive</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/interior2.png" alt="360 Image Upload">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📸</span> 360° Panoramic Image Upload</h4>
+                            <p>Upload high-quality 360-degree panoramic images of your restaurant interior. Customers can explore using Panolens for immersive pre-visit experience and better bookings.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Panolens</span>
+                                <span class="tag">Immersive</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/stakeholder.png" alt="Business Analytics">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📈</span> Business Analytics & Insights</h4>
+                            <p>Comprehensive analytics dashboard showing revenue trends, popular items, peak hours, customer preferences, and performance metrics for data-driven decisions.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Analytics</span>
+                                <span class="tag">Data-driven</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/menu.png" alt="Menu Management">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🍽️</span> Menu Management</h4>
+                            <p>Create and manage multiple menu categories. Add, edit, and remove items with images, descriptions, prices, and availability status. Real-time menu updates.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Dynamic</span>
+                                <span class="tag">Real-time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/table.png" alt="Table Management">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🎯</span> Table Management</h4>
+                            <p>Configure table layouts by capacity (2/4/6/8/12/16 persons). Track availability, manage reservations, and optimize seating arrangements for better customer experience.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Smart Booking</span>
+                                <span class="tag">Optimization</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">⏰</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">⏰</span> Operating Hours Management</h4>
+                            <p>Set flexible operating hours and special schedules. Manage availability for delivery, pickup, and dine-in services separately with custom time slots.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Flexible</span>
+                                <span class="tag">Custom Hours</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">💵</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">💵</span> Revenue Tracking</h4>
+                            <p>Detailed revenue breakdowns by order type (Delivery/Pickup/Dine-in), payment method, and time period. Export reports and track profitability metrics.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Financial</span>
+                                <span class="tag">Reporting</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlights">
+                    <h4>Stakeholder Tools</h4>
+                    <ul class="highlight-list">
+                        <li>3D interior design tool</li>
+                        <li>360° panoramic uploads</li>
+                        <li>Business analytics</li>
+                        <li>Dynamic menu control</li>
+                        <li>Smart table management</li>
+                        <li>Revenue insights</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="rider">
+            <div class="section-title">🚗 Delivery Partner System</div>
+            <div class="section-subtitle">Intelligent routing and management system for efficient deliveries</div>
+
+            <div class="role-section">
+                <div class="role-header">
+                    <div class="role-icon rider-icon">🛵</div>
+                    <div>
+                        <h2>Advanced Rider Platform</h2>
+                        <p>Smart routing, live tracking, and direct customer communication</p>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/rider.png" alt="Rider Dashboard">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📊</span> Smart Rider Dashboard</h4>
+                            <p>Real-time dashboard showing current status, daily earnings, delivery statistics, performance metrics, and upcoming orders. Schedule management and availability control.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Real-time</span>
+                                <span class="tag">Analytics</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/delivery.png" alt="OSRM Routing">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🗺️</span> OSRM-Powered Route Optimization</h4>
+                            <p>Integration with Open Source Routing Machine (OSRM) for optimal route calculation. Dynamic routing with traffic-aware pathfinding, estimated delivery times, and turn-by-turn navigation.</p>
+                            <div class="feature-tags">
+                                <span class="tag">OSRM</span>
+                                <span class="tag">Optimization</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">📍</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">📍</span> Geolocation-Based Pickup & Drop</h4>
+                            <p>GPS-based automatic restaurant pickup location detection. Smart delivery point prediction using customer address geocoding and map verification before completion.</p>
+                            <div class="feature-tags">
+                                <span class="tag">GPS</span>
+                                <span class="tag">Geolocation</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image">
+                            <img src="/uploads/features/Chat.png" alt="Live Chat">
+                        </div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">💬</span> Real-Time Customer Chat</h4>
+                            <p>Direct WebSocket-based messaging with customers during delivery. Share live location updates, provide ETAs, and handle customer requests or delivery issues instantly.</p>
+                            <div class="feature-tags">
+                                <span class="tag">WebSocket</span>
+                                <span class="tag">Real-time</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">💰</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">💰</span> Earnings Tracking</h4>
+                            <p>Real-time earnings dashboard with daily, weekly, and monthly summaries. Track per-delivery earnings, bonuses, and view detailed payment history with settlement schedules.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Financial</span>
+                                <span class="tag">Transparent</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">🔄</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">🔄</span> Order Management</h4>
+                            <p>Smart order acceptance/rejection system. Batch delivery capabilities for multiple orders. Status tracking from pickup to delivery with proof-of-delivery (POD) capture.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Flexible</span>
+                                <span class="tag">Efficient</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-card-image" style="background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">⭐</div>
+                        <div class="feature-card-content">
+                            <h4><span class="feature-icon">⭐</span> Performance Rating</h4>
+                            <p>Transparent rating system based on on-time delivery, customer satisfaction, and order completion rate. Incentive programs for high-performing riders and consistent service.</p>
+                            <div class="feature-tags">
+                                <span class="tag">Gamification</span>
+                                <span class="tag">Incentives</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlights">
+                    <h4>Rider Benefits</h4>
+                    <ul class="highlight-list">
+                        <li>Smart route optimization</li>
+                        <li>Real-time GPS tracking</li>
+                        <li>Direct customer communication</li>
+                        <li>Transparent earnings</li>
+                        <li>Flexible scheduling</li>
+                        <li>Performance rewards</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="tech">
+            <div class="section-title">⚙️ Technology Stack</div>
+            <div class="section-subtitle">Modern, scalable architecture built with industry-leading technologies</div>
+
+            <div class="tech-stack">
+                <h3>Backend & Core</h3>
+                <div class="tech-list">
+                    <div class="tech-item">
+                        <strong>Node.js</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Express.js</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>PostgreSQL</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Database</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>Socket.io</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Real-time</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>OSRM</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Routing</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>Multer</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">File Upload</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>Bcrypt</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Security</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>Panolens</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">360° Views</p>
+                    </div>
+                    <div class="tech-item">
+                        <strong>Leaflet.js</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem;">Maps</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="highlights" style="margin-top: 2rem;">
+                <h4>Key Technical Features</h4>
+                <ul class="highlight-list">
+                    <li>Real-time WebSocket communication</li>
+                    <li>Geolocation-based services</li>
+                    <li>Route optimization algorithm</li>
+                    <li>Session management</li>
+                    <li>Secure authentication</li>
+                    <li>Multi-role authorization</li>
+                    <li>360° panoramic support</li>
+                    <li>Live GPS tracking</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-title">✨ What Sets Khadok Apart</div>
+            <div class="section-subtitle">Industry-leading features that create a competitive advantage</div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #ff1493;">
+                    <h3 style="color: #ff1493; margin-bottom: 1rem;">🎭 Multi-Role Architecture</h3>
+                    <p>Seamlessly serve Admins, Consumers, Stakeholders, and Riders with role-specific interfaces and capabilities, all within a single unified platform.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #1abc9c;">
+                    <h3 style="color: #1abc9c; margin-bottom: 1rem;">🗺️ Advanced Routing</h3>
+                    <p>Integration with OSRM provides intelligent route optimization with traffic awareness, saving delivery time and operational costs significantly.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #ff69b4;">
+                    <h3 style="color: #ff69b4; margin-bottom: 1rem;">🔄 Real-Time Communication</h3>
+                    <p>WebSocket-powered live messaging between all parties - customers can chat with riders, receive instant notifications, and track deliveries in real-time.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #667eea;">
+                    <h3 style="color: #667eea; margin-bottom: 1rem;">📸 Immersive Interior Experience</h3>
+                    <p>Unique 360° panoramic image viewing with interactive 3D floor planning helps customers make informed dining decisions and increases reservations.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #fa709a;">
+                    <h3 style="color: #fa709a; margin-bottom: 1rem;">💳 Local Payment Integration</h3>
+                    <p>Integrated bKash payment gateway specifically tailored for Bangladesh market, adding local payment convenience that competitors lack.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #30cfd0;">
+                    <h3 style="color: #30cfd0; margin-bottom: 1rem;">📊 Business Intelligence</h3>
+                    <p>Comprehensive analytics for stakeholders showing revenue trends, popular items, peak hours, and customer behavior for data-driven decision making.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #fee140;">
+                    <h3 style="color: #fee140; margin-bottom: 1rem;">🎫 Ticket System</h3>
+                    <p>Comprehensive admin ticket management system for handling complaints, disputes, and support requests with prioritization and tracking.</p>
+                </div>
+
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-left: 4px solid #1abc9c;">
+                    <h3 style="color: #1abc9c; margin-bottom: 1rem;">🔒 Robust Security</h3>
+                    <p>Multi-role authentication, encrypted passwords, session management, and comprehensive account moderation tools ensure platform safety and integrity.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="imageModal" class="modal">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="expandedImg">
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Khadok 2.0 - Advanced Food Delivery Platform | Built with modern technology | Designed for growth</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">Portfolio Project showcasing full-stack development capabilities</p>
+    </footer>
+
+    <script>
+        // Modal Logic for Grid Images
+        function openModal(imgSrc) {
+            const modal = document.getElementById("imageModal");
+            const expandedImg = document.getElementById("expandedImg");
+            
+            expandedImg.src = imgSrc;
+            modal.style.display = "flex"; 
+            modal.style.justifyContent = "center";
+            modal.style.alignItems = "center";
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModal() {
+            document.getElementById("imageModal").style.display = "none";
+            document.body.style.overflow = 'auto'; 
+        }
+
+        // Close when clicking the dark background
+        window.onclick = function(event) {
+            const modal = document.getElementById("imageModal");
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Close on 'Escape' key for accessibility
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
+
+        // Attach click events and titles to all feature card images
+        document.addEventListener("DOMContentLoaded", function() {
+            const images = document.querySelectorAll('.feature-card-image img');
+            images.forEach(img => {
+                img.addEventListener('click', function() {
+                    openModal(this.src);
+                });
+                img.title = "Click to enlarge";
+            });
+        });
+    </script>
+</body>
+</html>
