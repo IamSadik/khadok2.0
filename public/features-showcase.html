@@ -527,6 +527,97 @@
         li {
             list-style: none;
         }   
+
+        /* Future Work / Roadmap Section */
+.roadmap-section {
+    background: white;
+    border-radius: 15px;
+    padding: 3rem;
+    margin-top: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.roadmap-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #1abc9c, #667eea);
+}
+
+.roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.roadmap-card {
+    background: #fdfdfd;
+    border: 1px solid #eef2f5;
+    border-radius: 12px;
+    padding: 1.8rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.roadmap-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    border-color: #1abc9c;
+}
+
+.roadmap-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.roadmap-badge {
+    font-size: 1.5rem;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0faf7;
+    color: #1abc9c;
+    border-radius: 10px;
+}
+
+.roadmap-card h4 {
+    font-size: 1.15rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.roadmap-card p {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.roadmap-tech-tag {
+    margin-top: auto;
+    padding-top: 1rem;
+}
+
+.tech-pill {
+    display: inline-block;
+    padding: 2px 10px;
+    background: #eef2f5;
+    color: #5a738e;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    font-weight: bold;
+}
     </style>
 </head>
 <body>
@@ -539,6 +630,7 @@
                 <li><a href="#stakeholder">Stakeholder</a></li>
                 <li><a href="#rider">Rider</a></li>
                 <li><a href="#tech">Technology</a></li>
+                <li><a href="#roadmap">Future Work</a></li>
             </ul>
         </div>
     </nav>
@@ -1060,6 +1152,8 @@
                 </div>
             </div>
 
+            
+
             <div class="highlights" style="margin-top: 2rem;">
                 <h4>Key Technical Features</h4>
                 <ul class="highlight-list">
@@ -1072,6 +1166,83 @@
                     <li>360° panoramic support</li>
                     <li>Live GPS tracking</li>
                 </ul>
+            </div>
+        </section>
+
+        <section class="section" id="roadmap">
+            <div class="section-title">🔮 Future Work & Architectural Roadmap</div>
+            <div class="section-subtitle">Planned production-grade system enhancements to optimize performance, scalability, and security</div>
+
+            <div class="roadmap-section">
+                <div class="roadmap-grid">
+                    
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-badge">🔑</div>
+                            <h4>Stateless Authentication</h4>
+                        </div>
+                        <p>Transition from stateful Express-session storage to standard JSON Web Tokens (JWT) using asymmetric cryptography (RS256). This removes database lookups for session validation, allowing seamless horizontal scaling across decoupled microservices.</p>
+                        <div class="roadmap-tech-tag">
+                            <span class="tech-pill">JWT / Access & Refresh Tokens</span>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-badge">⚡</div>
+                            <h4>In-Memory Active Dispatching</h4>
+                        </div>
+                        <p>Optimize rider assignment computations by caching active riders and pending orders in memory using Redis Hashmaps. Replaces heavy polling queries with O(1) lookups based on geospatial index buckets to ensure lightning-fast match dispatches.</p>
+                        <div class="roadmap-tech-tag">
+                            <span class="tech-pill">Redis Hashes / Geospatial Indexing</span>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-badge">🧠</div>
+                            <h4>Advanced AI-Driven Personalization</h4>
+                        </div>
+                        <p>Upgrade basic list filtering into a Collaborative Filtering Recommendation Engine. By analyzing user purchase matrices, order velocities, temporal trends, and cuisine preferences, the system will dynamically deliver custom-tailored restaurant lists.</p>
+                        <div class="roadmap-tech-tag">
+                            <span class="tech-pill">Python / Scikit-Learn / Matrix Factorization</span>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-badge">🛡️</div>
+                            <h4>Enterprise Defensive Security</h4>
+                        </div>
+                        <p>Fortify API endpoints against automated abuse by establishing IP-based rate limiting via Token Bucket algorithms, configuring context-aware Cors policies, enforcing strict Helmet.js headers, and implementing SQL injection prevention via raw parameterization.</p>
+                        <div class="roadmap-tech-tag">
+                            <span class="tech-pill">Helmet.js / Rate-Limiter-Flexible</span>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-badge">💾</div>
+                            <h4>Multi-Tier Query Caching</h4>
+                        </div>
+                        <p>Implement a read-through cache layer using Redis to intercept database queries for static data like menu items and restaurant profiles. Drastically lowers the read burden on the main PostgreSQL instance, reducing latency down to sub-milliseconds.</p>
+                        <div class="roadmap-tech-tag">
+                            <span class="tech-pill">Redis Cache Layer</span>
+                        </div>
+                    </div>
+
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <div class="roadmap-badge">📨</div>
+                            <h4>Asynchronous Event Architecture</h4>
+                        </div>
+                        <p>Decouple the notification engine, analytical trackers, and receipt dispatch processes from the main HTTP cycle by introducing RabbitMQ or Apache Kafka. Decoupled systems read from message queues to completely eliminate bottlenecks during peak load hours.</p>
+                        <div class="roadmap-tech-tag">
+                            <span class="tech-pill">RabbitMQ / Event-Driven Pub-Sub</span>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </section>
 
