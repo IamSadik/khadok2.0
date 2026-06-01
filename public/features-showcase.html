@@ -39,7 +39,7 @@
         .logo {
             font-size: 1.8rem;
             font-weight: bold;
-            background: linear-gradient(135deg, #ff1493 0%, #1abc9c 100%);
+            background: linear-gradient(135deg, #101812 0%, #101812 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -65,7 +65,7 @@
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5A8765 0%, #101812 100%);
             color: white;
             padding: 6rem 2rem;
             text-align: center;
@@ -106,18 +106,19 @@
         .cta-button {
             display: inline-block;
             padding: 12px 40px;
-            background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+            background: linear-gradient(135deg, #5A8765 0%, #101812 100%);
             color: white;
             text-decoration: none;
             border-radius: 50px;
             font-weight: bold;
             transition: transform 0.3s, box-shadow 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.4);
+            
+            box-shadow: 0 4px 15px rgba(6, 127, 123, 0.4);
         }
 
         .cta-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 7px 20px rgba(255, 20, 147, 0.6);
+            box-shadow: 0 4px 15px rgba(20, 255, 247, 0.4);
         }
 
         /* Container */
@@ -523,12 +524,15 @@
         html {
             scroll-behavior: smooth;
         }
+        li {
+            list-style: none;
+        }   
     </style>
 </head>
 <body>
     <nav>
         <div class="container">
-            <div class="logo">🍖 KHADOK</div>
+            <div class="logo"><li><a href="index.html">  KHADOK</li></div>
             <ul>
                 <li><a href="#admin">Admin Hub</a></li>
                 <li><a href="#consumer">Consumer</a></li>
@@ -542,7 +546,7 @@
     <section class="hero">
         <div class="hero-content">
             <h1>🚀 Advanced Food Delivery Revolution</h1>
-            <p>Khadok 2.0 - A Multi-Role Platform with Cutting-Edge Features for Every Stakeholder</p>
+            <p>Khadok - A Multi-Role Platform with Cutting-Edge Features for Every Stakeholder</p>
             <a href="/" class="cta-button">Explore Platform →</a>
         </div>
     </section>
@@ -1125,8 +1129,8 @@
     </div>
 
     <footer>
-        <p>&copy; 2026 Khadok 2.0 - Advanced Food Delivery Platform | Built with modern technology | Designed for growth</p>
-        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">Portfolio Project showcasing full-stack development capabilities</p>
+        <p>&copy; 2026 Khadok - Advanced Food Delivery Platform | Built with modern technology | Designed for growth</p>
+        
     </footer>
 
     <script>
