@@ -17,7 +17,7 @@ Khadok streamlines every step of the ordering journey:
 4. **Admins** oversee the entire system: user management, session auditing, analytics, and compliance.
 
 ---
-## Check the [Features](https://khadok2-0.onrender.com/features-showcase.html) Page on live demo: for full details and screenshots.
+## Check the [Features](https://khadok2-0.onrender.com/features-showcase.html) Page in the live demo for full details and screenshots.
 ---
 
 ## 🔥 Key Features (Detailed)
