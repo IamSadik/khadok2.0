@@ -1,6 +1,7 @@
 // /controllers/consumerController.js
 const consumerModel = require('../models/consumerModel');
 const orderModel = require('../models/orderModel');
+const restaurantModel = require('../models/restaurantModel');
 const checkFirstTimeLogin = async (req, res) => {
     const { consumer_id } = req.query;
 
@@ -221,6 +222,39 @@ const updateConsumerProfile = async (req, res) => {
 module.exports = {
   checkFirstTimeLogin,
   updateConsumerInfo,
+  getRecommendedRestaurants: async (req, res) => {
+    const consumer_id = req.session?.userId;
+    if (!consumer_id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { lat, lng, radius } = req.query;
+    if (!lat || !lng) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    const parsedRadius = Number(radius);
+    const searchRadius = Number.isFinite(parsedRadius) && parsedRadius > 0 ? parsedRadius : 12;
+
+    try {
+      const result = await restaurantModel.getCuisineRecommendedRestaurantIdsForConsumer(
+        consumer_id,
+        String(lat),
+        String(lng),
+        searchRadius,
+        { limit: 30 }
+      );
+
+      return res.status(200).json({
+        category: result.category,
+        recommended_ids: result.restaurantIds,
+        radius: searchRadius,
+      });
+    } catch (error) {
+      console.error('Error fetching recommended restaurants:', error);
+      return res.status(500).json({ error: 'Server error' });
+    }
+  },
   getConsumerProfile,
   updateConsumerProfile,
 };

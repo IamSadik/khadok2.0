@@ -18,6 +18,9 @@ router.post(
 // Profile overview for consumer dashboard
 router.get('/profile', consumerController.getConsumerProfile);
 
+// Recommended restaurants near consumer based on most-ordered cuisine
+router.get('/recommendations/restaurants', consumerController.getRecommendedRestaurants);
+
 // Update consumer profile (supports avatar upload)
 router.post(
   '/profile',

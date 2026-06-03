@@ -127,6 +127,10 @@ let currentFilter = 'delivery'; // Track current filter: 'all', 'delivery', 'pic
 let currentSort = 'relevance'; // Track current sort: 'relevance', 'rating', 'distance', 'fastest'
 let searchQuery = ''; // Track current search query
 
+// Recommendation state (populated from backend, used for relevance ordering)
+let recommendedRestaurantIds = new Set();
+let recommendedCategory = null;
+
 function formatRating(rating) {
   return rating !== null && rating !== undefined ? Number(rating).toFixed(1) : 'N/A';
 }
@@ -373,7 +377,25 @@ window.viewRestaurant = function(restaurantId) {
           
         case 'relevance':
         default:
-          // Keep original order (API returns by distance by default)
+          // Keep original order (API returns by distance by default),
+          // but prioritize restaurants that match the consumer's most-ordered cuisine.
+          if (recommendedRestaurantIds && recommendedRestaurantIds.size > 0) {
+            const preferred = [];
+            const rest = [];
+            sorted.forEach((restaurant) => {
+              const id = Number(restaurant?.stakeholder_id);
+              if (Number.isFinite(id) && recommendedRestaurantIds.has(id)) {
+                preferred.push(restaurant);
+              } else {
+                rest.push(restaurant);
+              }
+            });
+            console.log(
+              `✅ Using relevance order with recommendations (${preferred.length} preferred${recommendedCategory ? `: ${recommendedCategory}` : ''})`
+            );
+            return [...preferred, ...rest];
+          }
+
           console.log('✅ Using default relevance order');
           break;
       }
@@ -510,6 +532,30 @@ window.viewRestaurant = function(restaurantId) {
 
         // 🔥 Store all restaurants globally for filtering and sorting
         allRestaurants = data.restaurants;
+
+        // Load recommendations and prioritize them for default ordering
+        try {
+          const recoResponse = await fetch(
+            `/api/consumer/recommendations/restaurants?lat=${lat}&lng=${lng}&radius=${radius}`,
+            { credentials: 'include' }
+          );
+
+          if (recoResponse.ok) {
+            const reco = await recoResponse.json();
+            recommendedCategory = reco?.category ? String(reco.category).trim() : null;
+            const ids = Array.isArray(reco?.recommended_ids) ? reco.recommended_ids : [];
+            recommendedRestaurantIds = new Set(
+              ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+            );
+          } else {
+            recommendedRestaurantIds = new Set();
+            recommendedCategory = null;
+          }
+        } catch (recoError) {
+          console.warn('⚠️ Failed to load recommended restaurants:', recoError);
+          recommendedRestaurantIds = new Set();
+          recommendedCategory = null;
+        }
         
         // Reset sort to 'relevance' (first sort button is active by default)
         currentSort = 'relevance';

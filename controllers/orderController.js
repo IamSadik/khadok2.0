@@ -21,6 +21,12 @@ const toTypeVariants = (type) => {
   };
 };
 
+const normalizeCategory = (value) => {
+  if (value === null || value === undefined) return null;
+  const trimmed = String(value).trim();
+  return trimmed ? trimmed : null;
+};
+
 // Helper function to calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // Earth's radius in km
@@ -153,6 +159,35 @@ exports.createOrder = async (req, res) => {
     const orderId = await orderModel.createOrder(orderData);
     console.log(`✅ Order ${orderId} created successfully (${order_type})`);
 
+    // Ensure we always persist category on order_items.
+    // Client may omit category on multi-item orders, so we fetch it from menu/cuisine.
+    const uniqueMenuIds = Array.from(
+      new Set(
+        (items || [])
+          .map((item) => Number(item?.menu_id))
+          .filter((menuId) => Number.isFinite(menuId) && menuId > 0)
+      )
+    );
+
+    const categoryByMenuId = new Map();
+    if (uniqueMenuIds.length > 0) {
+      const { rows: menuRows } = await db.query(
+        `SELECT
+           m.menu_id,
+           COALESCE(NULLIF(TRIM(m.category), ''), MIN(c.name)) AS category
+         FROM menu m
+         LEFT JOIN stakeholder_cuisine sc ON sc.menu_id = m.menu_id
+         LEFT JOIN cuisine c ON c.id = sc.cuisine_id
+         WHERE m.menu_id = ANY($1)
+         GROUP BY m.menu_id, m.category`,
+        [uniqueMenuIds]
+      );
+
+      menuRows.forEach((row) => {
+        categoryByMenuId.set(Number(row.menu_id), normalizeCategory(row.category));
+      });
+    }
+
     // Create order items
     const orderItems = items.map(item => ({
       order_id: orderId,
@@ -160,7 +195,7 @@ exports.createOrder = async (req, res) => {
       item_name: item.item_name,
       item_price: parseFloat(item.item_price),
       quantity: parseInt(item.quantity),
-      category: item.category || null, // ✅ Include category from cart
+      category: normalizeCategory(item.category) ?? categoryByMenuId.get(Number(item.menu_id)) ?? null,
       subtotal: parseFloat(item.subtotal)
     }));
 
