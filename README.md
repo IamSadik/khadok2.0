@@ -3,7 +3,7 @@
 **Khadok** is a full-featured food ordering platform built for the Bangladesh market. It connects **Consumers**, **Stakeholders** (restaurant owners), **Riders**, and **Admins** in one ecosystem, offering delivery, pickup, and immersive dine-in experiences. Key differentiators include real-time logistics, 3D interior previews, AI recommendations, and multi-role dashboards.
 
 ---
-Live Demo: [🔗](https://khadok2-0.onrender.com/index.html)
+ [🔗Live Demo](https://khadok2-0.onrender.com/index.html)
 
 
 ## 🚀 Project Description
