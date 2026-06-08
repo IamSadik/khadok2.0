@@ -228,7 +228,7 @@ module.exports = {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { lat, lng, radius } = req.query;
+    const { lat, lng, radius, orderType, limit } = req.query;
     if (!lat || !lng) {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
     }
@@ -236,19 +236,45 @@ module.exports = {
     const parsedRadius = Number(radius);
     const searchRadius = Number.isFinite(parsedRadius) && parsedRadius > 0 ? parsedRadius : 12;
 
+    const parsedBreakdownLimit = Number(limit);
+    const breakdownLimit = Number.isFinite(parsedBreakdownLimit) && parsedBreakdownLimit > 0
+      ? Math.min(parsedBreakdownLimit, 8)
+      : 5;
+
     try {
+      // Step 1: Figure out which cuisines this user has been ordering
+      // (e.g. { pizza: 3, burger: 2, drinks: 1 }).
+      const breakdown = await restaurantModel.getCuisineBreakdownForConsumer(
+        consumer_id,
+        { orderType, limit: breakdownLimit }
+      );
+
+      // Step 2: Pull restaurant ids matching any of the user's top cuisines
+      // within the requested radius. The model already de-duplicates and
+      // orders by distance / rating.
+      const topCategories = breakdown.map((row) => row.category);
+
       const result = await restaurantModel.getCuisineRecommendedRestaurantIdsForConsumer(
         consumer_id,
         String(lat),
         String(lng),
         searchRadius,
-        { limit: 30 }
+        {
+          categories: topCategories,
+          limit: 30,
+        }
       );
 
       return res.status(200).json({
+        // The single top cuisine (used for relevance sort + the "because you
+        // love X" banner).
         category: result.category,
+        categories: topCategories,
+        cuisine_breakdown: breakdown,
+        // Restaurant ids the dashboard uses to bubble the right shops to the top.
         recommended_ids: result.restaurantIds,
         radius: searchRadius,
+        order_type: orderType || null,
       });
     } catch (error) {
       console.error('Error fetching recommended restaurants:', error);

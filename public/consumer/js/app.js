@@ -130,6 +130,97 @@ let searchQuery = ''; // Track current search query
 // Recommendation state (populated from backend, used for relevance ordering)
 let recommendedRestaurantIds = new Set();
 let recommendedCategory = null;
+let recommendedCategories = [];
+let cuisineBreakdown = [];
+
+// 🔥 Map a cuisine name to an emoji + label. Falls back to a generic icon.
+const CUISINE_ICON_MAP = {
+  pizza: '🍕', burger: '🍔', burgers: '🍔', biryani: '🍛',
+  noodle: '🍜', noodles: '🍜', pasta: '🍝', sushi: '🍣',
+  cake: '🍰', cakes: '🍰', coffee: '☕', cafe: '☕',
+  drink: '🥤', drinks: '🥤', beverage: '🥤', juice: '🧃',
+  dessert: '🍰', sweet: '🍬', sweets: '🍬',
+  kebab: '🍢', kebabs: '🍢',
+  rice: '🍚', chicken: '🍗', beef: '🥩', meat: '🥩',
+  fish: '🐟', seafood: '🦐', sandwich: '🥪', sandwiches: '🥪',
+  salad: '🥗', salads: '🥗', soup: '🍲', soups: '🍲',
+  roll: '🌯', rolls: '🌯', shawarma: '🌯',
+  momo: '🥟', momos: '🥟', dumpling: '🥟', dumplings: '🥟',
+};
+
+function iconForCuisine(name) {
+  if (!name) return '🍽️';
+  const key = String(name).toLowerCase().trim();
+  if (CUISINE_ICON_MAP[key]) return CUISINE_ICON_MAP[key];
+  // loose substring match so e.g. "Spicy Burger" still picks 🍔
+  for (const k of Object.keys(CUISINE_ICON_MAP)) {
+    if (key.includes(k)) return CUISINE_ICON_MAP[k];
+  }
+  return '🍽️';
+}
+
+// 🔥 Render the "Your Favourite Cuisines" chips from the user's order
+// breakdown. If the user has no order history, we keep the hardcoded
+// list of generic cuisines.
+function renderCuisineShortcuts(breakdown) {
+  const list = document.getElementById('cuisine-list');
+  const subtitle = document.getElementById('cuisine-subtitle');
+  if (!list) return;
+
+  const safeBreakdown = Array.isArray(breakdown) ? breakdown : [];
+  if (safeBreakdown.length === 0) {
+    // Hide the dynamic subtitle when we fall back to the static list.
+    if (subtitle) subtitle.hidden = true;
+    return;
+  }
+
+  list.innerHTML = safeBreakdown
+    .map((row) => {
+      const name = String(row.category || '').trim();
+      if (!name) return '';
+      return `<div class="cuisine-card" data-cuisine="${name}">${iconForCuisine(name)} ${name}</div>`;
+    })
+    .join('');
+
+  if (subtitle) {
+    subtitle.hidden = false;
+    const total = safeBreakdown.reduce((sum, r) => sum + Number(r.quantity || 0), 0);
+    if (total > 0) {
+      subtitle.textContent = `Based on your last ${total} order${total === 1 ? '' : 's'} — we think you'll love these.`;
+    } else {
+      subtitle.textContent = "Based on what you usually order, we've lined up these cuisines for you.";
+    }
+  }
+}
+
+// 🔥 Show / hide the "Recommended for you" banner above the restaurant grid.
+function renderRecommendationBanner(topCategory, breakdown) {
+  const banner = document.getElementById('recommendation-banner');
+  const title = document.getElementById('rec-title');
+  const subtitle = document.getElementById('rec-subtitle');
+  if (!banner || !title || !subtitle) return;
+
+  const safeBreakdown = Array.isArray(breakdown) ? breakdown : [];
+  if (!topCategory || safeBreakdown.length === 0) {
+    banner.hidden = true;
+    return;
+  }
+
+  const top = safeBreakdown[0];
+  const topQty = Number(top.quantity || 0);
+
+  title.textContent = `Because you love ${topCategory}`;
+  const others = safeBreakdown.slice(1, 4).map((r) => r.category).filter(Boolean);
+  if (others.length > 0) {
+    subtitle.textContent = `Plus ${others.join(', ')} — top picks are pinned to the top of the list.`;
+  } else if (topQty > 0) {
+    subtitle.textContent = `You've ordered ${topCategory} ${topQty} time${topQty === 1 ? '' : 's'}. Showing matching spots first.`;
+  } else {
+    subtitle.textContent = 'Picked from your taste profile.';
+  }
+
+  banner.hidden = false;
+}
 
 function formatRating(rating) {
   return rating !== null && rating !== undefined ? Number(rating).toFixed(1) : 'N/A';
@@ -543,18 +634,35 @@ window.viewRestaurant = function(restaurantId) {
           if (recoResponse.ok) {
             const reco = await recoResponse.json();
             recommendedCategory = reco?.category ? String(reco.category).trim() : null;
+            recommendedCategories = Array.isArray(reco?.categories)
+              ? reco.categories.map((c) => String(c).trim()).filter(Boolean)
+              : [];
+            cuisineBreakdown = Array.isArray(reco?.cuisine_breakdown)
+              ? reco.cuisine_breakdown
+              : [];
             const ids = Array.isArray(reco?.recommended_ids) ? reco.recommended_ids : [];
             recommendedRestaurantIds = new Set(
               ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))
             );
+
+            // 🔥 Render the dynamic "Favourite Cuisines" chips + the
+            // "Recommended for you" banner based on the user's breakdown.
+            renderCuisineShortcuts(cuisineBreakdown);
+            renderRecommendationBanner(recommendedCategory, cuisineBreakdown);
           } else {
             recommendedRestaurantIds = new Set();
             recommendedCategory = null;
+            recommendedCategories = [];
+            cuisineBreakdown = [];
+            renderRecommendationBanner(null, []);
           }
         } catch (recoError) {
           console.warn('⚠️ Failed to load recommended restaurants:', recoError);
           recommendedRestaurantIds = new Set();
           recommendedCategory = null;
+          recommendedCategories = [];
+          cuisineBreakdown = [];
+          renderRecommendationBanner(null, []);
         }
         
         // Reset sort to 'relevance' (first sort button is active by default)

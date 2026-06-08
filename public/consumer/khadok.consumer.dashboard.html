@@ -179,7 +179,10 @@
         <!-- Cuisine Categories -->
         <section class="cuisine-section">
           <h2>Your Favourite Cuisines</h2>
-          <div class="cuisine-list">
+          <p class="cuisine-subtitle" id="cuisine-subtitle" hidden>
+            Based on what you usually order, we've lined up these cuisines for you.
+          </p>
+          <div class="cuisine-list" id="cuisine-list">
             <div class="cuisine-card">🍕 Pizza</div>
             <div class="cuisine-card">🍔 Burgers</div>
             <div class="cuisine-card">🍛 Biryani</div>
@@ -187,6 +190,15 @@
             <div class="cuisine-card">🍣 Sushi</div>
             <div class="cuisine-card">🍰 Cakes</div>
             <div class="cuisine-card">☕ Coffee</div>
+          </div>
+        </section>
+
+        <!-- Recommended For You Banner -->
+        <section class="recommendation-banner" id="recommendation-banner" hidden>
+          <div class="rec-icon"><i class="fas fa-sparkles"></i></div>
+          <div class="rec-text">
+            <h3 id="rec-title">Recommended for you</h3>
+            <p id="rec-subtitle">Picked from your taste profile</p>
           </div>
         </section>
 
