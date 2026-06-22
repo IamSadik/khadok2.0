@@ -273,6 +273,8 @@ module.exports = {
         cuisine_breakdown: breakdown,
         // Restaurant ids the dashboard uses to bubble the right shops to the top.
         recommended_ids: result.restaurantIds,
+        // Full restaurant rows for the dedicated recommendation section.
+        recommended_restaurants: result.restaurants || [],
         radius: searchRadius,
         order_type: orderType || null,
       });

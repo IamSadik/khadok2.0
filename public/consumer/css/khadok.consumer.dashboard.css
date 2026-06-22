@@ -757,6 +757,59 @@ body {
   color: #b45309;
 }
 
+/* Recommended restaurants row */
+.recommended-section {
+  margin: 18px 0 8px;
+}
+
+.recommended-section-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  color: #111827;
+}
+
+.recommended-section-header p {
+  margin: 0 0 14px;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.recommended-restaurants-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.recommended-restaurants-row .restaurant-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.recommended-restaurants-row .restaurant-card .recommended-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  background: linear-gradient(135deg, #ff8a3d, #f97316);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.35);
+}
+
+.recommended-empty {
+  color: #6b7280;
+  font-size: 0.95rem;
+  padding: 12px 0;
+}
+
 /* Filters */
 .filter-bar {
   display: flex;

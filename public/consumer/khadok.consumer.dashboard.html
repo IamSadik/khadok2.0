@@ -26,7 +26,6 @@
   <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
   <!-- Socket.IO for real-time order tracking -->
   <script src="/socket.io/socket.io.js"></script>
-  <script src="js/app.js"></script>
 
 
 </head>
@@ -200,6 +199,15 @@
             <h3 id="rec-title">Recommended for you</h3>
             <p id="rec-subtitle">Picked from your taste profile</p>
           </div>
+        </section>
+
+        <!-- Recommended Restaurants (based on order history) -->
+        <section class="recommended-section" id="recommended-section" hidden>
+          <div class="recommended-section-header">
+            <h2 id="recommended-section-title">Recommended for you</h2>
+            <p id="recommended-section-subtitle">Shops matching your favourite cuisines</p>
+          </div>
+          <div class="recommended-restaurants-row" id="recommended-restaurants-container"></div>
         </section>
 
         <!-- Filter + Sort -->
@@ -422,7 +430,7 @@
               <input type="text" id="cuisine-search" placeholder="Search for cuisines">
               <i class="fas fa-search"></i>
             </div>
-            <div class="checkbox-group cuisine-grid" id="cuisine-list">
+            <div class="checkbox-group cuisine-grid" id="filter-cuisine-list">
               <!-- Initial 10 cuisines -->
               <div class="checkbox-item">
                 <input type="checkbox" id="cuisine-appetizer" value="Appetizer">
@@ -1397,7 +1405,7 @@
       const filterClearBtn = document.getElementById('filter-clear-btn');
       const showMoreBtn = document.getElementById('show-more-cuisines');
       const cuisineSearch = document.getElementById('cuisine-search');
-      const cuisineList = document.getElementById('cuisine-list');
+      const cuisineList = document.getElementById('filter-cuisine-list');
 
       // Open filter panel
       if (openFilterBtn) {

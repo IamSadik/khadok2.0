@@ -122,7 +122,7 @@ const getCuisineBreakdownForConsumer = async (
       ORDER BY order_item_id, resolved_category
     )
     SELECT
-      resolved_category AS category,
+      MIN(resolved_category) AS category,
       SUM(quantity)::int AS quantity,
       ROUND(
         SUM(quantity)::numeric
@@ -130,8 +130,8 @@ const getCuisineBreakdownForConsumer = async (
         4
       ) AS ratio
     FROM deduped
-    GROUP BY resolved_category
-    ORDER BY quantity DESC, resolved_category ASC
+    GROUP BY LOWER(TRIM(resolved_category))
+    ORDER BY quantity DESC, MIN(resolved_category) ASC
     LIMIT $${limitParamIdx}
   `;
 
@@ -150,7 +150,7 @@ const getCuisineRecommendedRestaurantIdsForConsumer = async (
   lat,
   lng,
   radius = 10,
-  { categories = [], limit = 20, orderType } = {}
+  { categories = [], limit = 20 } = {}
 ) => {
   const safeCategories = Array.isArray(categories)
     ? categories
@@ -159,23 +159,45 @@ const getCuisineRecommendedRestaurantIdsForConsumer = async (
     : [];
 
   const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 50);
-
-  const params = [lat, lng, safeCategories, radius, safeLimit];
+  const topCategory = safeCategories[0] || null;
+  const params = [lat, lng, safeCategories, radius, safeLimit, topCategory];
 
   const { rows } = await pool.query(
     `WITH candidates AS (
        SELECT
          s.stakeholder_id,
+         s.restaurant_name,
+         s.address,
+         s.lat,
+         s.lng,
          s.ratings,
+         s.picture,
+         s.opens_at,
+         s.closes_at,
+         s.type,
          (6371 * ACOS(
            LEAST(1,
              COS(RADIANS($1)) * COS(RADIANS(s.lat::FLOAT)) * COS(RADIANS(s.lng::FLOAT) - RADIANS($2))
              + SIN(RADIANS($1)) * SIN(RADIANS(s.lat::FLOAT))
            )
-         )) AS distance
+         )) AS distance,
+         CASE
+           WHEN $6::text IS NULL OR TRIM($6::text) = '' THEN 0
+           WHEN EXISTS (
+             SELECT 1
+             FROM menu m
+             LEFT JOIN stakeholder_cuisine sc ON sc.menu_id = m.menu_id
+             LEFT JOIN cuisine c ON c.id = sc.cuisine_id
+             WHERE m.stakeholder_id = s.stakeholder_id
+               AND LOWER(COALESCE(NULLIF(TRIM(m.category), ''), c.name)) = LOWER(TRIM($6::text))
+           ) THEN 1
+           ELSE 0
+         END AS matches_top_category
        FROM stakeholder s
        WHERE s.restaurant_name IS NOT NULL
          AND TRIM(s.restaurant_name) <> ''
+         AND s.lat IS NOT NULL
+         AND s.lng IS NOT NULL
          AND (
               CARDINALITY($3::text[]) = 0
               OR EXISTS (
@@ -184,27 +206,61 @@ const getCuisineRecommendedRestaurantIdsForConsumer = async (
                 LEFT JOIN stakeholder_cuisine sc ON sc.menu_id = m.menu_id
                 LEFT JOIN cuisine c ON c.id = sc.cuisine_id
                 WHERE m.stakeholder_id = s.stakeholder_id
-                  AND COALESCE(NULLIF(TRIM(m.category), ''), c.name) = ANY ($3::text[])
+                  AND LOWER(COALESCE(NULLIF(TRIM(m.category), ''), c.name)) = ANY (
+                    SELECT LOWER(unnest($3::text[]))
+                  )
               )
             )
      )
-     SELECT stakeholder_id, distance
+     SELECT
+       stakeholder_id,
+       restaurant_name,
+       address,
+       lat,
+       lng,
+       ratings,
+       picture,
+       opens_at,
+       closes_at,
+       type,
+       distance,
+       matches_top_category
      FROM candidates
      WHERE distance <= $4
      ORDER BY
        CASE WHEN CARDINALITY($3::text[]) = 0 THEN 1 ELSE 0 END ASC,
+       matches_top_category DESC,
        distance ASC,
-       COALESCE((SELECT ratings FROM stakeholder sk WHERE sk.stakeholder_id = candidates.stakeholder_id), 0) DESC
+       COALESCE(ratings, 0) DESC,
+       restaurant_name ASC
      LIMIT $5`,
     params
   );
 
+  const restaurants = rows.map((r) => ({
+    stakeholder_id: Number(r.stakeholder_id),
+    restaurant_name: r.restaurant_name,
+    address: r.address,
+    lat: r.lat,
+    lng: r.lng,
+    ratings: r.ratings,
+    picture: r.picture,
+    opens_at: r.opens_at,
+    closes_at: r.closes_at,
+    type: r.type,
+    distance: r.distance === null || r.distance === undefined
+      ? null
+      : Number(Number(r.distance).toFixed(2)),
+    matches_top_category: Number(r.matches_top_category) === 1,
+  }));
+
   return {
-    category: safeCategories[0] || null,
+    category: topCategory,
     categoriesUsed: safeCategories,
-    restaurantIds: rows
-      .map((r) => Number(r.stakeholder_id))
+    restaurantIds: restaurants
+      .map((r) => r.stakeholder_id)
       .filter((id) => Number.isFinite(id)),
+    restaurants,
   };
 };
 

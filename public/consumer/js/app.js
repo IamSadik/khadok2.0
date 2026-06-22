@@ -129,6 +129,7 @@ let searchQuery = ''; // Track current search query
 
 // Recommendation state (populated from backend, used for relevance ordering)
 let recommendedRestaurantIds = new Set();
+let recommendedRestaurants = [];
 let recommendedCategory = null;
 let recommendedCategories = [];
 let cuisineBreakdown = [];
@@ -201,7 +202,7 @@ function renderRecommendationBanner(topCategory, breakdown) {
   if (!banner || !title || !subtitle) return;
 
   const safeBreakdown = Array.isArray(breakdown) ? breakdown : [];
-  if (!topCategory || safeBreakdown.length === 0) {
+  if (!topCategory || safeBreakdown.length === 0 || !recommendedRestaurants.length) {
     banner.hidden = true;
     return;
   }
@@ -224,6 +225,160 @@ function renderRecommendationBanner(topCategory, breakdown) {
 
 function formatRating(rating) {
   return rating !== null && rating !== undefined ? Number(rating).toFixed(1) : 'N/A';
+}
+
+function parseRestaurantTypes(typeString) {
+  if (!typeString) return [];
+
+  try {
+    const types = JSON.parse(typeString);
+    return types.map((t) => String(t).toLowerCase().trim());
+  } catch (error) {
+    console.error('Error parsing restaurant types:', error, typeString);
+    return [];
+  }
+}
+
+function convertTo12Hour(time24) {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hours12 = hours % 12 || 12;
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+function isRestaurantOpen(opensAt, closesAt) {
+  if (!opensAt || !closesAt) return true;
+
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const [openHour, openMin] = opensAt.split(':').map(Number);
+  const [closeHour, closeMin] = closesAt.split(':').map(Number);
+  const openMinutes = openHour * 60 + openMin;
+  const closeMinutes = closeHour * 60 + closeMin;
+
+  if (closeMinutes < openMinutes) {
+    return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+  }
+
+  return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+}
+
+function enrichRecommendedRestaurants(recommended, nearbyList) {
+  const nearbyById = new Map(
+    (nearbyList || []).map((r) => [Number(r.stakeholder_id), r])
+  );
+
+  return (recommended || []).map((rec) => {
+    const nearby = nearbyById.get(Number(rec.stakeholder_id));
+    return nearby ? { ...rec, ...nearby } : rec;
+  });
+}
+
+function buildRestaurantCardHtml(restaurant, { showRecommendedBadge = false } = {}) {
+  const imageUrl = restaurant.picture
+    ? `/uploads/${restaurant.picture}`
+    : 'images/placeholder-restaurant.jpg';
+
+  let distance;
+  if (restaurant.road_distance !== null && restaurant.road_distance !== undefined) {
+    if (restaurant.road_distance < 1 && restaurant.road_distance_meters !== null) {
+      distance = `${restaurant.road_distance_meters} m`;
+    } else {
+      distance = `${Number(restaurant.road_distance).toFixed(1)} km`;
+    }
+  } else if (restaurant.distance !== null && restaurant.distance !== undefined) {
+    distance = `${Number(restaurant.distance).toFixed(1)} km`;
+  } else {
+    distance = 'N/A';
+  }
+
+  const rating = formatRating(restaurant.ratings);
+  const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
+    ? `${Math.max(1, Math.round(restaurant.estimated_time))} min`
+    : 'N/A';
+
+  const isOpen = isRestaurantOpen(restaurant.opens_at, restaurant.closes_at);
+  const opensAt12hr = convertTo12Hour(restaurant.opens_at);
+  const closesAt12hr = convertTo12Hour(restaurant.closes_at);
+  const cardClass = isOpen ? 'restaurant-card' : 'restaurant-card restaurant-card-closed';
+  const onclickAttr = isOpen ? `onclick="viewRestaurant('${restaurant.stakeholder_id}')"` : '';
+  const recommendedBadge = showRecommendedBadge
+    ? '<span class="recommended-badge"><i class="fas fa-sparkles"></i> For you</span>'
+    : '';
+
+  return `
+    <div class="${cardClass}" ${onclickAttr} ${!isOpen ? 'style="cursor: not-allowed; opacity: 0.7;"' : ''}>
+      ${recommendedBadge}
+      <img src="${imageUrl}" alt="${restaurant.restaurant_name}" onerror="this.src='images/placeholder-restaurant.jpg'">
+      <div class="restaurant-info">
+        <h4>${restaurant.restaurant_name}</h4>
+        <p style="color: #777; font-size: 0.9rem; margin: 5px 0;">
+          ${restaurant.address || 'Restaurant Address'}
+        </p>
+        <div class="restaurant-meta">
+          <span title="Rating">
+            <i class="fas fa-star" style="color: #ffc107;"></i> ${rating}
+          </span>
+          <span title="Distance">
+            <i class="fas fa-map-marker-alt" style="color: #e91e63;"></i> ${distance}
+          </span>
+          <span title="Estimated Delivery Time">
+            <i class="fas fa-clock" style="color: #4CAF50;"></i> ${deliveryTime}
+          </span>
+        </div>
+        ${isOpen
+          ? `<span class="badge badge-open">Open Now (${opensAt12hr} - ${closesAt12hr})</span>`
+          : `<span class="badge badge-closed">Closed (Opens at ${opensAt12hr})</span>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderRecommendedRestaurants() {
+  const section = document.getElementById('recommended-section');
+  const container = document.getElementById('recommended-restaurants-container');
+  const sectionTitle = document.getElementById('recommended-section-title');
+  const sectionSubtitle = document.getElementById('recommended-section-subtitle');
+  if (!section || !container) return;
+
+  if (!recommendedCategory || !Array.isArray(recommendedRestaurants) || recommendedRestaurants.length === 0) {
+    section.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+
+  let filtered = recommendedRestaurants;
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter((restaurant) =>
+      parseRestaurantTypes(restaurant.type).includes(currentFilter)
+    );
+  }
+
+  if (filtered.length === 0) {
+    section.hidden = true;
+    container.innerHTML = '';
+    return;
+  }
+
+  const enriched = enrichRecommendedRestaurants(filtered, allRestaurants);
+
+  if (sectionTitle) {
+    sectionTitle.textContent = recommendedCategory
+      ? `More ${recommendedCategory} spots for you`
+      : 'Recommended for you';
+  }
+  if (sectionSubtitle) {
+    const others = cuisineBreakdown.slice(1, 3).map((row) => row.category).filter(Boolean);
+    sectionSubtitle.textContent = others.length
+      ? `Because you often order ${recommendedCategory}, ${others.join(' & ')}`
+      : `Based on your order history — you love ${recommendedCategory}`;
+  }
+
+  container.innerHTML = enriched
+    .map((restaurant) => buildRestaurantCardHtml(restaurant, { showRecommendedBadge: true }))
+    .join('');
+  section.hidden = false;
 }
 
 // 🔥 GLOBAL FUNCTION - View restaurant details (must be global for onclick to work)
@@ -416,21 +571,6 @@ window.viewRestaurant = function(restaurantId) {
       });
     }
 
-    // 🔥 Function to parse type string from database
-    function parseRestaurantTypes(typeString) {
-      if (!typeString) return [];
-      
-      try {
-        // Type comes as string like: "[\"delivery\",\"pickup\",\"dine-in\"]"
-        // Parse it to array
-        const types = JSON.parse(typeString);
-        return types.map(t => t.toLowerCase().trim());
-      } catch (error) {
-        console.error('Error parsing restaurant types:', error, typeString);
-        return [];
-      }
-    }
-
     // 🔥 Function to sort restaurants based on selected criteria
     function sortRestaurants(restaurants) {
       const sorted = [...restaurants]; // Create a copy to avoid mutating original
@@ -530,6 +670,69 @@ window.viewRestaurant = function(restaurantId) {
       const lat = parseFloat(localStorage.getItem('current_user_lat'));
       const lng = parseFloat(localStorage.getItem('current_user_lng'));
       initializeRestaurantsMap(sortedRestaurants, lat, lng);
+
+      // Step 6: Refresh the dedicated recommendation row for the active filter
+      renderRecommendedRestaurants();
+    }
+
+    // Fetch personalized recommendations from order history
+    async function loadRecommendations(lat, lng, radius) {
+      try {
+        const recoResponse = await fetch(
+          `/api/consumer/recommendations/restaurants?lat=${lat}&lng=${lng}&radius=${radius}`,
+          { credentials: 'include' }
+        );
+
+        if (recoResponse.ok) {
+          const reco = await recoResponse.json();
+          recommendedCategory = reco?.category ? String(reco.category).trim() : null;
+          recommendedCategories = Array.isArray(reco?.categories)
+            ? reco.categories.map((c) => String(c).trim()).filter(Boolean)
+            : [];
+          cuisineBreakdown = Array.isArray(reco?.cuisine_breakdown)
+            ? reco.cuisine_breakdown
+            : [];
+          const ids = Array.isArray(reco?.recommended_ids) ? reco.recommended_ids : [];
+          recommendedRestaurantIds = new Set(
+            ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+          );
+          recommendedRestaurants = Array.isArray(reco?.recommended_restaurants)
+            ? reco.recommended_restaurants
+            : [];
+
+          if (recommendedRestaurants.length === 0 && recommendedRestaurantIds.size > 0) {
+            recommendedRestaurants = allRestaurants.filter((restaurant) =>
+              recommendedRestaurantIds.has(Number(restaurant.stakeholder_id))
+            );
+          }
+
+          // Include recommended shops in the main list so relevance sorting can surface them
+          recommendedRestaurants.forEach((restaurant) => {
+            const id = Number(restaurant.stakeholder_id);
+            if (!Number.isFinite(id)) return;
+            if (!allRestaurants.some((entry) => Number(entry.stakeholder_id) === id)) {
+              allRestaurants.push(restaurant);
+            }
+          });
+
+          renderCuisineShortcuts(cuisineBreakdown);
+          renderRecommendationBanner(recommendedCategory, cuisineBreakdown);
+          renderRecommendedRestaurants();
+          return;
+        }
+
+        console.warn('⚠️ Recommendations API returned', recoResponse.status);
+      } catch (recoError) {
+        console.warn('⚠️ Failed to load recommended restaurants:', recoError);
+      }
+
+      recommendedRestaurantIds = new Set();
+      recommendedRestaurants = [];
+      recommendedCategory = null;
+      recommendedCategories = [];
+      cuisineBreakdown = [];
+      renderRecommendationBanner(null, []);
+      renderRecommendedRestaurants();
     }
 
     // Function to fetch and display nearby restaurants
@@ -593,9 +796,14 @@ window.viewRestaurant = function(restaurantId) {
         const data = await response.json();
         console.log('📍 Nearby restaurants:', data);
 
+        // 🔥 Store all restaurants globally for filtering and sorting
+        allRestaurants = Array.isArray(data.restaurants) ? data.restaurants : [];
+
+        // Load recommendations even when the nearby list is empty
+        await loadRecommendations(lat, lng, radius);
+
         // Check if we have restaurants
-        if (!data.restaurants || data.restaurants.length === 0) {
-          allRestaurants = []; // Clear stored restaurants
+        if (allRestaurants.length === 0) {
           restaurantContainer.innerHTML = `
             <div class="no-restaurants">
               <i class="fas fa-utensils" style="font-size: 3rem; color: #ccc;"></i>
@@ -619,50 +827,6 @@ window.viewRestaurant = function(restaurantId) {
             `;
           }
           return;
-        }
-
-        // 🔥 Store all restaurants globally for filtering and sorting
-        allRestaurants = data.restaurants;
-
-        // Load recommendations and prioritize them for default ordering
-        try {
-          const recoResponse = await fetch(
-            `/api/consumer/recommendations/restaurants?lat=${lat}&lng=${lng}&radius=${radius}`,
-            { credentials: 'include' }
-          );
-
-          if (recoResponse.ok) {
-            const reco = await recoResponse.json();
-            recommendedCategory = reco?.category ? String(reco.category).trim() : null;
-            recommendedCategories = Array.isArray(reco?.categories)
-              ? reco.categories.map((c) => String(c).trim()).filter(Boolean)
-              : [];
-            cuisineBreakdown = Array.isArray(reco?.cuisine_breakdown)
-              ? reco.cuisine_breakdown
-              : [];
-            const ids = Array.isArray(reco?.recommended_ids) ? reco.recommended_ids : [];
-            recommendedRestaurantIds = new Set(
-              ids.map((id) => Number(id)).filter((id) => Number.isFinite(id))
-            );
-
-            // 🔥 Render the dynamic "Favourite Cuisines" chips + the
-            // "Recommended for you" banner based on the user's breakdown.
-            renderCuisineShortcuts(cuisineBreakdown);
-            renderRecommendationBanner(recommendedCategory, cuisineBreakdown);
-          } else {
-            recommendedRestaurantIds = new Set();
-            recommendedCategory = null;
-            recommendedCategories = [];
-            cuisineBreakdown = [];
-            renderRecommendationBanner(null, []);
-          }
-        } catch (recoError) {
-          console.warn('⚠️ Failed to load recommended restaurants:', recoError);
-          recommendedRestaurantIds = new Set();
-          recommendedCategory = null;
-          recommendedCategories = [];
-          cuisineBreakdown = [];
-          renderRecommendationBanner(null, []);
         }
         
         // Reset sort to 'relevance' (first sort button is active by default)
@@ -878,98 +1042,12 @@ window.viewRestaurant = function(restaurantId) {
         return;
       }
 
-      restaurantContainer.innerHTML = restaurants.map(restaurant => {
-        // Get restaurant image or use placeholder
-        const imageUrl = restaurant.picture 
-          ? `/uploads/${restaurant.picture}` 
-          : 'images/placeholder-restaurant.jpg';
-
-        // Use road_distance_meters for distances < 1km, otherwise use road_distance
-        let distance;
-        if (restaurant.road_distance !== null && restaurant.road_distance !== undefined) {
-          if (restaurant.road_distance < 1 && restaurant.road_distance_meters !== null) {
-            // Show in meters if less than 1 km
-            distance = `${restaurant.road_distance_meters} m`;
-          } else {
-            // Show in km
-            distance = `${restaurant.road_distance.toFixed(1)} km`;
-          }
-        } else {
-          distance = 'N/A';
-        }
-
-        // Get rating from API (can be null)
-        const rating = formatRating(restaurant.ratings);
-        
-        // Use estimated_time from API (check for null/undefined, not falsy)
-        const deliveryTime = restaurant.estimated_time !== null && restaurant.estimated_time !== undefined
-          ? `${Math.max(1, Math.round(restaurant.estimated_time))} min` // Minimum 1 min
-          : 'N/A';
-
-        // Convert 24hr to 12hr format and determine if open
-        function convertTo12Hour(time24) {
-          if (!time24) return '';
-          const [hours, minutes] = time24.split(':').map(Number);
-          const period = hours >= 12 ? 'PM' : 'AM';
-          const hours12 = hours % 12 || 12;
-          return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-        }
-
-        // Check if restaurant is currently open
-        function isRestaurantOpen(opensAt, closesAt) {
-          if (!opensAt || !closesAt) return true; // Default to open if times not set
-          
-          const now = new Date();
-          const currentMinutes = now.getHours() * 60 + now.getMinutes();
-          
-          const [openHour, openMin] = opensAt.split(':').map(Number);
-          const [closeHour, closeMin] = closesAt.split(':').map(Number);
-          
-          const openMinutes = openHour * 60 + openMin;
-          const closeMinutes = closeHour * 60 + closeMin;
-          
-          // Handle cases where closing time is past midnight
-          if (closeMinutes < openMinutes) {
-            return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
-          }
-          
-          return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
-        }
-
-        const isOpen = isRestaurantOpen(restaurant.opens_at, restaurant.closes_at);
-        const opensAt12hr = convertTo12Hour(restaurant.opens_at);
-        const closesAt12hr = convertTo12Hour(restaurant.closes_at);
-
-        // Make card non-clickable if closed
-        const cardClass = isOpen ? 'restaurant-card' : 'restaurant-card restaurant-card-closed';
-        const onclickAttr = isOpen ? `onclick="viewRestaurant('${restaurant.stakeholder_id}')"` : '';
-
-        return `
-          <div class="${cardClass}" ${onclickAttr} ${!isOpen ? 'style="cursor: not-allowed; opacity: 0.7;"' : ''}>
-            <img src="${imageUrl}" alt="${restaurant.restaurant_name}" onerror="this.src='images/placeholder-restaurant.jpg'">
-            <div class="restaurant-info">
-              <h4>${restaurant.restaurant_name}</h4>
-              <p style="color: #777; font-size: 0.9rem; margin: 5px 0;">
-                ${restaurant.address || 'Restaurant Address'}
-              </p>
-              <div class="restaurant-meta">
-                <span title="Rating">
-                  <i class="fas fa-star" style="color: #ffc107;"></i> ${rating}
-                </span>
-                <span title="Distance (Road)">
-                  <i class="fas fa-map-marker-alt" style="color: #e91e63;"></i> ${distance}
-                </span>
-                <span title="Estimated Delivery Time">
-                  <i class="fas fa-clock" style="color: #4CAF50;"></i> ${deliveryTime}
-                </span>
-              </div>
-              ${isOpen 
-                ? `<span class="badge badge-open">Open Now (${opensAt12hr} - ${closesAt12hr})</span>` 
-                : `<span class="badge badge-closed">Closed (Opens at ${opensAt12hr})</span>`}
-            </div>
-          </div>
-        `;
-      }).join('');
+      restaurantContainer.innerHTML = restaurants
+        .map((restaurant) => {
+          const showBadge = recommendedRestaurantIds.has(Number(restaurant.stakeholder_id));
+          return buildRestaurantCardHtml(restaurant, { showRecommendedBadge: showBadge });
+        })
+        .join('');
     }
 
     // Make loadNearbyRestaurants globally accessible
